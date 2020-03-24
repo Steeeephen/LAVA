@@ -17,6 +17,8 @@ from crypt import champdict, picdict
 
 time0 = time.time()
 
+if(not(os.path.exists("output"))):
+	os.mkdir("output")
 # Filling in as many missing values as possible
 def headfill(df):
 	cols = df.columns
