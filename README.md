@@ -64,4 +64,4 @@ Installation on other machines has not been fully tested yet
 Currently optimised only for LEC games, but dimensions for LPL/LCS minimap also in code. 
 Note that the output file is based on the LEC minimap, meaning outputs from other leagues are slightly offset until more output maps added
 
-Please note that this is an early build, any queries can be directed to stephen.ofarrell64 [at] gmail.com
+Please note that this is an early build, any queries can be directed to  loltracker.program [at] gmail.com
