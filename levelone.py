@@ -215,7 +215,7 @@ for i in (playlist['items']):
 	videos.append(i['pafy'].videoid)
 
 # Change this to skip videos
-videos = videos[10:]
+videos = videos[13:]
 
 # Run on each video
 for i, video in enumerate(videos):
