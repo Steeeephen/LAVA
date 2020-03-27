@@ -6,11 +6,13 @@ A program for tracking League of Legends players from in-game video
 
 ### Ubuntu 18.04:
 
-Install python
+Install python and pip
 
 ```
 $ sudo apt-get update
 $ sudo apt-get install python3.6
+$ sudo apt install python3-pip
+
 ```
 Navigate to folder with levelone.py
 
@@ -23,6 +25,23 @@ Run program
 ```
 $ python levelone.py
 ```
+
+### Windows
+
+Install [python](https://docs.python.org/3/using/windows.html), pip should automatically install as well
+
+Navigate to folder with levelone.py
+
+Install dependencies
+```
+$ pip install -r requirements_windows.txt
+```
+Run program
+
+```
+$ python levelone.py
+```
+
 
 ## Usage
 
