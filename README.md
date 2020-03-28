@@ -68,7 +68,7 @@ Three files will be output; a csv containing all player positions as well as a h
 
 ## Notes
 
-107 champions trackable; Ornn and Trundle are known problem children, will be fixed in due time
+107 champions trackable; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
 
 90 blue side champions identifiable, 88 red side
 
