@@ -61,12 +61,17 @@ to fit your usage
 
 Output will be sent to the 'output' directory for each game in the playlist
 
+## Output
+
+Three files will be output; a csv containing all player positions as well as a html for blue & red side. The html file will contain interactive graphs of each player's in-game position until the 90 second mark. These plots can be downloaded as a png by opening the html and clicking the button on each graph
+
+
 ## Notes
 
 107 champions trackable; Ornn and Trundle are known problem children, will be fixed in due time
 
 90 blue side champions identifiable, 88 red side
 
-Currently optimised only for LEC/UKLC games, more to follow
+Currently optimised only for LEC/UKLC games, more to follow. The dimensions are *slightly* different for each league so the raw numbers are not directly comparable between different leagues
 
 Please note that this is an early build, any queries can be directed to  loltracker.program [at] gmail.com
