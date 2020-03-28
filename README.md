@@ -45,23 +45,28 @@ $ python levelone.py
 
 ## Usage
 
-Change the line
+Change the lines
 ```
-plurl = "https://www.youtube.com/watch?v=jBHX225EVy4&list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
+# Change this to get different leagues: 'uklc' and 'lec' supported so far
+league = "lec"
+
+# Change this url to get different videos
+playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
+
+# Change this to skip the first n videos of the playlist
+videos_to_skip = 15
+
 ```
-to include your own playlist
+to fit your usage
 
 Output will be sent to the 'output' directory for each game in the playlist
 
 ## Notes
 
-Installation on other machines has not been fully tested yet
-
-107 champions trackable
+107 champions trackable; Ornn and Trundle are known problem children, will be fixed in due time
 
 90 blue side champions identifiable, 88 red side
 
-Currently optimised only for LEC games, but dimensions for LPL/LCS minimap also in code. 
-Note that the output file is based on the LEC minimap, meaning outputs from other leagues are slightly offset until more output maps added
+Currently optimised only for LEC/UKLC games, more to follow
 
 Please note that this is an early build, any queries can be directed to  loltracker.program [at] gmail.com
