@@ -15,6 +15,26 @@ import youtube_dl
 import pafy
 from crypt import champdict, picdict
 
+#-----------------------------
+
+# Change this to get different leagues: 'uklc' and 'lec' supported so far
+league = "lec"
+
+# Change this url to get different videos
+playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
+
+# Change this to skip the first n videos of the playlist
+videos_to_skip = 15
+
+#-----------------------------
+
+leagues = {
+	"uklc":	[545, 708, 1105, 1270],
+	"lec":	[560, 710, 1100, 1270]
+}
+
+map_0, map_1, map_2, map_3 = leagues[league]
+
 time0 = time.time()
 
 if(not(os.path.exists("output"))):
@@ -188,7 +208,7 @@ def graph_html(colour):
 	html_text = """
 		<html>
 			<body>
-				{0}
+				<center>{0}</center>
 			</body>
 		</html>
 		""".format(divs).format(*div[d:d+5])
@@ -205,17 +225,14 @@ buff4 = cv2.imread("assets/redside_red.jpg", 0)
 # Scoreboard is only ever up during live footage, this will filter useless frames
 header = cv2.imread("assets/header.jpg", 0)
 
-# Change this url to get different videos
-plurl = "https://www.youtube.com/watch?v=jBHX225EVy4&list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
-
 # Iterate through each video in the playlist, grabbing their IDs
-playlist = pafy.get_playlist(plurl)
+playlist = pafy.get_playlist(playlist_url)
 videos = []
 for i in (playlist['items']):
 	videos.append(i['pafy'].videoid)
 
 # Change this to skip videos
-videos = videos[13:]
+videos = videos[videos_to_skip:]
 
 # Run on each video
 for i, video in enumerate(videos):
@@ -342,10 +359,10 @@ for i, video in enumerate(videos):
 		location = np.where(matched > 0.75)
 		if(location[0].any()):
 
-			# Each broadcast has a slightly different minimap size, output currently optimised for LEC but updates incoming
-			cropped = gray[560:710, 1100:1270] #lec
-			# cropped = gray[550:708, 1100:1270] #lcs
-			#cropped = gray[535:707, 1100:1270] #lpl
+			# Each broadcast has a slightly different minimap size, output currently optimised for uklc but updates incoming
+			cropped = gray[map_0:map_1, map_2:map_3]
+			#cropped = gray[550:708, 1100:1270] #lcs test
+			#cropped = gray[535:707, 1100:1270] #lpl test
 
 			# Check for the buffs spawning
 			buffcheck  = cv2.matchTemplate(cropped, buff,  cv2.TM_CCOEFF_NORMED)
@@ -420,8 +437,10 @@ for i, video in enumerate(videos):
 			df,
 			x = axes[0], 
 			y = axes[1],
-			range_x = [0,170],
-			range_y = [150, 0],
+			#range_x = [0,170],#lec
+			range_x = [0,map_3 - map_2], #uklc
+			#range_y = [150, 0], #lec
+			range_y = [map_1 - map_0, 0],
 			width = 800,
 			height = 800,
 			hover_name = 'Seconds',
@@ -430,13 +449,15 @@ for i, video in enumerate(videos):
 
 		fig.add_layout_image(
 				dict(
-					source=Image.open("assets/result_720p.png"),
+					source=Image.open("assets/%s.png" % league),
 					xref="x",
 					yref="y",
 					x=0,
 					y=0,
-					sizex=170,
-					sizey=150,
+					# sizex=170, #lec
+					# sizey=150,
+					sizex = map_3 - map_2, #uklc
+					sizey = map_1 - map_0, 
 					sizing="stretch",
 					opacity=1,
 					layer="below")
