@@ -28,7 +28,7 @@ $ python levelone.py
 
 ### Windows
 
-Install [python](https://docs.python.org/3/using/windows.html), pip should automatically install as well
+Install [python 3.7](https://docs.python.org/3/using/windows.html), pip should automatically install as well
 
 Navigate to folder with levelone.py
 
