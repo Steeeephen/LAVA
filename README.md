@@ -68,10 +68,10 @@ Three files will be output; a csv containing all player positions as well as a h
 
 ## Notes
 
-107 champions trackable; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
+115 champions trackable; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
 
-90 blue side champions identifiable, 88 red side
+97 blue side champions identifiable, 98 red side
 
-Currently optimised only for LEC/UKLC games, more to follow. UKLC vods also have issues with stopping too early, will be fixed asap. The dimensions are *slightly* different for each league so the raw numbers are not directly comparable between different leagues
+Currently optimised only for LEC/UKLC games, more to follow. The dimensions are *slightly* different for each league so the raw numbers are not directly comparable between different leagues
 
 Please note that this is an early build, any queries can be directed to  loltracker.program [at] gmail.com
