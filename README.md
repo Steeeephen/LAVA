@@ -48,14 +48,13 @@ $ python levelone.py
 Change the lines
 ```
 # Change this to get different leagues: 'uklc' and 'lec' supported so far
-league = "lec"
+league = "uklc"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
+playlist_url = "https://www.youtube.com/playlist?list=PLoUvAO9AzGtz1k6_sg9fJxpHzXeOouRWP"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 15
-
+videos_to_skip = 0
 ```
 to fit your usage
 
@@ -68,9 +67,9 @@ Three files will be output; a csv containing all player positions as well as a h
 
 ## Notes
 
-115 champions trackable; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
+122 champions trackable; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
 
-97 blue side champions identifiable, 98 red side
+100 blue side champions identifiable, 104 red side
 
 Currently optimised only for LEC/UKLC games, more to follow. The dimensions are *slightly* different for each league so the raw numbers are not directly comparable between different leagues
 

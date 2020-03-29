@@ -18,13 +18,13 @@ from crypt import champdict, picdict
 #-----------------------------
 
 # Change this to get different leagues: 'uklc' and 'lec' supported so far
-league = "lec"
+league = "uklc"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/watch?v=xUyDLKNvkts&list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
+playlist_url = "https://www.youtube.com/playlist?list=PLoUvAO9AzGtz1k6_sg9fJxpHzXeOouRWP"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 5
+videos_to_skip = 0
 
 #-----------------------------
 
