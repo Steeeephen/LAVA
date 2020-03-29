@@ -71,6 +71,7 @@ Three files will be output; a csv containing all player positions as well as a h
 
 100 blue side champions identifiable, 104 red side
 
-Currently optimised only for LEC/UKLC/LCK/LPL games, more to follow. The dimensions are *slightly* different for each league so the raw numbers are not directly comparable between different leagues
+Currently optimised only for LEC/UKLC/SLO/LCK/LPL games, more to follow. The dimensions are *slightly* different for each league so the raw numbers are not always directly comparable between different leagues
+
 
 Please note that this is an early build, any queries can be directed to  loltracker.program [at] gmail.com

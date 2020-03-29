@@ -17,14 +17,14 @@ from crypt import champdict, picdict
 
 #-----------------------------
 
-# Change this to get different leagues: 'uklc', 'lpl',' lck' and 'lec' supported so far
-league = "lpl"
+# Change this to get different leagues: 'uklc', 'slo', lpl',' lck' and 'lec' supported so far
+league = "slo"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSS1XIZGtmM9bPT8X0H6lR_"
+playlist_url = "https://www.youtube.com/playlist?list=PLcjoFWKKl5y-xpwC_m_u3O_Gss_F1CkOA"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 2
+videos_to_skip = 6
 
 #-----------------------------
 
@@ -42,6 +42,7 @@ leagues = {
 }
 
 if league == "lpl": league = "lck"
+if league == "slo": league = "uklc"
 
 map_0, map_1, map_2, map_3 = leagues[league][:4]
 
@@ -280,10 +281,9 @@ for i, video in enumerate(videos):
 		_,frame = cap.read()
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		cropped = gray[0:hheight, hwidth1:hwidth2]
-
 		# Look for the scoreboard
 		matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
-		location = np.where(matched > 0.8)
+		location = np.where(matched > 0.75)
 		
 		# Break when scoreboard found
 		if(location[0].any()):
@@ -292,7 +292,8 @@ for i, video in enumerate(videos):
 		# Skip one second
 		for i in range(frames_to_skip):
 			cap.grab()
-
+	cv2.imshow("ok",gray)
+	cv2.waitKey()
 	threshold = 0.7
 	champs = []
 	portraits = os.listdir("classify/blue")
@@ -326,7 +327,8 @@ for i, video in enumerate(videos):
 			print("-"*30)
 	print("-"*30)
 
-
+	cv2.imshow("ij",blue)
+	cv2.waitKey()
 	champstemp = champs
 	threshold = 0.7
 	portraits = os.listdir("classify/red")
@@ -368,7 +370,7 @@ for i, video in enumerate(videos):
 		
 		# Again, only consider locations where the scoreboard shows
 		matched = cv2.matchTemplate(cropped,header,cv2.TM_CCOEFF_NORMED)
-		location = np.where(matched > 0.75)
+		location = np.where(matched > 0.65)
 		if(location[0].any()):
 
 			# Each broadcast has a slightly different minimap size, output currently optimised for uklc but updates incoming
