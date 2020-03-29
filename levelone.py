@@ -21,20 +21,26 @@ from crypt import champdict, picdict
 league = "lec"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
+playlist_url = "https://www.youtube.com/watch?v=xUyDLKNvkts&list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 15
+videos_to_skip = 5
 
 #-----------------------------
 
 leagues = {
-	"uklc":	[545, 708, 1105, 1270],
-	"lec":	[560, 710, 1100, 1270]
+	"uklc":	[
+	545, 708, 1105, 1270, 581, 591, 1180, 1190, 660, 670, 1187, 1197,
+	627, 637, 1225, 1235, 616, 626, 1140, 1150],
+	"lec":	[
+	560, 710, 1100, 1270, 596, 606, 1175, 1185, 667, 677, 1181, 1191, 
+	638, 648, 1217, 1227, 627, 637, 1140, 1150]
 }
 
-map_0, map_1, map_2, map_3 = leagues[league]
+map_0, map_1, map_2, map_3 = leagues[league][:4]
 
+buff_list = leagues[league][4:]
+#rr br rb bb
 time0 = time.time()
 
 if(not(os.path.exists("output"))):
@@ -217,10 +223,10 @@ def graph_html(colour):
 	html_writer.close()
 
 # Buffs spawn at 90 seconds exactly, when they appear we use this to sync the time
-buff  = cv2.imread("assets/blueside_blue.jpg" , 0)
-buff2 = cv2.imread("assets/blueside_red.jpg", 0)
-buff3 = cv2.imread("assets/redside_blue.jpg", 0)
-buff4 = cv2.imread("assets/redside_red.jpg", 0)
+buff  = cv2.imread("assets/blueside_blue_%s.jpg" % league, 0)
+buff2 = cv2.imread("assets/blueside_red_%s.jpg" % league, 0)
+buff3 = cv2.imread("assets/redside_blue_%s.jpg" % league, 0)
+buff4 = cv2.imread("assets/redside_red_%s.jpg" % league, 0)
 
 # Scoreboard is only ever up during live footage, this will filter useless frames
 header = cv2.imread("assets/header.jpg", 0)
@@ -303,7 +309,7 @@ for i, video in enumerate(videos):
 		
 		# If too many champions found, check again with stricter threshold
 		if(len(champs) > 5):
-			threshold += 0.1
+			threshold += 0.05
 			print("-"*30)
 		# If too few champions found, this is often due to an awkward frame transition. Skip a frame and try again
 		elif(len(champs) < 5):
@@ -339,7 +345,7 @@ for i, video in enumerate(videos):
 			print("-"*30)
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		elif(len(champs) > 10):
-			threshold += 0.1
+			threshold += 0.05
 			print("-"*30)
 
 	# Grab portraits of each champion found, to search for on the minimap
@@ -363,12 +369,15 @@ for i, video in enumerate(videos):
 			cropped = gray[map_0:map_1, map_2:map_3]
 			#cropped = gray[550:708, 1100:1270] #lcs test
 			#cropped = gray[535:707, 1100:1270] #lpl test
-
+			cropped_1 = gray[buff_list[12]-4:buff_list[13]+4, buff_list[14]-4:buff_list[15]+4]
+			cropped_2 = gray[buff_list[4]- 4:buff_list[5]+ 4, buff_list[6]- 4:buff_list[7]+ 4]
+			cropped_3 = gray[buff_list[8]- 4:buff_list[9]+ 4, buff_list[10]-4:buff_list[11]+4]
+			cropped_4 = gray[buff_list[0]- 4:buff_list[1]+ 4, buff_list[2]- 4:buff_list[3]+ 4]
 			# Check for the buffs spawning
 			buffcheck  = cv2.matchTemplate(cropped, buff,  cv2.TM_CCOEFF_NORMED)
-			buffcheck2 = cv2.matchTemplate(cropped, buff2, cv2.TM_CCOEFF_NORMED)
-			buffcheck3 = cv2.matchTemplate(cropped, buff3, cv2.TM_CCOEFF_NORMED)
-			buffcheck4 = cv2.matchTemplate(cropped, buff4, cv2.TM_CCOEFF_NORMED)
+			buffcheck2 = cv2.matchTemplate(cropped_2, buff2, cv2.TM_CCOEFF_NORMED)
+			buffcheck3 = cv2.matchTemplate(cropped_3, buff3, cv2.TM_CCOEFF_NORMED)
+			buffcheck4 = cv2.matchTemplate(cropped_4, buff4, cv2.TM_CCOEFF_NORMED)
 			
 			buffs  = np.where(buffcheck  > 0.9)
 			buffs2 = np.where(buffcheck2 > 0.9)
@@ -437,9 +446,7 @@ for i, video in enumerate(videos):
 			df,
 			x = axes[0], 
 			y = axes[1],
-			#range_x = [0,170],#lec
-			range_x = [0,map_3 - map_2], #uklc
-			#range_y = [150, 0], #lec
+			range_x = [0,map_3 - map_2],
 			range_y = [map_1 - map_0, 0],
 			width = 800,
 			height = 800,
@@ -454,9 +461,7 @@ for i, video in enumerate(videos):
 					yref="y",
 					x=0,
 					y=0,
-					# sizex=170, #lec
-					# sizey=150,
-					sizex = map_3 - map_2, #uklc
+					sizex = map_3 - map_2,
 					sizey = map_1 - map_0, 
 					sizing="stretch",
 					opacity=1,
