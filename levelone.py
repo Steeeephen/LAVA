@@ -17,11 +17,11 @@ from crypt import champdict, picdict
 
 #-----------------------------
 
-# Change this to get different leagues: 'uklc' and 'lec' supported so far
-league = "uklc"
+# Change this to get different leagues: 'uklc', 'lck' and 'lec' supported so far
+league = "lck"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLoUvAO9AzGtz1k6_sg9fJxpHzXeOouRWP"
+playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSyd5T3aL3e0wagIsyeOr12"
 
 # Change this to skip the first n videos of the playlist
 videos_to_skip = 0
@@ -34,7 +34,11 @@ leagues = {
 	627, 637, 1225, 1235, 616, 626, 1140, 1150],
 	"lec":	[
 	560, 710, 1100, 1270, 596, 606, 1175, 1185, 667, 677, 1181, 1191, 
-	638, 648, 1217, 1227, 627, 637, 1140, 1150]
+	638, 648, 1217, 1227, 627, 637, 1140, 1150],
+	"lck": [
+	535, 705, 1095, 1267, 572, 582, 1172, 1182, 656, 666, 1180, 1190, 
+	621, 631, 1222, 1232, 608, 618 ,1132, 1142
+	]
 }
 
 map_0, map_1, map_2, map_3 = leagues[league][:4]
@@ -223,10 +227,10 @@ def graph_html(colour):
 	html_writer.close()
 
 # Buffs spawn at 90 seconds exactly, when they appear we use this to sync the time
-buff  = cv2.imread("assets/blueside_blue_%s.jpg" % league, 0)
-buff2 = cv2.imread("assets/blueside_red_%s.jpg" % league, 0)
-buff3 = cv2.imread("assets/redside_blue_%s.jpg" % league, 0)
-buff4 = cv2.imread("assets/redside_red_%s.jpg" % league, 0)
+buff  = cv2.imread("assets/%s/blueside_blue_%s.jpg" % (league, league), 0)
+buff2 = cv2.imread("assets/%s/blueside_red_%s.jpg" % (league, league), 0)
+buff3 = cv2.imread("assets/%s/redside_blue_%s.jpg" % (league, league), 0)
+buff4 = cv2.imread("assets/%s/redside_red_%s.jpg" % (league,league), 0)
 
 # Scoreboard is only ever up during live footage, this will filter useless frames
 header = cv2.imread("assets/header.jpg", 0)
@@ -456,7 +460,7 @@ for i, video in enumerate(videos):
 
 		fig.add_layout_image(
 				dict(
-					source=Image.open("assets/%s.png" % league),
+					source=Image.open("assets/%s/%s.png" % (league, league)),
 					xref="x",
 					yref="y",
 					x=0,

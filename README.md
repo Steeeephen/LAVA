@@ -47,7 +47,7 @@ $ python levelone.py
 
 Change the lines
 ```
-# Change this to get different leagues: 'uklc' and 'lec' supported so far
+# Change this to get different leagues: 'uklc', 'lck' and 'lec' supported so far
 league = "uklc"
 
 # Change this url to get different videos
@@ -71,6 +71,6 @@ Three files will be output; a csv containing all player positions as well as a h
 
 100 blue side champions identifiable, 104 red side
 
-Currently optimised only for LEC/UKLC games, more to follow. The dimensions are *slightly* different for each league so the raw numbers are not directly comparable between different leagues
+Currently optimised only for LEC/UKLC/LCK games, more to follow. The dimensions are *slightly* different for each league so the raw numbers are not directly comparable between different leagues
 
 Please note that this is an early build, any queries can be directed to  loltracker.program [at] gmail.com
