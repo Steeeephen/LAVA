@@ -18,13 +18,13 @@ from crypt import champdict, picdict
 #-----------------------------
 
 # Change this to get different leagues: 'uklc', 'slo', 'lcs', 'lpl', 'lck' and 'lec' supported so far
-league = "lcs"
+league = "pcs"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPRBhX-gzMRidkExc6nECJQI"
+playlist_url = "https://www.youtube.com/playlist?list=PL75JZkpAR55oeVaImFPZ2tkX6HE4m-eC4"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 6
+videos_to_skip = 0
 
 #-----------------------------
 
@@ -37,12 +37,13 @@ leagues = {
 	638, 648, 1217, 1227, 627, 637, 1140, 1150],
 	"lck": [
 	535, 705, 1095, 1267, 572, 582, 1172, 1182, 656, 666, 1180, 1190, 
-	621, 631, 1222, 1232, 608, 618 ,1132, 1142
-	],
+	621, 631, 1222, 1232, 608, 618 ,1132, 1142],
 	"lcs": [
 	554, 707, 1112, 1267, 587, 597, 1183, 1193, 662, 672, 1190, 1200,
-	630, 640, 1227, 1237, 619, 629, 1146, 1156]
-	#"pcs": [538, 705, 1098, 1265
+	630, 640, 1227, 1237, 619, 629, 1146, 1156],
+	"pcs": [
+	538, 705, 1098, 1265, 570, 580, 1173, 1183, 652, 662, 1181, 1191,
+	618, 628, 1222, 1232, 606, 616, 1133, 1143]
 }
 
 # Some broadcasts have the same dimensions
@@ -297,8 +298,6 @@ for i, video in enumerate(videos):
 		# Skip one second
 		for i in range(frames_to_skip):
 			cap.grab()
-	cv2.imshow("ok",gray)
-	cv2.waitKey()
 	threshold = 0.7
 	champs = []
 	portraits = os.listdir("classify/blue")
@@ -332,8 +331,6 @@ for i, video in enumerate(videos):
 			print("-"*30)
 	print("-"*30)
 
-	cv2.imshow("ij",blue)
-	cv2.waitKey()
 	champstemp = champs
 	threshold = 0.7
 	portraits = os.listdir("classify/red")
