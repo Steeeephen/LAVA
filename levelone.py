@@ -17,11 +17,11 @@ from crypt import champdict, picdict
 
 #-----------------------------
 
-# Change this to get different leagues: 'uklc', 'slo', lpl',' lck' and 'lec' supported so far
-league = "slo"
+# Change this to get different leagues: 'uklc', 'slo', 'lcs', 'lpl', 'lck' and 'lec' supported so far
+league = "lcs"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLcjoFWKKl5y-xpwC_m_u3O_Gss_F1CkOA"
+playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPRBhX-gzMRidkExc6nECJQI"
 
 # Change this to skip the first n videos of the playlist
 videos_to_skip = 6
@@ -38,9 +38,14 @@ leagues = {
 	"lck": [
 	535, 705, 1095, 1267, 572, 582, 1172, 1182, 656, 666, 1180, 1190, 
 	621, 631, 1222, 1232, 608, 618 ,1132, 1142
-	]
+	],
+	"lcs": [
+	554, 707, 1112, 1267, 587, 597, 1183, 1193, 662, 672, 1190, 1200,
+	630, 640, 1227, 1237, 619, 629, 1146, 1156]
+	#"pcs": [538, 705, 1098, 1265
 }
 
+# Some broadcasts have the same dimensions
 if league == "lpl": league = "lck"
 if league == "slo": league = "uklc"
 
@@ -375,8 +380,7 @@ for i, video in enumerate(videos):
 
 			# Each broadcast has a slightly different minimap size, output currently optimised for uklc but updates incoming
 			cropped = gray[map_0:map_1, map_2:map_3]
-			#cropped = gray[550:708, 1100:1270] #lcs test
-			#cropped = gray[535:707, 1100:1270] #lpl test
+
 			cropped_1 = gray[buff_list[12]-4:buff_list[13]+4, buff_list[14]-4:buff_list[15]+4]
 			cropped_2 = gray[buff_list[4]- 4:buff_list[5]+ 4, buff_list[6]- 4:buff_list[7]+ 4]
 			cropped_3 = gray[buff_list[8]- 4:buff_list[9]+ 4, buff_list[10]-4:buff_list[11]+4]
