@@ -12,7 +12,6 @@ Install python and pip
 $ sudo apt-get update
 $ sudo apt-get install python3.6
 $ sudo apt install python3-pip
-
 ```
 Navigate to folder with levelone.py
 
@@ -47,11 +46,11 @@ $ python levelone.py
 
 Change the lines
 ```
-# Change this to get different leagues: 'uklc', 'lpl', 'lcs', 'slo' 'lck', 'pcs' and 'lec' supported so far
-league = "uklc"
+# Change this to get different leagues: 'uklc', 'slo', 'lcs', 'pcs', 'lpl', 'lck' and 'lec' supported so far
+league = "lec"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLoUvAO9AzGtz1k6_sg9fJxpHzXeOouRWP"
+playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
 
 # Change this to skip the first n videos of the playlist
 videos_to_skip = 0
@@ -67,9 +66,9 @@ Three files will be output; a csv containing all player positions as well as a h
 
 ## Notes
 
-122 champions trackable; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
+126 champions trackable; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
 
-100 blue side champions identifiable, 104 red side
+103 blue side champions identifiable, 109 red side
 
 Currently optimised only for LEC/UKLC/SLO/LCK/LPL/LCS/PCS games, more to follow. The dimensions are *slightly* different for each league so the raw numbers are not always directly comparable between different leagues
 
