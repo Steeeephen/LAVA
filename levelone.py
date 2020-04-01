@@ -17,14 +17,14 @@ from crypt import champdict, picdict
 
 #-----------------------------
 
-# Change this to get different leagues: 'uklc', 'slo', 'lcs', 'pcs', 'lpl', 'lck' and 'lec' supported so far
-league = "lfl"
+# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'lcs', 'pcs', 'lpl', 'lck' and 'lec' supported so far
+league = "lec"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLxoiDY8HD-T-rF72iwHj_9Nog74ZuVyGP"
+playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 1
+videos_to_skip = 0
 
 #-----------------------------
 
@@ -48,7 +48,7 @@ leagues = {
 
 # Some broadcasts have the same dimensions
 if league == "lpl": league = "lck"
-if league in ["slo", 'lfl']: league = "uklc"
+if league in ["slo", 'lfl', 'ncs']: league = "uklc"
 
 map_0, map_1, map_2, map_3 = leagues[league][:4]
 
