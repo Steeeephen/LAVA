@@ -46,7 +46,7 @@ $ python levelone.py
 
 Change the lines
 ```
-# Change this to get different leagues: 'uklc', 'slo', 'lcs', 'pcs', 'lpl', 'lck' and 'lec' supported so far
+# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'lcs', 'pcs', 'lpl', 'lck' and 'lec' supported so far
 league = "lec"
 
 # Change this url to get different videos
@@ -70,7 +70,19 @@ Three files will be output; a csv containing all player positions as well as a h
 
 103 blue side champions identifiable, 109 red side
 
-Currently optimised only for LEC/UKLC/SLO/LCK/LPL/LCS/PCS games, more to follow. The dimensions are *slightly* different for each league so the raw numbers are not always directly comparable between different leagues
+Currently optimised only for:
+
+* LFL (France)
+* UKLC (Ireland & the UK)
+* SLO (Spain)
+* LEC (Europe)
+* LPL (China)
+* LCK (Korea)
+* LCS (North America)
+* PCS (Pacific)
+
+
+The dimensions are *slightly* different for each league so the raw numbers are not always directly comparable between different leagues. Vods with a lot of noise beforehand can slow down the program, vods with highlights beforehand can break the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is the biggest thing as the program will see the highlight, assume the game started and begin gathering data.
 
 
 Please note that this is an early build, any queries can be directed to  loltracker.program [at] gmail.com
