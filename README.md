@@ -46,7 +46,7 @@ $ python levelone.py
 
 Change the lines
 ```
-# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'lcs', 'pcs', 'lpl', 'lck' and 'lec' supported so far
+# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'lcs', 'pcs', 'lpl', 'lck' and 'lec' supported so far
 league = "lec"
 
 # Change this url to get different videos
@@ -76,13 +76,14 @@ Currently optimised only for:
 * UKLC (Ireland & the UK)
 * SLO (Spain)
 * NCS (Nordic)
+* PGN (Italy)
 * LEC (Europe)
 * LPL (China)
 * LCK (Korea)
 * LCS (North America)
 * PCS (Pacific)
 
-I can't seem to find individual vods for EBL and the German league has issues in their overlay that will need an extra fix
+I can't seem to find individual vods for EBL/Ultraliga and the German league has issues in their overlay that will need an extra fix
 
 The dimensions are *slightly* different for each league so the raw numbers are not always directly comparable between different leagues. Vods with a lot of noise beforehand can slow down the program, vods with highlights beforehand can break the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is the biggest thing as the program will see the highlight, assume the game started and begin gathering data.
 
