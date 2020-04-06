@@ -17,7 +17,7 @@ from crypt import champdict, picdict
 
 #-----------------------------
 
-# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'lcs', 'pcs', 'lpl', 'bl', 'lck' and 'lec' supported so far
+# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', lcs', 'pcs', 'lpl', 'bl', 'lck' and 'lec' supported so far
 league = "lec"
 
 # Change this url to get different videos
@@ -48,7 +48,7 @@ leagues = {
 
 # Some broadcasts have the same dimensions
 if league == "lpl": league = "lck"
-if league in ["slo", 'lfl', 'ncs', 'pgn', 'bl']: league = "uklc"
+if league in ["slo", 'lfl', 'ncs', 'pgn', 'bl', 'hpm']: league = "uklc"
 
 map_0, map_1, map_2, map_3 = leagues[league][:4]
 
