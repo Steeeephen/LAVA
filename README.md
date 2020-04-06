@@ -46,7 +46,7 @@ $ python levelone.py
 
 Change the lines
 ```
-# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'lcs', 'pcs', 'lpl', 'bl', 'lck' and 'lec' supported so far
+# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', lcs', 'pcs', 'lpl', 'bl', 'lck' and 'lec' supported so far
 league = "lec"
 
 # Change this url to get different videos
@@ -78,6 +78,7 @@ Currently optimised only for:
 * NCS (Nordic)
 * PGN (Italy)
 * BL (Belgium)
+* HPM (Czech Republic/Slovakia)
 * LEC (Europe)
 * LPL (China)
 * LCK (Korea)
