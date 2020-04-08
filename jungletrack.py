@@ -24,7 +24,7 @@ league = "lec"
 playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 0
+videos_to_skip = 4
 
 #-----------------------------
 
@@ -33,8 +33,7 @@ leagues = {
 	545, 708, 1105, 1270, 581, 591, 1180, 1190, 660, 670, 1187, 1197,
 	627, 637, 1225, 1235, 616, 626, 1140, 1150],
 	"lec":	[
-	563, 712, 1108, 1258, 596, 606, 1175, 1185, 667, 677, 1181, 1191, 
-	638, 648, 1217, 1227, 627, 637, 1140, 1150],
+	563, 712, 1108, 1258, 23, 50, 1207, 1230],
 	"lck": [
 	535, 705, 1095, 1267, 572, 582, 1172, 1182, 656, 666, 1180, 1190, 
 	621, 631, 1222, 1232, 608, 618 ,1132, 1142],
@@ -52,13 +51,27 @@ if league in ["slo", 'lfl', 'ncs', 'pgn', 'bl', 'hpm']: league = "uklc"
 
 map_0, map_1, map_2, map_3 = leagues[league][:4]
 
-buff_list = leagues[league][4:]
+baron = leagues[league][4:]
 #rr br rb bb
 time0 = time.time()
 
 if(not(os.path.exists("output"))):
 	os.mkdir("output")
 	
+# Putting interactive graphs to a html file
+def graph_html(div_plot, champ):
+	html_writer = open('output/%s/%s.html' % (video, champ),'w')
+	html_text = """
+		<html>
+			<body>
+				<center>{0}</center>
+			</body>
+		</html>
+		""".format(div_plot)
+
+	html_writer.write(html_text)
+	html_writer.close()
+
 # Filling in as many missing values as possible
 def headfill(df):
 	cols = df.columns
@@ -217,29 +230,37 @@ def headfill(df):
 			df[column] = x2
 	return(df)
 
-# Putting interactive graphs to a html file
-def graph_html(colour):
-	if colour == 'blue':
-		d = 0
-	else:
-		d = 5
-	html_writer = open('output/%s/%s/levelonegraphs.html' % (video,colour),'w')
-	html_text = """
-		<html>
-			<body>
-				<center>{0}</center>
-			</body>
-		</html>
-		""".format(divs).format(*div[d:d+5])
+h,w = cv2.imread('assets/%s/%s.png' % (league,league)).shape[:2]
+radius = int(w/2.5)
 
-	html_writer.write(html_text)
-	html_writer.close()
 
-# Buffs spawn at 90 seconds exactly, when they appear we use this to sync the time
-buff  = cv2.imread("assets/%s/blueside_blue_%s.jpg" % (league, league), 0)
-buff2 = cv2.imread("assets/%s/blueside_red_%s.jpg" % (league, league), 0)
-buff3 = cv2.imread("assets/%s/redside_blue_%s.jpg" % (league, league), 0)
-buff4 = cv2.imread("assets/%s/redside_red_%s.jpg" % (league,league), 0)
+def classify(points):
+	reds = [0]*9
+	for point in points:
+		if(norm(point - np.array([0,0]))   		< radius):
+			reds[5]+=1
+		elif(norm(point - np.array([149,0])) 	< radius):
+			reds[6]+=1
+		elif(norm(point - np.array([149,149])) 	< radius):
+			reds[8]+=1
+		elif(norm(point - np.array([0,149])) 	< radius):
+			reds[7]+=1
+		elif(point[0] < h - point[1] - h/10):
+			if(point[0] < (4/5)*point[1]):
+				reds[1]+=1
+			else:
+				reds[0]+=1
+		elif(point[0] < h - point[1] + h/10):
+			reds[4]+=1
+		else:
+			if(point[0] < (4/5)*point[1]):
+				reds[2]+=1
+			else:
+				reds[3]+=1
+	return(reds)
+
+# Baron spawns at 20mins, when it appears we use this to sync the time
+baron_template = cv2.imread("assets/%s/baron_%s.jpg" % (league,league), 0)
 
 # Scoreboard is only ever up during live footage, this will filter useless frames
 header = cv2.imread("assets/header.jpg", 0)
@@ -270,8 +291,8 @@ for i, video in enumerate(videos):
 	# Stream video url through OpenCV
 	cap = cv2.VideoCapture(play.url)
 
-	templates = [0]*10
-	point_i = [(0,0)]*10
+	templates = [0]*2
+	point_i = [(0,0)]*2
 
 	# Skip one second each time, reduce this for longer runtime but better accuracy
 	frames_to_skip = int(cap.get(cv2.CAP_PROP_FPS))
@@ -301,69 +322,56 @@ for i, video in enumerate(videos):
 	threshold = 0.7
 	champs = []
 	portraits = os.listdir("classify/blue")
-	
-
-	# Identify blue side champions
-	while(len(champs) != 5):
-		blue = gray[105:410, 17:52]
-		champs = []
-		
-		# Check the sidebar for each champion
+	found = True
+	while(found):
+		blue = gray[178:202, 22:47]
 		for portrait in portraits:
 			template = cv2.imread("classify/blue/%s" % portrait, 0)
 			matched  = cv2.matchTemplate(blue, template, cv2.TM_CCOEFF_NORMED)
 			location = np.where(matched > threshold)
-			
+				
 			if(location[0].any()):
-				champs.append(champdict[portrait[:-4]])
-				print("Blue Champion Identified: %s" % portrait[:-4])
-		
-		# If too many champions found, check again with stricter threshold
-		if(len(champs) > 5):
-			threshold += 0.05
-			print("-"*30)
-		# If too few champions found, this is often due to an awkward frame transition. Skip a frame and try again
-		elif(len(champs) < 5):
+				blu_jung = champdict[portrait[:-4]]
+				champs.append(blu_jung)
+				print("Blue Jungler Identified: %s" % portrait[:-4])
+				found = False
+				break
+		else:
 			for i in range(frames_to_skip):
 				cap.grab()
 			_, frame = cap.read()
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-			print("-"*30)
-	print("-"*30)
-
+			
 	champstemp = champs
 	threshold = 0.7
 	portraits = os.listdir("classify/red")
-		
+	found = True	
+	
 	# Same for red side champions
-	while(len(champs) != 10):
-		red = gray[105:410, 1228:1262]	
-		champs = []
-		champs.extend(champstemp)
+	while(found):
+		red = gray[178:202, 1233:1257]
 		for portrait in portraits:
 			template = cv2.imread("classify/red/%s" % portrait, 0)
-			matched = cv2.matchTemplate(red, template, cv2.TM_CCOEFF_NORMED)
+			matched  = cv2.matchTemplate(red, template, cv2.TM_CCOEFF_NORMED)
 			location = np.where(matched > threshold)
+				
 			if(location[0].any()):
-				champs.append(champdict[portrait[:-4]])
-				print("Red Champion Identified: %s" % portrait[:-4])
-		
-		if(len(champs) < 10):
+				red_jung = champdict[portrait[:-4]]
+				champs.append(red_jung)
+				print("Red Jungler Identified: %s" % portrait[:-4])
+				found = False
+				break
+		else:
 			for i in range(frames_to_skip):
 				cap.grab()
 			_, frame = cap.read()
-			print("-"*30)
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-		elif(len(champs) > 10):
-			threshold += 0.05
-			print("-"*30)
+	print("-"*30)
 
 	# Grab portraits of each champion found, to search for on the minimap
 	for i, champ in enumerate(champs):
 		templates[i] = cv2.imread('champs/%s' % champ,0)
 	points = {key:[] for key in champs}
-	
-
 
 	while(True):
 		_, frame = cap.read()
@@ -377,24 +385,13 @@ for i, video in enumerate(videos):
 
 			# Each broadcast has a slightly different minimap size, output currently optimised for uklc but updates incoming
 			cropped = gray[map_0:map_1, map_2:map_3]
-
-			cropped_1 = gray[buff_list[12]-4:buff_list[13]+4, buff_list[14]-4:buff_list[15]+4]
-			cropped_2 = gray[buff_list[4]- 4:buff_list[5]+ 4, buff_list[6]- 4:buff_list[7]+ 4]
-			cropped_3 = gray[buff_list[8]- 4:buff_list[9]+ 4, buff_list[10]-4:buff_list[11]+4]
-			cropped_4 = gray[buff_list[0]- 4:buff_list[1]+ 4, buff_list[2]- 4:buff_list[3]+ 4]
+			cropped_4 = gray[baron[0]- 4:baron[1]+ 4, baron[2]- 4:baron[3]+ 4]
 			# Check for the buffs spawning
-			buffcheck  = cv2.matchTemplate(cropped_1, buff,  cv2.TM_CCOEFF_NORMED)
-			buffcheck2 = cv2.matchTemplate(cropped_2, buff2, cv2.TM_CCOEFF_NORMED)
-			buffcheck3 = cv2.matchTemplate(cropped_3, buff3, cv2.TM_CCOEFF_NORMED)
-			buffcheck4 = cv2.matchTemplate(cropped_4, buff4, cv2.TM_CCOEFF_NORMED)
-			
+			buffcheck  = cv2.matchTemplate(cropped_4, baron_template,  cv2.TM_CCOEFF_NORMED)
 			buffs  = np.where(buffcheck  > 0.9)
-			buffs2 = np.where(buffcheck2 > 0.9)
-			buffs3 = np.where(buffcheck3 > 0.9)
-			buffs4 = np.where(buffcheck4 > 0.9)
 			
 			# Stop when the buffs do spawn
-			if(buffs[0].any() or buffs2[0].any() or buffs3[0].any() or buffs4[0].any()):
+			if(buffs[0].any()):
 				break
 			else: # Otherwise, look for each champions and save their location
 				for i, template in enumerate(templates):
@@ -405,7 +402,7 @@ for i, video in enumerate(videos):
 					try:
 						point = next(zip(*location[::-1]))
 						point_i[i] = point
-						cv2.rectangle(cropped, point, (point[0] + 14, point[1] + 14), 255, 2)
+						#cv2.rectangle(cropped, point, (point[0] + 14, point[1] + 14), 255, 2)
 					except:
 						point = (np.nan,np.nan)
 						pass
@@ -413,9 +410,9 @@ for i, video in enumerate(videos):
 					points[champs[i]].append(temp)
 
 				# Show minimap with all champions outlined
-				cv2.imshow('minimap',cropped)
-				if cv2.waitKey(1) & 0xFF == ord('q'):
-					break
+				#cv2.imshow('minimap',cropped)
+				#if cv2.waitKey(1) & 0xFF == ord('q'):
+				#	break
 				for i in range(frames_to_skip):
 					cap.grab()
 	df = pd.DataFrame(points)
@@ -435,79 +432,137 @@ for i, video in enumerate(videos):
 			list(
 				map(pd.Series, 
 				zip(*df[col]))))))
-
-	# Add a seconds column, counting back from buffs spawning
-	df['Seconds'] = pd.Series(range(90-len(points[champs[0]]),91))
-
-	# Output locations to a csv
-	df.to_csv("output/%s/levelonepositions.csv" % video, index = False)
-	
-	# Array for the graphs to go into
-	cols = df.columns[:-1]
-	div = [""]*len(cols)
-
-	# Graph each champion's locations
-	for i, col in enumerate(cols):
-		champ = df[col]
-		axes = list(zip(*champ))
-
+	for col in df.columns:
+		reds = classify(df[col])
+		reds = list(map(lambda x : 255-255*(x - min(reds))/(max(reds)-min(reds)), reds))
 		fig = px.scatter(
-			df,
-			x = axes[0], 
-			y = axes[1],
-			range_x = [0,map_3 - map_2],
-			range_y = [map_1 - map_0, 0],
-			width = 800,
-			height = 800,
-			hover_name = 'Seconds',
-			color = 'Seconds',
-			color_continuous_scale = "Oranges")
+				x = [], 
+				y = [],
+				range_x = [0,w],
+				range_y = [h, 0],
+				width = 800,
+				height = 800)
 
-		fig.add_layout_image(
-				dict(
-					source=Image.open("assets/%s/%s.png" % (league, league)),
+
+		fig.update_layout(
+				template = "plotly_white",
+				xaxis_showgrid = False,
+				yaxis_showgrid = False
+				)
+
+		fig.update_xaxes(showticklabels = False, title_text = "")
+		fig.update_yaxes(showticklabels = False, title_text = "")
+
+		fig.update_layout(
+			shapes=[
+			dict(
+					type="path",
+					path = "M 0,0 L %d,%d L %d,0 Z" % (w/2,h/2,w),
+					line=dict(
+						color="white",
+						width=2,
+					),
+					fillcolor='rgba(255,%d,%d,1)' % (reds[0],reds[0]),
+				),
+			dict(
+					type="path",
+					path = "M 0,0 L %d,%d L 0,%d Z" % (w/2,h/2,w),
+					line=dict(
+						color="white",
+						width=2,
+					),
+					fillcolor='rgba(255,%d,%d,1)' % (reds[1],reds[1]),
+				),
+			
+			dict(
+					type="path",
+					path = "M %d,%d L %d,%d L 0,%d Z" % (w,h,w/2, h/2,h),
+					line=dict(
+						color="white",
+						width=2,
+					),
+					fillcolor='rgba(255,%d,%d,1)' % (reds[2],reds[2]),
+				),
+			dict(
+					type="path",
+					path = "M %d,%d L %d,%d L %d,0 Z" % (w,h,w/2,h/2,w),
+					line=dict(
+						color="white",
+						width=2,
+					),
+					fillcolor='rgba(255,%d,%d,1)' % (reds[3],reds[3]),
+				),
+			dict(
+					type="path",
+					path = "M %d,%d L %d,%d L %d,0 L 0,%d Z" % (w/10,h, w,h/10,w-w/10,h-h/10),
+					line=dict(
+						color="white",
+						width=2,
+					),
+					fillcolor='rgba(255, %d,%d,1)' % (reds[4],reds[4]),
+				),
+				
+			dict(
+					type="circle",
 					xref="x",
 					yref="y",
-					x=0,
-					y=0,
-					sizex = map_3 - map_2,
-					sizey = map_1 - map_0, 
-					sizing="stretch",
-					opacity=1,
-					layer="below")
-		)
-
-		fig.add_layout_image(
-				dict(
-					source=Image.open('portraits/%sSquare.png' % col.capitalize()),
+					x0=-radius,
+					fillcolor='rgba(255, %d,%d,1)' % (reds[5],reds[5]),
+					y0=radius,
+					x1=radius,
+					y1=-radius,
+					line_color="white",
+				),
+			dict(
+					type="circle",
 					xref="x",
 					yref="y",
-					x=0,
-					y=0,
-					sizex=20,
-					sizey=20,
-					sizing="stretch",
-					opacity=1,
-					layer="below")
-		)
-
+					fillcolor='rgba(255, %d,%d,1)' % (reds[6],reds[6]),
+					x0=w-radius,
+					y0=radius,
+					x1=w+radius,
+					y1=-radius,
+					line_color="white",
+				),
+			dict(
+					type="circle",
+					xref="x",
+					yref="y",
+					fillcolor='rgba(255, %d,%d,1)' % (reds[7],reds[7]),
+					x0=-radius,
+					y0=h+radius,
+					x1=radius,
+					y1=h-radius,
+					line_color="white",
+				),
+			dict(
+					type="circle",
+					xref="x",
+					yref="y",
+					fillcolor='rgba(255, %d,%d,1)' % (reds[8],reds[8]),
+					x0=w-radius,
+					y0=h+radius,
+					x1=w+radius,
+					y1=h-radius,
+					line_color="white",
+				)])
 		fig.update_layout(
 			title = col.capitalize(),
 			template = "plotly_white",
 			xaxis_showgrid = False,
 			yaxis_showgrid = False
 			)
-		
-		fig.update_xaxes(showticklabels = False, title_text = "")
-		fig.update_yaxes(showticklabels = False, title_text = "")
-		div[i] = plotly.offline.plot(fig, output_type = 'div')
+		graph_html(plotly.offline.plot(fig, output_type = 'div'), col)
+	# Add a seconds column, counting back from buffs spawning
+	df['Seconds'] = pd.Series(range(1201-len(points[champs[0]]),1201))
 
-	divs = ('{{{:d}}}\n'*5).format(*range(5))
+	# Output locations to a csv
+	df.to_csv("output/%s/junglepositions.csv" % video, index = False)
+	
+	# Array for the graphs to go into
+	cols = df.columns[:-1]
+	div = [""]*len(cols)
 
-	# Output graphs to html
-	graph_html('blue')
-	graph_html('red')
-	print("Level One Analysed\n")
 
 time1 = time.time()
 print("Runtime: %.2f seconds" % (time1-time0))

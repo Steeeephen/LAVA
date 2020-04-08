@@ -25,6 +25,11 @@ Run program
 $ python levelone.py
 ```
 
+Or
+```
+$ python jungletrack.py
+```
+
 ### Windows
 
 Install [python 3.7](https://docs.python.org/3/using/windows.html), pip should automatically install as well
@@ -39,6 +44,11 @@ Run program
 
 ```
 $ python levelone.py
+```
+
+Or
+```
+$ python jungletrack.py
 ```
 
 
@@ -61,8 +71,15 @@ Output will be sent to the 'output' directory for each game in the playlist
 
 ## Output
 
-Three files will be output; a csv containing all player positions as well as a html for blue & red side. The html file will contain interactive graphs of each player's in-game position until the 90 second mark. These plots can be downloaded as a png by opening the html and clicking the button on each graph
+### Level One:
+Three files will be output; a csv containing all player positions as well as a html for blue & red side. The html file will contain interactive graphs of each player's in-game position until the 90 second mark. 
+![Level One Example](levelone_example.png)
 
+### Jungle Track:
+Three files will be output; a csv containing all jungler positions as well as a html for blue & red side. The html file has a choropleth map showing the jungler's positions for the first 20 minutes split into the regions of the map.
+![Jungle Example](jungle_example.png)
+
+All plots can be downloaded as a png by opening the html and clicking the corresponding button on each graph
 
 ## Notes
 
