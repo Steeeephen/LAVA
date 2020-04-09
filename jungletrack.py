@@ -30,19 +30,15 @@ videos_to_skip = 4
 
 leagues = {
 	"uklc":	[
-	545, 708, 1105, 1270, 581, 591, 1180, 1190, 660, 670, 1187, 1197,
-	627, 637, 1225, 1235, 616, 626, 1140, 1150],
+	545, 708, 1105, 1270],
 	"lec":	[
-	563, 712, 1108, 1258, 23, 50, 1207, 1230],
+	563, 712, 1108, 1258],
 	"lck": [
-	535, 705, 1095, 1267, 572, 582, 1172, 1182, 656, 666, 1180, 1190, 
-	621, 631, 1222, 1232, 608, 618 ,1132, 1142],
+	535, 705, 1095, 1267],
 	"lcs": [
-	554, 707, 1112, 1267, 587, 597, 1183, 1193, 662, 672, 1190, 1200,
-	630, 640, 1227, 1237, 619, 629, 1146, 1156],
+	554, 707, 1112, 1267],
 	"pcs": [
-	538, 705, 1098, 1265, 570, 580, 1173, 1183, 652, 662, 1181, 1191,
-	618, 628, 1222, 1232, 606, 616, 1133, 1143]
+	538, 705, 1098, 1265]
 }
 
 # Some broadcasts have the same dimensions
@@ -51,7 +47,7 @@ if league in ["slo", 'lfl', 'ncs', 'pgn', 'bl', 'hpm']: league = "uklc"
 
 map_0, map_1, map_2, map_3 = leagues[league][:4]
 
-baron = leagues[league][4:]
+baron = [23, 50, 1207, 1230]
 #rr br rb bb
 time0 = time.time()
 
@@ -162,13 +158,13 @@ def headfill(df):
 					if(count > 5): # Missing for more than 5 seconds
 						point = x[k]
 						if(index < 5): # Blue Side
-							circle_x = 5
-							circle_y = 150
+							circle_x = 0
+							circle_y = h
 						else: # Red Side
-							circle_x = 165
+							circle_x = w
 							circle_y = 0
 						# If first location after disappearing is in the base
-						if(norm(np.array(point) - np.array([circle_x,circle_y])) < 68):
+						if(norm(np.array(point) - np.array([circle_x,circle_y])) < radius):
 							# Fill in with location just before disappearing (Assuming they died/recalled)
 							x2 = pd.concat([pd.Series(x2[:k-count]),
 											pd.Series([x2[k-count-1]]*count),
