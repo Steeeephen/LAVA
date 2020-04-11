@@ -51,6 +51,10 @@ Or
 $ python jungletrack.py
 ```
 
+Or
+```
+$ python midtrack.py
+```
 
 ## Usage
 
@@ -73,11 +77,15 @@ Output will be sent to the 'output' directory for each game in the playlist
 
 ### Level One:
 Three files will be output; a csv containing all player positions as well as a html for blue & red side. The html file will contain interactive graphs of each player's in-game position until the 90 second mark. 
-![Level One Example](levelone_example.png)
+![Level One Example](/markdown_assets/levelone_example.png)
 
 ### Jungle Track:
 Three files will be output; a csv containing all jungler positions as well as a html for blue & red side. The html file has a choropleth map showing the jungler's positions for the first 20 minutes split into the regions of the map.
-![Jungle Example](jungle_example.png)
+![Jungle Example](/markdown_assets/jungle_example.png)
+
+### Mid Track:
+Similar to jungle track, but for midlaners. Focuses on different regions of the map
+![Midlane Example](/markdown_assets/midlane_example.png)
 
 All plots can be downloaded as a png by opening the html and clicking the corresponding button on each graph
 
@@ -102,7 +110,7 @@ Currently optimised only for:
 * LCS (North America)
 * PCS (Pacific)
 
-I can't seem to find individual vods for EBL/Ultraliga/Baltic Masters and the German league has issues in their overlay that will need an extra fix
+These leagues have been tested for the level one tracker, but the individual role trackers have not been *fully* tested just yet. Still some work to do on double checking these (especially the midlane tracker)
 
 The dimensions are *slightly* different for each league so the raw numbers are not always directly comparable between different leagues. Vods with a lot of noise beforehand can slow down the program, vods with highlights beforehand can break the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is the biggest thing as the program will see the highlight, assume the game started and begin gathering data.
 

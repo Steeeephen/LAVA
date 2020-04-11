@@ -24,7 +24,7 @@ league = "lec"
 playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 4
+videos_to_skip = 13
 
 #-----------------------------
 
@@ -231,28 +231,31 @@ radius = int(w/2.5)
 
 
 def classify(points):
-	reds = [0]*9
+	lec = cv2.imread('assets/lec/lec.png')
+	reds = [0]*8
 	for point in points:
-		if(norm(point - np.array([0,0]))   		< radius):
-			reds[5]+=1
-		elif(norm(point - np.array([149,0])) 	< radius):
+		if(norm(point - np.array([149,0]))	< radius):
 			reds[6]+=1
-		elif(norm(point - np.array([149,149])) 	< radius):
-			reds[8]+=1
 		elif(norm(point - np.array([0,149])) 	< radius):
 			reds[7]+=1
-		elif(point[0] < h - point[1] - h/10):
-			if(point[0] < (4/5)*point[1]):
-				reds[1]+=1
-			else:
-				reds[0]+=1
-		elif(point[0] < h - point[1] + h/10):
+		elif(norm(point - np.array([149,149])) 	< radius or point[0] > w-w/10 or point[1] > h-h/10):
+			reds[5]+=1
+		elif(norm(point - np.array([0,149])) 	< radius or point[0] < w/10 or point[1] < h/10):
 			reds[4]+=1
-		else:
-			if(point[0] < (4/5)*point[1]):
-				reds[2]+=1
-			else:
-				reds[3]+=1
+		elif(point[0] < h - point[1] - h/10):
+			reds[3]+=1
+		elif(point[0] > h - point[1] + h/10):
+			reds[2]+=1
+		elif(point[0] < point[1]):
+			cv2.circle(lec, (int(point[0]),int(point[1])), 1, 255, 1)
+			reds[1]+=1
+		elif(point[0] > point[1]):
+			#cv2.circle(lec,(int(point[0]),int(point[1])), 1, (255,255,255), 1)
+			reds[0]+=1
+	print(reds)
+	#cv2.imshow("ok",lec)
+	#cv2.waitKey()
+	#xdxcd = input()
 	return(reds)
 
 # Baron spawns at 20mins, when it appears we use this to sync the time
@@ -320,7 +323,7 @@ for i, video in enumerate(videos):
 	portraits = os.listdir("classify/blue")
 	found = True
 	while(found):
-		blue = gray[178:202, 22:47]
+		blue = gray[245:270, 22:47]
 		for portrait in portraits:
 			template = cv2.imread("classify/blue/%s" % portrait, 0)
 			matched  = cv2.matchTemplate(blue, template, cv2.TM_CCOEFF_NORMED)
@@ -329,7 +332,7 @@ for i, video in enumerate(videos):
 			if(location[0].any()):
 				blu_jung = champdict[portrait[:-4]]
 				champs.append(blu_jung)
-				print("Blue Jungler Identified: %s" % portrait[:-4])
+				print("Blue Midlaner Identified: %s" % portrait[:-4])
 				found = False
 				break
 		else:
@@ -345,7 +348,7 @@ for i, video in enumerate(videos):
 	
 	# Same for red side champions
 	while(found):
-		red = gray[178:202, 1233:1257]
+		red = gray[245:270, 1233:1257]
 		for portrait in portraits:
 			template = cv2.imread("classify/red/%s" % portrait, 0)
 			matched  = cv2.matchTemplate(red, template, cv2.TM_CCOEFF_NORMED)
@@ -354,7 +357,7 @@ for i, video in enumerate(videos):
 			if(location[0].any()):
 				red_jung = champdict[portrait[:-4]]
 				champs.append(red_jung)
-				print("Red Jungler Identified: %s" % portrait[:-4])
+				print("Red Midlaner Identified: %s" % portrait[:-4])
 				found = False
 				break
 		else:
@@ -398,7 +401,7 @@ for i, video in enumerate(videos):
 					try:
 						point = next(zip(*location[::-1]))
 						point_i[i] = point
-						#cv2.rectangle(cropped, point, (point[0] + 14, point[1] + 14), 255, 2)
+						cv2.rectangle(cropped, point, (point[0] + 14, point[1] + 14), 255, 2)
 					except:
 						point = (np.nan,np.nan)
 						pass
@@ -406,9 +409,9 @@ for i, video in enumerate(videos):
 					points[champs[i]].append(temp)
 
 				# Show minimap with all champions outlined
-				#cv2.imshow('minimap',cropped)
-				#if cv2.waitKey(1) & 0xFF == ord('q'):
-				#	break
+				cv2.imshow('minimap',cropped)
+				if cv2.waitKey(1) & 0xFF == ord('q'):
+					break
 				for i in range(frames_to_skip):
 					cap.grab()
 	df = pd.DataFrame(points)
@@ -430,7 +433,8 @@ for i, video in enumerate(videos):
 				zip(*df[col]))))))
 	for col in df.columns:
 		reds = classify(df[col])
-		reds = list(map(lambda x : 255-255*(x - min(reds))/(max(reds)), reds))
+		reds = list(map(lambda x : 255-255*(x - min(reds))/(max(reds)-min(reds)), reds))
+		
 		fig = px.scatter(
 				x = [], 
 				y = [],
@@ -453,95 +457,183 @@ for i, video in enumerate(videos):
 			shapes=[
 			dict(
 					type="path",
-					path = "M 0,0 L %d,%d L %d,0 Z" % (w/2,h/2,w),
+					path = "M 0,0 L %d,%d L %d,0 Z" % (w,h,w),
 					line=dict(
-						color="white",
+						color='white',
 						width=2,
 					),
-					fillcolor='rgba(255,%d,%d,1)' % (reds[0],reds[0]),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[0],reds[0]),
 				),
 			dict(
 					type="path",
-					path = "M 0,0 L %d,%d L 0,%d Z" % (w/2,h/2,w),
+					path = "M 0,0 L %d,%d L 0,%d Z" % (w,h,h),
 					line=dict(
-						color="white",
+						color='white',
 						width=2,
 					),
-					fillcolor='rgba(255,%d,%d,1)' % (reds[1],reds[1]),
-				),
-			
-			dict(
-					type="path",
-					path = "M %d,%d L %d,%d L 0,%d Z" % (w,h,w/2, h/2,h),
-					line=dict(
-						color="white",
-						width=2,
-					),
-					fillcolor='rgba(255,%d,%d,1)' % (reds[2],reds[2]),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[1],reds[1]),
 				),
 			dict(
 					type="path",
-					path = "M %d,%d L %d,%d L %d,0 Z" % (w,h,w/2,h/2,w),
+					path = "M %d,%d L %d,%d L %d,%d Z" % (w/10,h,w,h/10,w,h),
 					line=dict(
-						color="white",
+						color='white',
 						width=2,
 					),
-					fillcolor='rgba(255,%d,%d,1)' % (reds[3],reds[3]),
-				),
-			dict(
-					type="path",
-					path = "M %d,%d L %d,%d L %d,0 L 0,%d Z" % (w/10,h, w,h/10,w-w/10,h-h/10),
-					line=dict(
-						color="white",
-						width=2,
-					),
-					fillcolor='rgba(255, %d,%d,1)' % (reds[4],reds[4]),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[2],reds[2]),
 				),
 				
 			dict(
+					type="path",
+					path = "M 0,%d L %d,%d L 0,0 Z" % (h-h/10,w-w/10,0),
+					line=dict(
+						color='white',
+						width=2,
+					),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[3],reds[3]),
+				),
+			dict(
+					type="rect",
+					x0=0,
+					y0=h,
+					x1=w/10,
+					y1=0,
+					line=dict(
+						color='white',
+						width=2,
+					),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[4],reds[4]),
+				),
+			dict(
+					type="rect",
+					x0=0,
+					y0=h/10,
+					x1=w,
+					y1=0,
+					line=dict(
+						color='white',
+						width=2,
+					),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[4],reds[4]),
+				),
+			dict(
 					type="circle",
 					xref="x",
 					yref="y",
 					x0=-radius,
-					fillcolor='rgba(255, %d,%d,1)' % (reds[5],reds[5]),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[4],reds[4]),
 					y0=radius,
 					x1=radius,
 					y1=-radius,
-					line_color="white",
+					line_color='white',
+				),
+			dict(
+					type="rect",
+					x0=0,
+					y0=h/10-0.5,
+					x1=w,
+					y1=0,
+					line=dict(
+						color='rgba(%d, %d, 255,1)' % (reds[4],reds[4]),
+						width=2,
+					),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[4],reds[4]),
+				),
+			dict(
+					type="rect",
+					x0=0,
+					y0=h,
+					x1=w/10-0.5,
+					y1=0,
+					line=dict(
+						color='rgba(%d, %d, 255,1)' % (reds[4],reds[4]),
+						width=2,
+					),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[4],reds[4]),
+				),
+			dict(
+					type="rect",
+					x0=0,
+					y0=h,
+					x1=w,
+					y1=h-h/10,
+					line=dict(
+						color="white",
+						width=2,
+					),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[5],reds[5]),
+				),
+			dict(
+					type="rect",
+					x0=w-w/10,
+					y0=h,
+					x1=w,
+					y1=0,
+					line=dict(
+						color='white',
+						width=2,
+					),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[5],reds[5]),
 				),
 			dict(
 					type="circle",
 					xref="x",
 					yref="y",
-					fillcolor='rgba(255, %d,%d,1)' % (reds[6],reds[6]),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[5],reds[5]),
+					x0=w-radius,
+					y0=h+radius,
+					x1=w+radius,
+					y1=h-radius,
+					line_color='white',
+				),
+			dict(
+					type="rect",
+					x0=0,
+					y0=h,
+					x1=w,
+					y1=h-h/10+0.5,
+					line=dict(
+						color='rgba(%d, %d, 255,1)' % (reds[5],reds[5]),
+						width=2,
+					),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[5],reds[5]),
+				),
+			dict(
+					type="rect",
+					x0=w-w/10+0.5,
+					y0=h,
+					x1=w,
+					y1=0,
+					line=dict(
+						color='rgba(%d, %d, 255,1)' % (reds[5],reds[5]),
+						width=2,
+					),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[5],reds[5]),
+				),
+			dict(
+					type="circle",
+					xref="x",
+					yref="y",
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[6],reds[6]),
 					x0=w-radius,
 					y0=radius,
 					x1=w+radius,
 					y1=-radius,
-					line_color="white",
+					line_color='white',
 				),
 			dict(
 					type="circle",
 					xref="x",
 					yref="y",
-					fillcolor='rgba(255, %d,%d,1)' % (reds[7],reds[7]),
+					fillcolor='rgba(%d, %d, 255,1)' % (reds[7],reds[7]),
 					x0=-radius,
 					y0=h+radius,
 					x1=radius,
 					y1=h-radius,
 					line_color="white",
-				),
-			dict(
-					type="circle",
-					xref="x",
-					yref="y",
-					fillcolor='rgba(255, %d,%d,1)' % (reds[8],reds[8]),
-					x0=w-radius,
-					y0=h+radius,
-					x1=w+radius,
-					y1=h-radius,
-					line_color="white",
-				)])
+				)
+				
+			])
 		fig.update_layout(
 			title = col.capitalize(),
 			template = "plotly_white",
