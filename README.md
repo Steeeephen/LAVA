@@ -56,6 +56,11 @@ Or
 $ python midtrack.py
 ```
 
+Or
+```
+$ python supporttrack.py
+```
+
 ## Usage
 
 Change the lines
@@ -86,6 +91,11 @@ Three files will be output; a csv containing all jungler positions as well as a 
 ### Mid Track:
 Similar to jungle track, but for midlaners. Focuses on different regions of the map and only for the first 15 minutes
 ![Midlane Example](/markdown_assets/midlane_example.png)
+
+### Support Track:
+Similar to mid track, but for supports. Also the first 15 minutes only. Currently unsure of the best way to represent this
+![Support Example](/markdown_assets/support_example.png)
+
 
 All plots can be downloaded as a png by opening the html and clicking the corresponding button on each graph
 

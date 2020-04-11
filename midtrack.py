@@ -24,7 +24,7 @@ league = "lec"
 playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 13
+videos_to_skip = 15
 
 #-----------------------------
 
@@ -647,7 +647,7 @@ for i, video in enumerate(videos):
 	df['Seconds'] = pd.Series(range(1201-len(points[champs[0]]),1201))
 
 	# Output locations to a csv
-	df.to_csv("output/%s/junglepositions.csv" % video, index = False)
+	df.to_csv("output/%s/midlanepositions.csv" % video, index = False)
 	
 	# Array for the graphs to go into
 	cols = df.columns[:-1]

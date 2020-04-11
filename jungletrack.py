@@ -24,7 +24,7 @@ league = "lec"
 playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 4
+videos_to_skip = 15
 
 #-----------------------------
 
