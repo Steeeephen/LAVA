@@ -431,8 +431,10 @@ for i, video in enumerate(videos):
 			list(
 				map(pd.Series, 
 				zip(*df[col]))))))
-	for col in df.columns:
-		reds = classify(df[col])
+	df['Seconds'] = pd.Series(range(1201-len(points[champs[0]]),1201))
+
+	for col in df.columns[:-1]:
+		reds = classify(df[col][df['Seconds'] <= 900])
 		reds = list(map(lambda x : 255-255*(x - min(reds))/(max(reds)-min(reds)), reds))
 		
 		fig = px.scatter(

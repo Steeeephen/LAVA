@@ -84,7 +84,7 @@ Three files will be output; a csv containing all jungler positions as well as a 
 ![Jungle Example](/markdown_assets/jungle_example.png)
 
 ### Mid Track:
-Similar to jungle track, but for midlaners. Focuses on different regions of the map
+Similar to jungle track, but for midlaners. Focuses on different regions of the map and only for the first 15 minutes
 ![Midlane Example](/markdown_assets/midlane_example.png)
 
 All plots can be downloaded as a png by opening the html and clicking the corresponding button on each graph
