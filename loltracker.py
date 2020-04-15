@@ -22,13 +22,17 @@ league = "lec"
 
 # Change this url to get different videos
 playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
-playlist_url = "https://www.youtube.com/playlist?list=PLTCk8PVh_ZwnVkz--EYb_Ctz_GYn2ASXs"
 
 # Change this to skip the first n videos of the playlist
 videos_to_skip = 0
 
 #-----------------------------
 
+# Checking the runtime
+time0 = time.time()
+
+# Each league has different dimensions for their broadcast overlay. The dimensions are stored here. The first four numbers correspond to the corners of the minimap while the subsequent 16 correspond
+# to the redside red buff, blueside red buff, redside blue buff and blueside blue buff respectively
 leagues = {
 	"uklc":	[
 	545, 708, 1105, 1270, 581, 591, 1180, 1190, 660, 670, 1187, 1197,
@@ -52,18 +56,16 @@ if league == "lpl": league = "lck"
 if league in ["slo", 'lfl', 'ncs', 'pgn', 'bl', 'hpm']: league = "uklc"
 
 map_0, map_1, map_2, map_3 = leagues[league][:4]
-
-
-baron = [23, 50, 1207, 1230]
 buff_list = leagues[league][4:]
-#rr br rb bb
-time0 = time.time()
+baron = [23, 50, 1207, 1230]
 
+# 8 minutes, 14 minutes and 20 minutes are important breakpoints in the game, we'll split our data into those time intervals
 timesplits = {480:"0-8", 840:"8-14", 1200:"14-20"}
 
-if(not(os.path.exists("output"))):
-	os.mkdir("output")
-	
+# Get the height and width of the chosen league's map as all measurements will be relative to that	
+h,w = cv2.imread('assets/%s/%s.png' % (league,league)).shape[:2]
+radius = int(w/2.5)
+
 # Filling in as many missing values as possible
 def headfill(df):
 	cols = df.columns
@@ -222,9 +224,7 @@ def headfill(df):
 			df[column] = x2
 	return(df)
 
-h,w = cv2.imread('assets/%s/%s.png' % (league,league)).shape[:2]
-radius = int(w/2.5)
-
+# Each position has different regions that are ideal to focus on. These functions will classify which region each point is in
 def classify_jgl(points):
 	reds = [0]*9
 	for point in points:
@@ -291,8 +291,7 @@ def classify_mid(points):
 			reds[0]+=1
 	return(reds)
 
-# Putting interactive graphs to a html file
-
+# Putting graphs to a html file
 def graph_html(div_plot, colour, champ):
 	html_writer = open('output/%s/%s/%s.html' % (video, colour, champ),'w')
 	html_text = """
@@ -312,11 +311,8 @@ buff2 = cv2.imread("assets/%s/blueside_red_%s.jpg" % (league, league), 0)
 buff3 = cv2.imread("assets/%s/redside_blue_%s.jpg" % (league, league), 0)
 buff4 = cv2.imread("assets/%s/redside_red_%s.jpg" % (league,league), 0)
 
-
 # Baron spawns at 20mins, when it appears we use this to sync the time
 baron_template = cv2.imread("assets/%s/baron_%s.jpg" % (league,league), 0)
-
-
 
 # Scoreboard is only ever up during live footage, this will filter useless frames
 header = cv2.imread("assets/header.jpg", 0)
@@ -324,15 +320,21 @@ header = cv2.imread("assets/header.jpg", 0)
 # Iterate through each video in the playlist, grabbing their IDs
 playlist = pafy.get_playlist(playlist_url)
 videos = []
+
 for i in (playlist['items']):
 	videos.append(i['pafy'].videoid)
 
-# Change this to skip videos
+# Skipping videos
 videos = videos[videos_to_skip:]
+
+# Create output directory
+if(not(os.path.exists("output"))):
+	os.mkdir("output")
 
 # Run on each video
 for i, video in enumerate(videos):
-	dfiwadsald = i
+
+	# Get the video url using pafy
 	v = pafy.new(video)
 	play = v.getbest(preftype="mp4")
 	video = play.title
@@ -356,6 +358,7 @@ for i, video in enumerate(videos):
 	# Stream video url through OpenCV
 	cap = cv2.VideoCapture(play.url)
 
+	# Templates stores the champion pictures to search for, while point_i saves the most recent point found for that champion
 	templates = [0]*10
 	point_i = [(0,0)]*10
 
@@ -371,8 +374,13 @@ for i, video in enumerate(videos):
 	# Search until in-game footage found
 	while(True):
 		_,frame = cap.read()
+
+		# Making the images gray will make it more efficient
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+		# Search only in a section near the top, again for efficiency
 		cropped = gray[0:hheight, hwidth1:hwidth2]
+
 		# Look for the scoreboard
 		matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
 		location = np.where(matched > 0.75)
@@ -381,23 +389,25 @@ for i, video in enumerate(videos):
 		if(location[0].any()):
 			break
 
-		# Skip one second
+		# Skip one second if not
 		for i in range(frames_to_skip):
 			cap.grab()
+	
 	threshold = 0.7
-	champs = [""]*10
 	portraits = os.listdir("classify/blue")
 	identified = 0	
 
 	# Identify blue side champions
 	while(identified != 5):
 		identified = 0
+		champs = [""]*10
+		
+		# Each champion has their own spot on the sidebar, we use that to identify which champions are in the game and which position they're in
 		blue_top = gray[108:133, 17:52]
 		blue_jgl = gray[178:203, 17:52]
 		blue_mid = gray[245:275, 17:52]
 		blue_adc = gray[312:342, 17:52]
 		blue_sup = gray[380:410, 17:52]
-		champs = [""]*10
 		
 		# Check the sidebar for each champion
 		for portrait in portraits:
@@ -412,6 +422,7 @@ for i, video in enumerate(videos):
 		if(identified > 5):
 			threshold += 0.05
 			print("-"*30)
+		
 		# If too few champions found, this is often due to an awkward frame transition. Skip a frame and try again
 		elif(identified < 5):
 			for i in range(frames_to_skip):
@@ -428,14 +439,14 @@ for i, video in enumerate(videos):
 	# Same for red side champions
 	while(identified != 10):
 		identified = 5
+		champs = champstemp
+		
 		red_top = gray[108:133, 1228:1262]
 		red_jgl = gray[178:203, 1228:1262]
 		red_mid = gray[245:275, 1228:1262]
 		red_adc = gray[312:342, 1228:1262]
 		red_sup = gray[380:410, 1228:1262]
-		champs = champstemp
 		
-		# Check the sidebar for each champion
 		for portrait in portraits:
 			template = cv2.imread("classify/red/%s" % portrait, 0)
 			for i,role in enumerate(['top','jgl','mid','adc','sup']):
@@ -443,6 +454,7 @@ for i, video in enumerate(videos):
 					print("Red %s Identified: %s" % (role,portrait[:-4]))
 					identified+=1
 					champs[i+5] = champdict[portrait[:-4]]
+
 		if(identified < 10):
 			for i in range(frames_to_skip):
 				cap.grab()
@@ -456,6 +468,8 @@ for i, video in enumerate(videos):
 	# Grab portraits of each champion found, to search for on the minimap
 	for i, champ in enumerate(champs):
 		templates[i] = cv2.imread('champs/%s' % champ,0)
+
+	# Every position will be stored
 	points = {key:[] for key in champs}
 	
 	while(True):
@@ -466,16 +480,18 @@ for i, video in enumerate(videos):
 		# Again, only consider locations where the scoreboard shows
 		matched = cv2.matchTemplate(cropped,header,cv2.TM_CCOEFF_NORMED)
 		location = np.where(matched > 0.65)
-		if(location[0].any()):
 
-			# Each broadcast has a slightly different minimap size, output currently optimised for uklc but updates incoming
+		if(location[0].any()):
+			# Crop to the minimap
 			cropped = gray[map_0:map_1, map_2:map_3]
 
+			# Search for each buff
 			cropped_1 = gray[buff_list[12]-4:buff_list[13]+4, buff_list[14]-4:buff_list[15]+4]
 			cropped_2 = gray[buff_list[4]- 4:buff_list[5]+ 4, buff_list[6]- 4:buff_list[7]+ 4]
 			cropped_3 = gray[buff_list[8]- 4:buff_list[9]+ 4, buff_list[10]-4:buff_list[11]+4]
 			cropped_4 = gray[buff_list[0]- 4:buff_list[1]+ 4, buff_list[2]- 4:buff_list[3]+ 4]
-			# Check for the buffs spawning
+			
+			# Check whether or not they spawned
 			buffcheck  = cv2.matchTemplate(cropped_1, buff,  cv2.TM_CCOEFF_NORMED)
 			buffcheck2 = cv2.matchTemplate(cropped_2, buff2, cv2.TM_CCOEFF_NORMED)
 			buffcheck3 = cv2.matchTemplate(cropped_3, buff3, cv2.TM_CCOEFF_NORMED)
@@ -486,31 +502,35 @@ for i, video in enumerate(videos):
 			buffs3 = np.where(buffcheck3 > 0.9)
 			buffs4 = np.where(buffcheck4 > 0.9)
 			
-			# Stop when the buffs do spawn
+			# Stop when the buffs do spawn (90 seconds has been reached)
 			if(buffs[0].any() or buffs2[0].any() or buffs3[0].any() or buffs4[0].any()):
 				break
-			else: # Otherwise, look for each champions and save their location
+			else: # Until then, track each champion
 				for i, template in enumerate(templates):
 					matched = cv2.matchTemplate(cropped,template,cv2.TM_CCOEFF_NORMED)
 					location = np.where(matched >= 0.8)
 
-					# Outline character on map and save point if found, return NaN if not
+					# Outline character on map and save point if found, return NaN if not for interpolation
 					try:
 						point = next(zip(*location[::-1]))
 						point_i[i] = point
-						#cv2.rectangle(cropped, point, (point[0] + 14, point[1] + 14), 255, 2)
+						cv2.rectangle(cropped, point, (point[0] + 14, point[1] + 14), 255, 2)
 					except:
 						point = (np.nan,np.nan)
 						pass
+
+					# Each champion is a 14x14p image, and openCV returns the top-left corner. We add 7 to each dimension to make sure it's taking the centre of the champion
 					temp = np.array([point[0] + 7, point[1] + 7])
 					points[champs[i]].append(temp)
 
 				# Show minimap with all champions outlined
-				#cv2.imshow('minimap',cropped)
-				#if cv2.waitKey(1) & 0xFF == ord('q'):
-				#	break
+				cv2.imshow('minimap',cropped)
+				if cv2.waitKey(1) & 0xFF == ord('q'):
+					break
 				for i in range(frames_to_skip):
 					cap.grab()
+	
+	# Cast points to a pandas DataFrame
 	df = pd.DataFrame(points)
 
 	# Rename columns to readable champion names
@@ -524,25 +544,28 @@ for i, video in enumerate(videos):
 	# Interpolate any unredeemable missing values
 	for col in df.columns:
 		df[col] = list(zip(*map(
-			lambda l: l.replace(7,np.nan).interpolate().round(),
+			lambda l: l.interpolate().round(),
 			list(
 				map(pd.Series, 
 				zip(*df[col]))))))
 
-	# Add a seconds column, counting back from buffs spawning
+	# Add a seconds column, counting back from buffs spawning (90 seconds)
 	df['Seconds'] = pd.Series(range(90-len(points[champs[0]]),91))
 
-	# Output locations to a csv
+	# Output raw level one locations
 	df.to_csv("output/%s/levelonepositions.csv" % video, index = False)
 	
-	# Array for the graphs to go into
+	# Ignore the seconds column when iterating through champions
 	cols = df.columns[:-1]
-	div = [""]*len(cols)
+	
+	# We colour the maps differently depending on whether they are for blue or red side
 	colour="blue"
+
 	# Graph each champion's locations
 	for i, col in enumerate(cols):
-		if i > 4:
+		if i > 4: # If we graphed all 5 blue side champions
 			colour = "red"
+
 		champ = df[col]
 		axes = list(zip(*champ))
 
@@ -597,73 +620,74 @@ for i, video in enumerate(videos):
 		fig.update_yaxes(showticklabels = False, title_text = "")
 		graph_html(plotly.offline.plot(fig, output_type = 'div'),colour,"levelone/%s" % col)
 
-	divs = ('{{{:d}}}\n'*5).format(*range(5))
-
 	print("Level One Analysed\n")
+	
+	# Continue past 90 seconds, track the players until the baron spawns (20 minutes/1200 seconds)
 	while(True):
 		_, frame = cap.read()
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		cropped = gray[0:hheight, hwidth1:hwidth2]
 		
-		# Again, only consider locations where the scoreboard shows
 		matched = cv2.matchTemplate(cropped,header,cv2.TM_CCOEFF_NORMED)
 		location = np.where(matched > 0.65)
 		if(location[0].any()):
-
-			# Each broadcast has a slightly different minimap size, output currently optimised for uklc but updates incoming
 			cropped = gray[map_0:map_1, map_2:map_3]
 			cropped_4 = gray[baron[0]- 4:baron[1]+ 4, baron[2]- 4:baron[3]+ 4]
-			# Check for the buffs spawning
+			
+			# Check for the baron spawning
 			buffcheck  = cv2.matchTemplate(cropped_4, baron_template,  cv2.TM_CCOEFF_NORMED)
 			buffs  = np.where(buffcheck  > 0.9)
 			
-			# Stop when the buffs do spawn
+			# Stop when the baron spawns
 			if(buffs[0].any()):
 				break
-			else: # Otherwise, look for each champions and save their location
+			else: 
 				for i, template in enumerate(templates):
 					matched = cv2.matchTemplate(cropped,template,cv2.TM_CCOEFF_NORMED)
 					location = np.where(matched >= 0.8)
 
-					# Outline character on map and save point if found, return NaN if not
 					try:
 						point = next(zip(*location[::-1]))
 						point_i[i] = point
-						#cv2.rectangle(cropped, point, (point[0] + 14, point[1] + 14), 255, 2)
+						cv2.rectangle(cropped, point, (point[0] + 14, point[1] + 14), 255, 2)
 					except:
 						point = (np.nan,np.nan)
 						pass
+
 					temp = np.array([point[0] + 7, point[1] + 7])
 					points[champs[i]].append(temp)
 
-				# Show minimap with all champions outlined
-				#cv2.imshow('minimap',cropped)
-				#if cv2.waitKey(1) & 0xFF == ord('q'):
-				#	break
+				cv2.imshow('minimap',cropped)
+				if cv2.waitKey(1) & 0xFF == ord('q'):
+					break
 				for i in range(frames_to_skip):
 					cap.grab()
+	
 	df = pd.DataFrame(points)
 
-	# Rename columns to readable champion names
 	collist= df.columns
 	newcols = [picdict[i] for i in collist]
 	df.columns = newcols
 
-	# Fill in some missing values
 	df = headfill(df)
 	
-	# Interpolate any unredeemable missing values
 	for col in df.columns:
 		df[col] = list(zip(*map(
-			lambda l: l.replace(7,np.nan).interpolate().round(),
+			lambda l: l.interpolate().round(),
 			list(
 				map(pd.Series, 
 				zip(*df[col]))))))
-	colour = "blue"
+
+	# Seconds column now goes back from 1200 seconds, rather than 90
 	df['Seconds'] = pd.Series(range(1201-len(points[champs[0]]),1201))
+	colour = "blue"
+	
 	for col in [df.columns[i] for i in [1,6]]:
+		# We split these up into our important intervals
 		for times in timesplits.keys():
 			reds = classify_jgl(df[col][df['Seconds'] <= times])
+
+			# We scale our points so that they fall nicely on [0,255], meaning easier to read graphs
 			reds = list(map(lambda x : 255-255*(x - min(reds))/(max(reds)), reds))
 			fig = px.scatter(
 					x = [], 
@@ -682,6 +706,8 @@ for i, video in enumerate(videos):
 
 			fig.update_xaxes(showticklabels = False, title_text = "")
 			fig.update_yaxes(showticklabels = False, title_text = "")
+
+			# Different colours for each team
 			fill_team = "255, %d, %d" if colour == "red" else "%d, %d, 255"
 			fig.update_layout(
 				shapes=[
@@ -784,13 +810,11 @@ for i, video in enumerate(videos):
 				)
 			graph_html(plotly.offline.plot(fig, output_type = 'div'), colour, "jungle/%s_%s" % (col, timesplits[times]))
 		colour = "red"
-	# Add a seconds column, counting back from buffs spawning
 	
-	# Output locations to a csv
-	df.to_csv("output/%s/junglepositions.csv" % video, index = False)
 	print("Junglers tracked")
 	
 	colour = "blue"
+	
 	for col in [df.columns[i] for i in [4,9]]:
 		for times in timesplits.keys():
 			reds = classify_sup(df[col][df['Seconds'] <= times])
@@ -878,7 +902,7 @@ for i, video in enumerate(videos):
 				            y1=h-radius,
 				            line_color='white',
 				        ),
-				    dict(
+				    dict( # Plotly doesn't accept the Arc SVG command so this is a workaround to make the lanes look smooth
 				            type="rect",
 				            x0=0,
 				            y0=h,
@@ -941,9 +965,11 @@ for i, video in enumerate(videos):
 				)
 			graph_html(plotly.offline.plot(fig, output_type = 'div'), colour, "support/%s_%s" % (col,timesplits[times]))
 		colour = "red"
+	
 	print("Supports tracked")
 
 	colour = "blue"
+	
 	for col in [df.columns[i] for i in [2,7]]:
 		fill_team = "255, %d, %d" if colour == "red" else "%d, %d, 255"
 		for times in timesplits.keys():
@@ -1157,10 +1183,12 @@ for i, video in enumerate(videos):
 				)
 			graph_html(plotly.offline.plot(fig, output_type = 'div'), colour, "mid/%s_%s" % (col,timesplits[times]))
 		colour = "red"
+
 	print("Mids tracked")
-	if(dfiwadsald == 3):
-		break
-
-
+	
+	# Output raw locations to a csv
+	df.to_csv("output/%s/positions.csv" % video, index = False)
+	
+# Print final runtime
 time1 = time.time()
 print("Runtime: %.2f seconds" % (time1-time0))

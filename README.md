@@ -56,7 +56,7 @@ videos_to_skip = 0
 ```
 to fit your usage
 
-Output will be sent to the 'output' directory for each game in the playlist. Takes at least 100 seconds per game
+Output will be sent to the 'output' directory for each game in the playlist. Takes at least 100 seconds per game on my machine (Thinkpad T430)
 
 ## Output
 
@@ -103,5 +103,6 @@ These leagues have been tested for the level one tracker, but the individual rol
 
 The dimensions are *slightly* different for each league so the raw numbers in the csvs are not always directly comparable between different leagues. Vods with a lot of noise beforehand can slow down the program, vods with highlights beforehand can break the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is the biggest thing as the program will see the highlight, assume the game started and begin gathering data.
 
+Replays desync the time as the program assumes the game was paused anytime the game isn't live
 
 Please note that this is an early build, any queries can be directed to  loltracker.program [at] gmail.com
