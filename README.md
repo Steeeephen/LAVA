@@ -1,6 +1,6 @@
 # LolTracker
 
-A program for tracking League of Legends players from in-game video
+A program for tracking League of Legends players and providing analytics from in-game video
 
 ## Installation
 
@@ -22,12 +22,7 @@ $ pip install -r requirements.txt
 Run program
 
 ```
-$ python levelone.py
-```
-
-Or
-```
-$ python jungletrack.py
+$ python loltracker.py
 ```
 
 ### Windows
@@ -43,22 +38,7 @@ $ pip install -r requirements_windows.txt
 Run program
 
 ```
-$ python levelone.py
-```
-
-Or
-```
-$ python jungletrack.py
-```
-
-Or
-```
-$ python midtrack.py
-```
-
-Or
-```
-$ python supporttrack.py
+$ python loltracker.py
 ```
 
 ## Usage
@@ -76,36 +56,35 @@ videos_to_skip = 0
 ```
 to fit your usage
 
-Output will be sent to the 'output' directory for each game in the playlist
+Output will be sent to the 'output' directory for each game in the playlist. Takes at least 100 seconds per game
 
 ## Output
 
 ### Level One:
-Three files will be output; a csv containing all player positions as well as a html for blue & red side. The html file will contain interactive graphs of each player's in-game position until the 90 second mark. 
+An html for each champion on blue & red side, totalling 10. The file will contain interactive graphs of each player's in-game position until the 90 second mark. 
 ![Level One Example](/markdown_assets/levelone_example.png)
 
 ### Jungle Track:
-Three files will be output; a csv containing all jungler positions as well as a html for blue & red side. The html file has a choropleth map showing the jungler's positions for the first 20 minutes split into the regions of the map.
+An html for each jungler. The html file has choropleth maps showing the jungler's positions from 0-8, 8-14 and 14-20 minutes.
 ![Jungle Example](/markdown_assets/jungle_example.png)
 
 ### Mid Track:
-Similar to jungle track, but for midlaners. Focuses on different regions of the map and only for the first 15 minutes
+Similar to jungle track, but for midlaners. Focuses on different regions of the map
 ![Midlane Example](/markdown_assets/midlane_example.png)
 
 ### Support Track:
-Similar to mid track, but for supports. Also the first 15 minutes only. Currently unsure of the best way to represent this
+Similar to mid track, but for supports.
 ![Support Example](/markdown_assets/support_example.png)
-
 
 All plots can be downloaded as a png by opening the html and clicking the corresponding button on each graph
 
 ## Notes
 
-126 champions trackable; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
+125 champions trackable; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
 
-103 blue side champions identifiable, 109 red side
+101 blue side champions identifiable, 111 red side
 
-Currently optimised only for:
+Currently optimised for:
 
 * LFL (France)
 * UKLC (Ireland & the UK)
@@ -120,9 +99,9 @@ Currently optimised only for:
 * LCS (North America)
 * PCS (Pacific)
 
-These leagues have been tested for the level one tracker, but the individual role trackers have not been *fully* tested just yet. Still some work to do on double checking these (especially the midlane tracker)
+These leagues have been tested for the level one tracker, but the individual role trackers have not been *fully* tested just yet. Still some work to do on double checking these
 
-The dimensions are *slightly* different for each league so the raw numbers are not always directly comparable between different leagues. Vods with a lot of noise beforehand can slow down the program, vods with highlights beforehand can break the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is the biggest thing as the program will see the highlight, assume the game started and begin gathering data.
+The dimensions are *slightly* different for each league so the raw numbers in the csvs are not always directly comparable between different leagues. Vods with a lot of noise beforehand can slow down the program, vods with highlights beforehand can break the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is the biggest thing as the program will see the highlight, assume the game started and begin gathering data.
 
 
 Please note that this is an early build, any queries can be directed to  loltracker.program [at] gmail.com
