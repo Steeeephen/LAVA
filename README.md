@@ -45,7 +45,7 @@ $ python loltracker.py
 
 Change the lines
 ```
-# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', lcs', 'pcs', 'lpl', 'bl', 'lck' and 'lec' supported so far
+# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', 'lcs', 'pcs', 'lpl', 'bl', 'lck', 'eum' and 'lec' supported so far
 league = "lec"
 
 # Change this url to get different videos
@@ -80,12 +80,14 @@ All plots can be downloaded as a png by opening the html and clicking the corres
 
 ## Notes
 
-125 champions trackable; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
+125 champions trackable so far; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
 
-101 blue side champions identifiable, 111 red side
+101 blue side champions identifiable so far, 111 red side
 
 Currently optimised for:
 
+* EU Masters (Europe)
+* LEC (Europe)
 * LFL (France)
 * UKLC (Ireland & the UK)
 * SLO (Spain)
@@ -93,7 +95,6 @@ Currently optimised for:
 * PGN (Italy)
 * BL (Belgium)
 * HPM (Czech Republic/Slovakia)
-* LEC (Europe)
 * LPL (China)
 * LCK (Korea)
 * LCS (North America)
@@ -103,6 +104,6 @@ These leagues have been tested for the level one tracker, but the individual rol
 
 The dimensions are *slightly* different for each league so the raw numbers in the csvs are not always directly comparable between different leagues. Vods with a lot of noise beforehand can slow down the program, vods with highlights beforehand can break the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is the biggest thing as the program will see the highlight, assume the game started and begin gathering data.
 
-Replays desync the time as the program assumes the game was paused anytime the game isn't live
+Replays desync the time as the program assumes the game was paused anytime the game isn't live. On the to-do list
 
 Please note that this is an early build, any queries can be directed to  loltracker.program [at] gmail.com

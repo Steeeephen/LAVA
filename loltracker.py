@@ -17,14 +17,14 @@ from crypt import champdict, picdict
 
 #-----------------------------
 
-# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', lcs', 'pcs', 'lpl', 'bl', 'lck' and 'lec' supported so far
-league = "lec"
+# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', 'lcs', 'pcs', 'lpl', 'bl', 'lck', 'eum' and 'lec' supported so far
+league = "eum"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
+playlist_url = "https://www.youtube.com/playlist?list=PLcvpEVobSi9cMrj93URZ6J5TIOa6suaT8"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 0
+videos_to_skip = 5
 
 #-----------------------------
 
@@ -53,6 +53,7 @@ leagues = {
 
 # Some broadcasts have the same dimensions
 if league == "lpl": league = "lck"
+if league == "eum": league = "lcs"
 if league in ["slo", 'lfl', 'ncs', 'pgn', 'bl', 'hpm']: league = "uklc"
 
 map_0, map_1, map_2, map_3 = leagues[league][:4]
@@ -312,7 +313,7 @@ buff3 = cv2.imread("assets/%s/redside_blue_%s.jpg" % (league, league), 0)
 buff4 = cv2.imread("assets/%s/redside_red_%s.jpg" % (league,league), 0)
 
 # Baron spawns at 20mins, when it appears we use this to sync the time
-baron_template = cv2.imread("assets/%s/baron_%s.jpg" % (league,league), 0)
+baron_template = cv2.imread("assets/baron.jpg", 0)
 
 # Scoreboard is only ever up during live footage, this will filter useless frames
 header = cv2.imread("assets/header.jpg", 0)
@@ -549,6 +550,8 @@ for i, video in enumerate(videos):
 				map(pd.Series, 
 				zip(*df[col]))))))
 
+	level_one_points = len(points[champs[0]])
+	
 	# Add a seconds column, counting back from buffs spawning (90 seconds)
 	df['Seconds'] = pd.Series(range(90-len(points[champs[0]]),91))
 
@@ -610,7 +613,7 @@ for i, video in enumerate(videos):
 		)
 
 		fig.update_layout(
-			title = col.capitalize(),
+			title = "%s: Level One" % col.capitalize(),
 			template = "plotly_white",
 			xaxis_showgrid = False,
 			yaxis_showgrid = False
