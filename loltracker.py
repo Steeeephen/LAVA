@@ -18,13 +18,13 @@ from crypt import champdict, picdict
 #-----------------------------
 
 # Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', 'lcs', 'pcs', 'lpl', 'bl', 'lck', 'eum' and 'lec' supported so far
-league = "eum"
+league = "lec"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLcvpEVobSi9cMrj93URZ6J5TIOa6suaT8"
+playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 5
+videos_to_skip = 18
 
 #-----------------------------
 
@@ -238,14 +238,14 @@ def classify_jgl(points):
 		elif(norm(point - np.array([0,149])) 	< radius):
 			reds[7]+=1
 		elif(point[0] < h - point[1] - h/10):
-			if(point[0] < (4/5)*point[1]):
+			if(point[0] < (3/5)*point[1]):
 				reds[1]+=1
 			else:
 				reds[0]+=1
 		elif(point[0] < h - point[1] + h/10):
 			reds[4]+=1
 		else:
-			if(point[0] < (4/5)*point[1]):
+			if(point[0] < (3/5)*point[1]):
 				reds[2]+=1
 			else:
 				reds[3]+=1
@@ -304,6 +304,51 @@ def graph_html(div_plot, colour, champ):
 		""".format(div_plot)
 
 	html_writer.write(html_text)
+	html_writer.close()
+
+def proximity(l, t, side, role):
+	plots = ""
+	for i in l:
+		count = 0
+		champ = df.columns[i]
+		trundle = pd.DataFrame((df[df.columns[t]]).apply(lambda x : np.array(x)))
+		aatrox =pd.DataFrame((df[champ]).apply(lambda x : np.array(x)))
+
+		diffs = [0]*len(aatrox)
+		for j in range(len(aatrox)):
+			dist = norm(trundle[df.columns[t]][j] - aatrox[champ][j])
+			diffs[j] = dist
+			if(dist < 50):
+				count+=1
+				
+		fig2 = px.line(y=diffs, title = "%.2f%% Proximity" % (100*count/len(df['Seconds'])), x=df["Seconds"]/60)
+		fig2.update_yaxes(title=champ.capitalize())
+		fig2.add_shape(
+			# Line Diagonal
+				type="line",
+				x0=df['Seconds'].min()/60,
+				y0=50,
+				x1=20,
+				y1=50,
+				line=dict(
+					color="MediumPurple",
+					width=4,
+					dash="dot",
+				)
+		)
+		fig2.update_xaxes(rangeslider_visible=True, title = "Minute")
+		plots += plotly.offline.plot(fig2, output_type = 'div')
+	
+	html_txt = """
+		<html>
+			<body>
+				<center>{0}</center>
+			</body>
+		</html>
+		""".format(plots)
+
+	html_writer = open("output/%s/%s/%s_proximities.html" % (video, side, role), 'w')
+	html_writer.write(html_txt)
 	html_writer.close()
 
 # Buffs spawn at 90 seconds exactly, when they appear we use this to sync the time
@@ -406,18 +451,19 @@ for i, video in enumerate(videos):
 		# Each champion has their own spot on the sidebar, we use that to identify which champions are in the game and which position they're in
 		blue_top = gray[108:133, 17:52]
 		blue_jgl = gray[178:203, 17:52]
-		blue_mid = gray[245:275, 17:52]
-		blue_adc = gray[312:342, 17:52]
-		blue_sup = gray[380:410, 17:52]
+		blue_mid = gray[246:268, 17:52]
+		blue_adc = gray[314:336, 17:52]
+		blue_sup = gray[382:404, 17:52]
 		
 		# Check the sidebar for each champion
 		for portrait in portraits:
 			template = cv2.imread("classify/blue/%s" % portrait, 0)
 			for i,role in enumerate(['top','jgl','mid','adc','sup']):
 				if(eval('np.where(cv2.matchTemplate(blue_%s, template, cv2.TM_CCOEFF_NORMED) > threshold)[0].any()' % (role))):
-					print("Blue %s Identified: %s" % (role,portrait[:-4]))
-					identified+=1
-					champs[i] = champdict[portrait[:-4]]
+					if(champs[i] == ""):
+						print("Blue %s Identified: %s" % (role,portrait[:-4]))
+						identified+=1
+						champs[i] = champdict[portrait[:-4]]
 		
 		# If too many champions found, check again with stricter threshold
 		if(identified > 5):
@@ -550,8 +596,10 @@ for i, video in enumerate(videos):
 				map(pd.Series, 
 				zip(*df[col]))))))
 
+
 	level_one_points = len(points[champs[0]])
-	
+	print("%s points found" % level_one_points)
+
 	# Add a seconds column, counting back from buffs spawning (90 seconds)
 	df['Seconds'] = pd.Series(range(90-len(points[champs[0]]),91))
 
@@ -680,7 +728,7 @@ for i, video in enumerate(videos):
 			list(
 				map(pd.Series, 
 				zip(*df[col]))))))
-
+	df.to_csv("test.csv")
 	# Seconds column now goes back from 1200 seconds, rather than 90
 	df['Seconds'] = pd.Series(range(1201-len(points[champs[0]]),1201))
 	colour = "blue"
@@ -843,123 +891,123 @@ for i, video in enumerate(videos):
 			fill_team = "255, %d, %d" if colour == "red" else "%d, %d, 255"
 			fig.update_layout(
 				shapes=[
-				    dict(
-				            type="path",
-				            path = "M 0,0 L %d,%d L %d,0 Z" % (w,h,w),
-				            line=dict(
-				                color='white',
-				                width=2,
-				            ),
-				            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[1],reds[1]),
-				    ),
-				    dict(
-				            type="path",
-				            path = "M 0,0 L %d,%d L 0,%d Z" % (w,h,h),
-				            line=dict(
-				                color='white',
-				                width=2,
-				            ),
-				            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[2],reds[2]),
-				    ),
-				    dict(
-				            type="path",
-				            path = "M 0,%d L %d,0 L 0,0 Z" % (h,w),
-				            line=dict(
-				                color='white',
-				                width=2,
-				            ),
-				            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[0],reds[0]),
-				    ),
-				    dict(
-				            type="rect",
-				            x0=0,
-				            y0=h,
-				            x1=w,
-				            y1=h-h/10,
-				            line=dict(
-				                color="white",
-				                width=2,
-				            ),
-				            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-				        ),
-				    dict(
-				            type="rect",
-				            x0=w-w/10,
-				            y0=h,
-				            x1=w,
-				            y1=0,
-				            line=dict(
-				                color='white',
-				                width=2,
-				            ),
-				            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-				        ),
-				    dict(
-				            type="circle",
-				            xref="x",
-				            yref="y",
-				            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-				            x0=w-radius,
-				            y0=h+radius,
-				            x1=w+radius,
-				            y1=h-radius,
-				            line_color='white',
-				        ),
-				    dict( # Plotly doesn't accept the Arc SVG command so this is a workaround to make the lanes look smooth
-				            type="rect",
-				            x0=0,
-				            y0=h,
-				            x1=w,
-				            y1=h-h/10+0.5,
-				            line=dict(
-				                color=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-				                width=2,
-				            ),
-				            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-				        ),
-				    dict(
-				            type="rect",
-				            x0=w-w/10+0.5,
-				            y0=h,
-				            x1=w,
-				            y1=0,
-				            line=dict(
-				                color=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-				                width=2,
-				            ),
-				            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-				        ),
-				    dict(
-				            type="path",
-				            path = "M %d,%d L %d,%d L %d,0 L 0,%d Z" % (w/10,h, w,h/10,w-w/10,h-h/10),
-				            line=dict(
-				                color="white",
-				                width=2,
-				            ),
-				            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[4],reds[4]),
-				        ),
-				    dict(
-				            type="circle",
-				            xref="x",
-				            yref="y",
-				            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[6],reds[6]),
-				            x0=w-radius,
-				            y0=radius,
-				            x1=w+radius,
-				            y1=-radius,
-				            line_color='white',
-				        ),
-				    dict(
-				            type="circle",
-				            xref="x",
-				            yref="y",
-				            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[3],reds[3]),
-				            x0=-radius,
-				            y0=h+radius,
-				            x1=radius,
-				            y1=h-radius,
-				            line_color="white",
-				        )]) 
+					dict(
+							type="path",
+							path = "M 0,0 L %d,%d L %d,0 Z" % (w,h,w),
+							line=dict(
+								color='white',
+								width=2,
+							),
+							fillcolor=('rgba(%s,1)' % fill_team)  % (reds[1],reds[1]),
+					),
+					dict(
+							type="path",
+							path = "M 0,0 L %d,%d L 0,%d Z" % (w,h,h),
+							line=dict(
+								color='white',
+								width=2,
+							),
+							fillcolor=('rgba(%s,1)' % fill_team)  % (reds[2],reds[2]),
+					),
+					dict(
+							type="path",
+							path = "M 0,%d L %d,0 L 0,0 Z" % (h,w),
+							line=dict(
+								color='white',
+								width=2,
+							),
+							fillcolor=('rgba(%s,1)' % fill_team)  % (reds[0],reds[0]),
+					),
+					dict(
+							type="rect",
+							x0=0,
+							y0=h,
+							x1=w,
+							y1=h-h/10,
+							line=dict(
+								color="white",
+								width=2,
+							),
+							fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+						),
+					dict(
+							type="rect",
+							x0=w-w/10,
+							y0=h,
+							x1=w,
+							y1=0,
+							line=dict(
+								color='white',
+								width=2,
+							),
+							fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+						),
+					dict(
+							type="circle",
+							xref="x",
+							yref="y",
+							fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+							x0=w-radius,
+							y0=h+radius,
+							x1=w+radius,
+							y1=h-radius,
+							line_color='white',
+						),
+					dict( # Plotly doesn't accept the Arc SVG command so this is a workaround to make the lanes look smooth
+							type="rect",
+							x0=0,
+							y0=h,
+							x1=w,
+							y1=h-h/10+0.5,
+							line=dict(
+								color=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+								width=2,
+							),
+							fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+						),
+					dict(
+							type="rect",
+							x0=w-w/10+0.5,
+							y0=h,
+							x1=w,
+							y1=0,
+							line=dict(
+								color=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+								width=2,
+							),
+							fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+						),
+					dict(
+							type="path",
+							path = "M %d,%d L %d,%d L %d,0 L 0,%d Z" % (w/10,h, w,h/10,w-w/10,h-h/10),
+							line=dict(
+								color="white",
+								width=2,
+							),
+							fillcolor=('rgba(%s,1)' % fill_team)  % (reds[4],reds[4]),
+						),
+					dict(
+							type="circle",
+							xref="x",
+							yref="y",
+							fillcolor=('rgba(%s,1)' % fill_team)  % (reds[6],reds[6]),
+							x0=w-radius,
+							y0=radius,
+							x1=w+radius,
+							y1=-radius,
+							line_color='white',
+						),
+					dict(
+							type="circle",
+							xref="x",
+							yref="y",
+							fillcolor=('rgba(%s,1)' % fill_team)  % (reds[3],reds[3]),
+							x0=-radius,
+							y0=h+radius,
+							x1=radius,
+							y1=h-radius,
+							line_color="white",
+						)]) 
 			fig.update_layout(
 				title = "%s: %s" % (col.capitalize(), timesplits[times]),
 				template = "plotly_white",
@@ -1188,6 +1236,13 @@ for i, video in enumerate(videos):
 		colour = "red"
 
 	print("Mids tracked")
+
+	proximity([0,1,2,3], 4, "blue", "support")
+	proximity([0,2,3,4], 1, "blue", "jungle")
+	proximity([5,6,7,8], 9, "red", "support")
+	proximity([5,7,8,9], 6, "red", "jungle")
+
+	print("Proximities tracked")
 	
 	# Output raw locations to a csv
 	df.to_csv("output/%s/positions.csv" % video, index = False)

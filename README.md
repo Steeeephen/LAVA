@@ -76,6 +76,12 @@ Similar to jungle track, but for midlaners. Focuses on different regions of the 
 Similar to mid track, but for supports.
 ![Support Example](/markdown_assets/support_example.png)
 
+### Proximity Tracker:
+Tracks player proximity for supports and junglers throughout the game. Example shows a support's proximity to their adc
+<p align = "center">
+	<img src = "/markdown_assets/proximity_sample.png" width = 1200>
+</p> 
+
 All plots can be downloaded as a png by opening the html and clicking the corresponding button on each graph
 
 ## Notes
