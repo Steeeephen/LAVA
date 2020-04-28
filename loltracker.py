@@ -728,7 +728,7 @@ for i, video in enumerate(videos):
 			list(
 				map(pd.Series, 
 				zip(*df[col]))))))
-	df.to_csv("test.csv")
+		
 	# Seconds column now goes back from 1200 seconds, rather than 90
 	df['Seconds'] = pd.Series(range(1201-len(points[champs[0]]),1201))
 	colour = "blue"
@@ -1243,7 +1243,7 @@ for i, video in enumerate(videos):
 	proximity([5,7,8,9], 6, "red", "jungle")
 
 	print("Proximities tracked")
-	
+
 	# Output raw locations to a csv
 	df.to_csv("output/%s/positions.csv" % video, index = False)
 	
