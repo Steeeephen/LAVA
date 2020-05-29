@@ -86,9 +86,9 @@ All plots can be downloaded as a png by opening the html and clicking the corres
 
 ## Notes
 
-125 champions trackable so far; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
+136 champions trackable so far; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
 
-101 blue side champions identifiable so far, 111 red side
+108 blue side champions identifiable so far, 121 red side. Can check current progress [here](https://docs.google.com/spreadsheets/d/14pUWbDw32owzKmMUSGVbgytgAz0lY9U6FDAcrYU0Za4/edit?usp=sharing)
 
 Currently optimised for:
 
