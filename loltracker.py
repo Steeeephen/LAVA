@@ -24,7 +24,7 @@ league = "lec"
 playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 18
+videos_to_skip = 0
 
 #-----------------------------
 
@@ -52,7 +52,7 @@ leagues = {
 }
 
 # Some broadcasts have the same dimensions
-if league == "lpl": league = "lck"
+if league in ["lpl", "mc20"]: league = "lck"
 if league == "eum": league = "lcs"
 if league in ["slo", 'lfl', 'ncs', 'pgn', 'bl', 'hpm']: league = "uklc"
 
@@ -439,7 +439,7 @@ for i, video in enumerate(videos):
 		for i in range(frames_to_skip):
 			cap.grab()
 	
-	threshold = 0.7
+	threshold = 0.65
 	portraits = os.listdir("classify/blue")
 	identified = 0	
 
@@ -598,8 +598,7 @@ for i, video in enumerate(videos):
 
 
 	level_one_points = len(points[champs[0]])
-	print("%s points found" % level_one_points)
-
+	
 	# Add a seconds column, counting back from buffs spawning (90 seconds)
 	df['Seconds'] = pd.Series(range(90-len(points[champs[0]]),91))
 

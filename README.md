@@ -86,25 +86,26 @@ All plots can be downloaded as a png by opening the html and clicking the corres
 
 ## Notes
 
-136 champions trackable so far; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
+140 champions trackable so far; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
 
-108 blue side champions identifiable so far, 121 red side. Can check current progress [here](https://docs.google.com/spreadsheets/d/14pUWbDw32owzKmMUSGVbgytgAz0lY9U6FDAcrYU0Za4/edit?usp=sharing)
+110 blue side champions identifiable so far, 123 red side. Can check current progress [here](https://docs.google.com/spreadsheets/d/14pUWbDw32owzKmMUSGVbgytgAz0lY9U6FDAcrYU0Za4/edit?usp=sharing)
 
 Currently optimised for:
 
-* EU Masters (Europe)
-* LEC (Europe)
-* LFL (France)
-* UKLC (Ireland & the UK)
-* SLO (Spain)
-* NCS (Nordic)
-* PGN (Italy)
-* BL (Belgium)
-* HPM (Czech Republic/Slovakia)
-* LPL (China)
-* LCK (Korea)
-* LCS (North America)
-* PCS (Pacific)
+* EU Masters (Europe) - eum
+* LEC (Europe) - lec
+* LFL (France) - lfl
+* UK LoL Championship (Ireland & the UK) - uklc
+* Superliga Orange (Spain) - slo
+* Nordic Championship Series (Nordic) - ncs
+* PG Nationals (Italy) - pgn
+* Belgian League (Belgium) - bl
+* Hitpoint Masters (Czech Republic/Slovakia) - hpm
+* LPL (China) - lpl
+* LCK (Korea) - lck
+* LCS (North America) - lcs
+* PCS (Pacific) - pcs
+
 
 These leagues have been tested for the level one tracker, but the individual role trackers have not been *fully* tested just yet. Still some work to do on double checking these
 
