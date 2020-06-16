@@ -21,10 +21,10 @@ from crypt import champdict, picdict
 league = "lec"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
+playlist_url = "https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 0
+videos_to_skip = 6
 
 #-----------------------------
 
@@ -225,9 +225,25 @@ def headfill(df):
 			df[column] = x2
 	return(df)
 
+def timer(x, last):
+	if(len(x) < 1):
+		return(9999)
+	if(len(x) == 1):
+		timer_clean = last + x
+		try:
+			return(1200-(int(timer_clean[:-2])*60+int(timer_clean[-2:])))
+		except:
+			return(9999)
+	elif(x[0] == '7' and x[1] == '7'):
+		return(timer(x[2:], last+x[:1]))
+	else:
+		return(timer(x[1:], last + x[:1]))
+
+
 # Each position has different regions that are ideal to focus on. These functions will classify which region each point is in
 def classify_jgl(points):
 	reds = [0]*9
+	points.dropna(inplace=True)
 	for point in points:
 		if(norm(point - np.array([0,0]))   		< radius):
 			reds[5]+=1
@@ -253,6 +269,7 @@ def classify_jgl(points):
 
 def classify_sup(points):
 	reds = [0]*7
+	points.dropna(inplace=True)
 	for point in points:
 		if(norm(point - np.array([149,0]))  < radius):
 			reds[6]+=1
@@ -273,6 +290,7 @@ def classify_sup(points):
 
 def classify_mid(points):
 	reds = [0]*8
+	points.dropna(inplace=True)
 	for point in points:
 		if(norm(point - np.array([149,0]))	< radius):
 			reds[6]+=1
@@ -316,10 +334,13 @@ def proximity(l, t, side, role):
 
 		diffs = [0]*len(aatrox)
 		for j in range(len(aatrox)):
-			dist = norm(trundle[df.columns[t]][j] - aatrox[champ][j])
-			diffs[j] = dist
-			if(dist < 50):
-				count+=1
+			try:	
+				dist = norm(trundle[df.columns[t]][j] - aatrox[champ][j])
+				diffs[j] = dist
+				if(dist < 50):
+					count+=1
+			except:
+				pass
 				
 		fig2 = px.line(y=diffs, title = "%.2f%% Proximity" % (100*count/len(df['Seconds'])), x=df["Seconds"]/60)
 		fig2.update_yaxes(title=champ.capitalize())
@@ -518,7 +539,8 @@ for i, video in enumerate(videos):
 
 	# Every position will be stored
 	points = {key:[] for key in champs}
-	
+	seconds_timer = []
+
 	while(True):
 		_, frame = cap.read()
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -529,6 +551,27 @@ for i, video in enumerate(videos):
 		location = np.where(matched > 0.65)
 
 		if(location[0].any()):
+
+			cropped_timer = gray[23:50, 1210:1250]
+			
+			nums = dict()
+			
+			for i in os.listdir("assets/images"):
+				template = cv2.imread("assets/images/%s" % i, 0)
+				res = cv2.matchTemplate(cropped_timer, template, cv2.TM_CCOEFF_NORMED)
+				digit = np.where(res > 0.75)
+				if(digit[0].any()):
+					seen = set()
+					inp = (list(zip(*digit)))
+					outp = [(a, b) for a, b in inp if not (b in seen or seen.add(b))]
+					for out in outp:
+						nums[out[1]] = i[:1]
+			test = ""
+			for i,num in enumerate(sorted(nums)):
+				test = ''.join([test, nums[num]])
+			seconds_timer.append((timer(test,"")))
+
+
 			# Crop to the minimap
 			cropped = gray[map_0:map_1, map_2:map_3]
 
@@ -681,6 +724,26 @@ for i, video in enumerate(videos):
 		matched = cv2.matchTemplate(cropped,header,cv2.TM_CCOEFF_NORMED)
 		location = np.where(matched > 0.65)
 		if(location[0].any()):
+			cropped_timer = gray[23:50, 1210:1250]
+			
+			nums = dict()
+			
+			for i in os.listdir("assets/images"):
+				template = cv2.imread("assets/images/%s" % i, 0)
+				res = cv2.matchTemplate(cropped_timer, template, cv2.TM_CCOEFF_NORMED)
+				digit = np.where(res > 0.75)
+				if(digit[0].any()):
+					seen = set()
+					inp = (list(zip(*digit)))
+					outp = [(a, b) for a, b in inp if not (b in seen or seen.add(b) or seen.add(b+1) or seen.add(b-1))]
+					for out in outp:
+						nums[out[1]] = i[:1]
+			test = ""
+			for i,num in enumerate(sorted(nums)):
+				test = ''.join([test, nums[num]])
+			
+			seconds_timer.append((timer(test,"")))
+			
 			cropped = gray[map_0:map_1, map_2:map_3]
 			cropped_4 = gray[baron[0]- 4:baron[1]+ 4, baron[2]- 4:baron[3]+ 4]
 			
@@ -720,7 +783,6 @@ for i, video in enumerate(videos):
 	df.columns = newcols
 
 	df = headfill(df)
-	
 	for col in df.columns:
 		df[col] = list(zip(*map(
 			lambda l: l.interpolate().round(),
@@ -728,10 +790,15 @@ for i, video in enumerate(videos):
 				map(pd.Series, 
 				zip(*df[col]))))))
 		
-	# Seconds column now goes back from 1200 seconds, rather than 90
-	df['Seconds'] = pd.Series(range(1201-len(points[champs[0]]),1201))
 	colour = "blue"
+	seconds_timer = np.array(seconds_timer).astype(int)
+	seconds_timer = seconds_timer[~np.isnan(seconds_timer)]
+
+	df = pd.concat([df,pd.DataFrame({'Seconds':seconds_timer})], axis=1)
 	
+	df = df[df['Seconds'] < 1200]
+	df = df[df['Seconds'] > 0].sort_values("Seconds")
+
 	for col in [df.columns[i] for i in [1,6]]:
 		# We split these up into our important intervals
 		for times in timesplits.keys():

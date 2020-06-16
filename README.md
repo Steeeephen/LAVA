@@ -106,11 +106,16 @@ Currently optimised for:
 * LCS (North America) - lcs
 * PCS (Pacific) - pcs
 
+## Issues
 
-These leagues have been tested for the level one tracker, but the individual role trackers have not been *fully* tested just yet. Still some work to do on double checking these
+Still some testing to make sure it works for leagues other than the LEC, especially leagues that change their overlay
 
 The dimensions are *slightly* different for each league so the raw numbers in the csvs are not always directly comparable between different leagues. Vods with a lot of noise beforehand can slow down the program, vods with highlights beforehand can break the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is the biggest thing as the program will see the highlight, assume the game started and begin gathering data.
 
-Replays desync the time as the program assumes the game was paused anytime the game isn't live. On the to-do list
+Replays no longer desync the time, but the new method of tracking time has only been tested for the LEC
+
+Proximity graphs need to be smoothed
+
+Blue side jungle graphs became inaccurate with the most recent update, should be fixed soon
 
 Please note that this is an early build, any queries can be directed to  loltracker.program [at] gmail.com
