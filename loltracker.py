@@ -52,7 +52,7 @@ leagues = {
 }
 
 # Some broadcasts have the same dimensions
-if league in ["lpl", "mc20"]: league = "lck"
+if league in ["lpl"]: league = "lck"
 if league == "eum": league = "lcs"
 if league in ["slo", 'lfl', 'ncs', 'pgn', 'bl', 'hpm']: league = "uklc"
 
@@ -72,11 +72,11 @@ def headfill(df):
 	cols = df.columns
 	for index,column in enumerate(cols):
 		if(index < 5): # Blue side
-			cols2 = list(cols)[:5]
+			cols_team = list(cols)[:5]
 		else: # Red side
-			cols2 = list(cols)[5:]
+			cols_team = list(cols)[5:]
 
-		cols2.remove(column)
+		cols_team.remove(column)
 		col = df[column]
 		col = np.array(col)
 		colt = np.concatenate(col)
@@ -99,18 +99,18 @@ def headfill(df):
 					found = False
 					
 					# Check every champion on the same team to see if any were near the first known location
-					for col2 in cols2:
+					for col_team in cols_team:
 						for n in range(5): #4 seconds either side
-							check = norm(df[col2][i-n] - col[i])
+							check = norm(df[col_team][i-n] - col[i])
 							if(check < temp):
 								temp = check
 								found = True
-								champ_found = col2
-							check = norm(df[col2][i+n] - col[i])
+								champ_found = col_team
+							check = norm(df[col_team][i+n] - col[i])
 							if(check < temp):
 								temp = check
 								found = True
-								champ_found = col2
+								champ_found = col_team
 					# If an ally was found near the first known location
 					if(found):
 						# Assume the two walked together
@@ -127,18 +127,18 @@ def headfill(df):
 				try:
 					temp = 20
 					found = False
-					for col2 in cols2:
+					for col_team in cols_team:
 						for n in range(5):
-							check = norm(df[col2][j-n] - col[j])
+							check = norm(df[col_team][j-n] - col[j])
 							if(check < temp):
 								temp = check
 								found = True
-								champ_found = col2
-							check = norm(df[col2][j+n] - col[j])
+								champ_found = col_team
+							check = norm(df[col_team][j+n] - col[j])
 							if(check < temp):
 								temp = check
 								found = True
-								champ_found = col2
+								champ_found = col_team
 					if(found):
 						x = pd.concat([(x[:j+1]),(df[champ_found][j+1:])])
 				except:
@@ -174,17 +174,17 @@ def headfill(df):
 							found_closest = False
 
 							# For every ally champion
-							for col2 in cols2:
+							for col_team in cols_team:
 								temp = 20
 								found = False
 								for i in range(5):
 									try:
-										check = norm(np.array(point) - np.array(df[col2][k+i]))
+										check = norm(np.array(point) - np.array(df[col_team][k+i]))
 										if(check < temp):
 											temp = check
 											found = True
 
-										check = norm(np.array(point) - np.array(df[col2][k-i]))
+										check = norm(np.array(point) - np.array(df[col_team][k-i]))
 										if(check < temp):
 											temp = check
 											found = True
@@ -196,12 +196,12 @@ def headfill(df):
 									temp2 = 20
 									for i in range(5):
 										try:											
-											check2 = norm(np.array(x[k-count-1]) - np.array(df[col2][k-count-1+i]))
+											check2 = norm(np.array(x[k-count-1]) - np.array(df[col_team][k-count-1+i]))
 											if(check2 < temp2):
 												temp2 = check2
 												found_closest = True
 
-											check2 = norm(np.array(x[k-count-1]) - np.array(df[col2][k-count-1-i]))
+											check2 = norm(np.array(x[k-count-1]) - np.array(df[col_team][k-count-1-i]))
 											if(check2 < temp2):
 												temp2 = check2
 												found_closest = True
@@ -214,7 +214,7 @@ def headfill(df):
 									average = (temp + temp2) / 2
 									if(average < closest):
 										closest = average
-										champ_found = col2
+										champ_found = col_team
 
 							# Assume the two walked together
 							if(found_closest):
@@ -225,19 +225,20 @@ def headfill(df):
 			df[column] = x2
 	return(df)
 
-def timer(x, last):
-	if(len(x) < 1):
+# Function to recursively clean up the timer reading. Often will confuse 17:74 for 177:74 or miss a few digits, this removes as many of them as possible and converts the reading to the value in seconds
+def timer(time_read, last):
+	if(len(time_read) < 1):
 		return(9999)
-	if(len(x) == 1):
-		timer_clean = last + x
+	if(len(time_read) == 1):
+		timer_clean = last + time_read
 		try:
 			return(1200-(int(timer_clean[:-2])*60+int(timer_clean[-2:])))
 		except:
 			return(9999)
-	elif(x[0] == '7' and x[1] == '7'):
-		return(timer(x[2:], last+x[:1]))
+	elif(time_read[0] == '7' and time_read[1] == '7'):
+		return(timer(time_read[2:], last+time_read[:1]))
 	else:
-		return(timer(x[1:], last + x[:1]))
+		return(timer(time_read[1:], last + time_read[:1]))
 
 
 # Each position has different regions that are ideal to focus on. These functions will classify which region each point is in
@@ -324,28 +325,31 @@ def graph_html(div_plot, colour, champ):
 	html_writer.write(html_text)
 	html_writer.close()
 
+# This will graph the proximities for a given role and side, showing how close two players were throughout the game
 def proximity(l, t, side, role):
 	plots = ""
-	for i in l:
+	for i in l: # For each allied champion
 		count = 0
 		champ = df.columns[i]
-		trundle = pd.DataFrame((df[df.columns[t]]).apply(lambda x : np.array(x)))
-		aatrox =pd.DataFrame((df[champ]).apply(lambda x : np.array(x)))
+		champ_to_check = pd.DataFrame((df[df.columns[t]]).apply(lambda x : np.array(x)))
+		champ_teammate =pd.DataFrame((df[champ]).apply(lambda x : np.array(x)))
 
-		diffs = [0]*len(aatrox)
-		for j in range(len(aatrox)):
+		diffs = [0]*len(champ_teammate)
+		for j in range(len(champ_teammate)): # For every pair of points gathered
 			try:	
-				dist = norm(trundle[df.columns[t]][j] - aatrox[champ][j])
+				dist = norm(champ_to_check[df.columns[t]][j] - champ_teammate[champ][j]) # Get the distance between the two
 				diffs[j] = dist
+
+				# If within 50 units, they're considered 'close'
 				if(dist < 50):
 					count+=1
 			except:
 				pass
-				
+		
+		# Graph the distances over time
 		fig2 = px.line(y=diffs, title = "%.2f%% Proximity" % (100*count/len(df['Seconds'])), x=df["Seconds"]/60)
-		fig2.update_yaxes(title=champ.capitalize())
-		fig2.add_shape(
-			# Line Diagonal
+		fig2.update_yaxes(title="Distance to: %s" % champ.capitalize())
+		fig2.add_shape( 
 				type="line",
 				x0=df['Seconds'].min()/60,
 				y0=50,
@@ -360,6 +364,7 @@ def proximity(l, t, side, role):
 		fig2.update_xaxes(rangeslider_visible=True, title = "Minute")
 		plots += plotly.offline.plot(fig2, output_type = 'div')
 	
+	# Write to an html
 	html_txt = """
 		<html>
 			<body>
@@ -429,7 +434,7 @@ for i, video in enumerate(videos):
 	templates = [0]*10
 	point_i = [(0,0)]*10
 
-	# Skip one second each time, reduce this for longer runtime but better accuracy
+	# Skip one second each time, reduce this for longer runtime but better accuracy. The timer should still be synced up but hasn't been tested
 	frames_to_skip = int(cap.get(cv2.CAP_PROP_FPS))
 
 	_,frame = cap.read()
@@ -551,11 +556,12 @@ for i, video in enumerate(videos):
 		location = np.where(matched > 0.65)
 
 		if(location[0].any()):
-
+			# Track the baron timer in the top right to sync up the timer as it's larger than in the in-game timer
 			cropped_timer = gray[23:50, 1210:1250]
 			
 			nums = dict()
 			
+			# Traditional OCR doesn't have great accuracy here, so it manually checks against each digit and outputs the numbers it can find
 			for i in os.listdir("assets/images"):
 				template = cv2.imread("assets/images/%s" % i, 0)
 				res = cv2.matchTemplate(cropped_timer, template, cv2.TM_CCOEFF_NORMED)
@@ -566,16 +572,17 @@ for i, video in enumerate(videos):
 					outp = [(a, b) for a, b in inp if not (b in seen or seen.add(b))]
 					for out in outp:
 						nums[out[1]] = i[:1]
-			test = ""
+
+			timer_ordered = ""
 			for i,num in enumerate(sorted(nums)):
-				test = ''.join([test, nums[num]])
-			seconds_timer.append((timer(test,"")))
+				timer_ordered = ''.join([timer_ordered, nums[num]])
+			seconds_timer.append((timer(timer_ordered,"")))
 
 
 			# Crop to the minimap
 			cropped = gray[map_0:map_1, map_2:map_3]
 
-			# Search for each buff
+			# Search for each buff to determine when to graph the level one
 			cropped_1 = gray[buff_list[12]-4:buff_list[13]+4, buff_list[14]-4:buff_list[15]+4]
 			cropped_2 = gray[buff_list[4]- 4:buff_list[5]+ 4, buff_list[6]- 4:buff_list[7]+ 4]
 			cropped_3 = gray[buff_list[8]- 4:buff_list[9]+ 4, buff_list[10]-4:buff_list[11]+4]
@@ -600,7 +607,7 @@ for i, video in enumerate(videos):
 					matched = cv2.matchTemplate(cropped,template,cv2.TM_CCOEFF_NORMED)
 					location = np.where(matched >= 0.8)
 
-					# Outline character on map and save point if found, return NaN if not for interpolation
+					# Outline character on map and save point if found, return NaN if not (for interpolation)
 					try:
 						point = next(zip(*location[::-1]))
 						point_i[i] = point
@@ -609,7 +616,7 @@ for i, video in enumerate(videos):
 						point = (np.nan,np.nan)
 						pass
 
-					# Each champion is a 14x14p image, and openCV returns the top-left corner. We add 7 to each dimension to make sure it's taking the centre of the champion
+					# Each champion is approx. a 14x14p image, and openCV returns the top-left corner. We add 7 to each dimension to make sure it's taking the centre of the champion
 					temp = np.array([point[0] + 7, point[1] + 7])
 					points[champs[i]].append(temp)
 
@@ -738,11 +745,11 @@ for i, video in enumerate(videos):
 					outp = [(a, b) for a, b in inp if not (b in seen or seen.add(b) or seen.add(b+1) or seen.add(b-1))]
 					for out in outp:
 						nums[out[1]] = i[:1]
-			test = ""
+			timer_ordered	 = ""
 			for i,num in enumerate(sorted(nums)):
-				test = ''.join([test, nums[num]])
+				timer_ordered = ''.join([timer_ordered, nums[num]])
 			
-			seconds_timer.append((timer(test,"")))
+			seconds_timer.append((timer(timer_ordered,"")))
 			
 			cropped = gray[map_0:map_1, map_2:map_3]
 			cropped_4 = gray[baron[0]- 4:baron[1]+ 4, baron[2]- 4:baron[3]+ 4]
@@ -775,7 +782,7 @@ for i, video in enumerate(videos):
 					break
 				for i in range(frames_to_skip):
 					cap.grab()
-	
+	# Same as above
 	df = pd.DataFrame(points)
 
 	collist= df.columns
@@ -791,11 +798,14 @@ for i, video in enumerate(videos):
 				zip(*df[col]))))))
 		
 	colour = "blue"
+
+	# Use the seconds array to sync up the points with the ingame timer
 	seconds_timer = np.array(seconds_timer).astype(int)
 	seconds_timer = seconds_timer[~np.isnan(seconds_timer)]
 
 	df = pd.concat([df,pd.DataFrame({'Seconds':seconds_timer})], axis=1)
 	
+	# Remove the values that went wrong (9999 means the program's prediction was too low, a highly negative number means it was too high)
 	df = df[df['Seconds'] < 1200]
 	df = df[df['Seconds'] > 0].sort_values("Seconds")
 
@@ -1303,6 +1313,7 @@ for i, video in enumerate(videos):
 
 	print("Mids tracked")
 
+	# Graph the proximities
 	proximity([0,1,2,3], 4, "blue", "support")
 	proximity([0,2,3,4], 1, "blue", "jungle")
 	proximity([5,6,7,8], 9, "red", "support")
