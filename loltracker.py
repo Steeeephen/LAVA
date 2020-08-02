@@ -7,13 +7,8 @@ import os
 import plotly.express as px
 import plotly
 from PIL import Image
-import base64
-import hashlib
-from Crypto.Cipher import AES
-from Crypto import Random
 import youtube_dl
 import pafy
-from crypt import champdict, picdict
 
 #-----------------------------
 
@@ -249,16 +244,16 @@ def classify_jgl(points):
 		elif(norm(point - np.array([0,149])) 	< radius):
 			reds[7]+=1
 		elif(point[0] < h - point[1] - h/10):
-			if(point[0] < (3/5)*point[1]):
+			if(point[0] < point[1]):
 				reds[1]+=1
 			else:
 				reds[0]+=1
 		elif(point[0] < h - point[1] + h/10):
 			reds[4]+=1
 		elif(point[0] > h - point[1] + h/10):
-			if(point[0] < (3/5)*point[1]):
+			if(point[0] < point[1]):
 				reds[2]+=1
-			elif(point[0] > (3/5)*point[1]):
+			elif(point[0] > point[1]):
 				reds[3]+=1
 	return(reds)
 
@@ -483,7 +478,7 @@ for i, video in enumerate(videos):
 					if(champs[i] == ""):
 						print("Blue %s Identified: %s" % (role,portrait[:-4]))
 						identified+=1
-						champs[i] = champdict[portrait[:-4]]
+						champs[i] = portrait[:-4]
 		
 		# If too many champions found, check again with stricter threshold
 		if(identified > 5):
@@ -520,7 +515,7 @@ for i, video in enumerate(videos):
 				if(eval('np.where(cv2.matchTemplate(red_%s, template, cv2.TM_CCOEFF_NORMED) > threshold)[0].any()' % (role))):
 					print("Red %s Identified: %s" % (role,portrait[:-4]))
 					identified+=1
-					champs[i+5] = champdict[portrait[:-4]]
+					champs[i+5] = portrait[:-4]
 
 		if(identified < 10):
 			for i in range(frames_to_skip):
@@ -534,7 +529,7 @@ for i, video in enumerate(videos):
 
 	# Grab portraits of each champion found, to search for on the minimap
 	for i, champ in enumerate(champs):
-		templates[i] = cv2.imread('champs/%s' % champ,0)
+		templates[i] = cv2.imread('champs/%s.jpg' % champ,0)
 
 	# Every position will be stored
 	points = {key:[] for key in champs}
@@ -600,9 +595,7 @@ for i, video in enumerate(videos):
 	# Same as above
 	df = pd.DataFrame(points)
 
-	collist= df.columns
-	newcols = [picdict[i] for i in collist]
-	df.columns = newcols
+	# collist= df.columns
 
 	df = headfill(df)
 	for col in df.columns:
@@ -685,7 +678,7 @@ for i, video in enumerate(videos):
 		fig.update_yaxes(showticklabels = False, title_text = "")
 		graph_html(plotly.offline.plot(fig, output_type = 'div'),colour,"levelone/%s" % col)
 
-	print("Level One Analysed")
+	print("Level One graphs complete")
 
 	colour = "blue"
 
@@ -819,7 +812,7 @@ for i, video in enumerate(videos):
 			graph_html(plotly.offline.plot(fig, output_type = 'div'), colour, "jungle/%s_%s" % (col, timesplits[times]))
 		colour = "red"
 	
-	print("Junglers tracked")
+	print("Jungler Region Maps complete")
 	
 	colour = "blue"
 	
@@ -974,7 +967,7 @@ for i, video in enumerate(videos):
 			graph_html(plotly.offline.plot(fig, output_type = 'div'), colour, "support/%s_%s" % (col,timesplits[times]))
 		colour = "red"
 	
-	print("Supports tracked")
+	print("Support Region Maps complete")
 
 	colour = "blue"
 	
@@ -1192,7 +1185,7 @@ for i, video in enumerate(videos):
 			graph_html(plotly.offline.plot(fig, output_type = 'div'), colour, "mid/%s_%s" % (col,timesplits[times]))
 		colour = "red"
 
-	print("Mids tracked")
+	print("Mid Region Maps complete")
 
 	# Graph the proximities
 	proximity([0,1,2,3], 4, "blue", "support")
@@ -1200,7 +1193,7 @@ for i, video in enumerate(videos):
 	proximity([5,6,7,8], 9, "red", "support")
 	proximity([5,7,8,9], 6, "red", "jungle")
 
-	print("Proximities tracked")
+	print("Proximity Graphs complete")
 
 	# Output raw locations to a csv
 	df.to_csv("output/%s/positions.csv" % video, index = False)

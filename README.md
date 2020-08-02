@@ -1,45 +1,6 @@
 # LolTracker
 
-A program for tracking League of Legends players and providing analytics from in-game video
-
-## Installation
-
-### Ubuntu 18.04:
-
-Install python and pip
-
-```
-$ sudo apt-get update
-$ sudo apt-get install python3.6
-$ sudo apt install python3-pip
-```
-Navigate to folder with levelone.py
-
-Install dependencies
-```
-$ pip install -r requirements.txt
-```
-Run program
-
-```
-$ python loltracker.py
-```
-
-### Windows
-
-Install [python 3.7](https://docs.python.org/3/using/windows.html), pip should automatically install as well
-
-Navigate to folder with levelone.py
-
-Install dependencies
-```
-$ pip install -r requirements_windows.txt
-```
-Run program
-
-```
-$ python loltracker.py
-```
+A program for tracking League of Legends players and providing analytics from Youtube videos
 
 ## Usage
 
@@ -106,16 +67,49 @@ Currently optimised for:
 * LCS (North America) - lcs
 * PCS (Pacific) - pcs
 
-## Issues
+## Installation
 
-Still some testing to make sure it works for leagues other than the LEC, especially leagues that change their overlay
+### Ubuntu 18.04:
+
+Install python and pip
+
+```
+$ sudo apt-get update
+$ sudo apt-get install python3.6
+$ sudo apt install python3-pip
+```
+Navigate to folder with levelone.py
+
+Install dependencies
+```
+$ pip install -r requirements.txt
+```
+Run program
+
+```
+$ python loltracker.py
+```
+
+### Windows
+
+Install [python 3.7](https://docs.python.org/3/using/windows.html), pip should automatically install as well
+
+Navigate to folder with levelone.py
+
+Install dependencies
+```
+$ pip install -r requirements_windows.txt
+```
+Run program
+
+```
+$ python loltracker.py
+```
+
+## Issues
 
 The dimensions are *slightly* different for each league so the raw numbers in the csvs are not always directly comparable between different leagues. Vods with a lot of noise beforehand can slow down the program, vods with highlights beforehand can break the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is the biggest thing as the program will see the highlight, assume the game started and begin gathering data.
 
 Replays no longer desync the time, but the new method of tracking time has only been tested for the LEC
 
 Proximity graphs need to be smoothed
-
-Blue side jungle graphs became inaccurate with the most recent update, should be fixed soon
-
-Please note that this is an early build, any queries can be directed to  loltracker.program [at] gmail.com
