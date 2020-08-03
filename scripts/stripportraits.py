@@ -33,10 +33,13 @@ import youtube_dl
 #-----------------------------
 
 # Change this playlist to your own
-playlist_url = "https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s"
+playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPQkixYKTF3WkiyWwyP4BTzj"
 
 # Change until you get a frame with desired champion isolated on the minimap
-frames_to_skip = 14000
+frames_to_skip = 6000
+
+# Skip n videos in the playlist
+videos_to_skip = 82
 
 #-----------------------------
 
@@ -46,7 +49,7 @@ for i in (playlist['items']):
 	videos.append(i['pafy'].videoid)
 
 # Grabs first video from playlist
-v = pafy.new(videos[0])
+v = pafy.new(videos[videos_to_skip])
 play = v.getbest(preftype="mp4")
 cap = cv2.VideoCapture(play.url)
 

@@ -21,6 +21,10 @@ Output will be sent to the 'output' directory for each game in the playlist. Tak
 
 ## Output
 
+The raw data is saved as a csv, named positions.csv
+
+As well as this, the program will automatically draw up some basic graphs about each individual game:
+
 ### Level One:
 An html for each champion on blue & red side, totalling 10. The file will contain interactive graphs of each player's in-game position until the 90 second mark. 
 ![Level One Example](/markdown_assets/levelone_example.png)

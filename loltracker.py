@@ -12,14 +12,14 @@ import pafy
 
 #-----------------------------
 
-# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', 'lcs', 'pcs', 'lpl', 'bl', 'lck', 'eum' and 'lec' supported so far
-league = "lec"
+# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', 'lcs', 'lcsnew' 'pcs', 'lpl', 'bl', 'lck', 'eum' and 'lec' supported so far
+league = "lcsnew"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s"
+playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPQkixYKTF3WkiyWwyP4BTzj"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 4
+videos_to_skip = 82
 
 #-----------------------------
 
@@ -40,9 +40,13 @@ leagues = {
 	538, 705, 1098, 1265]
 }
 
+# LCS Summer 2020 has a different overlay
+overlay_swap = league == "lcsnew"
+
+
 # Some broadcasts have the same dimensions
 if league in ["lpl"]: league = "lck"
-if league == "eum": league = "lcs"
+if league in ["eum", 'lcsnew']: league = "lcs"
 if league in ["slo", 'lfl', 'ncs', 'pgn', 'bl', 'hpm']: league = "uklc"
 
 map_0, map_1, map_2, map_3 = leagues[league][:4]
@@ -366,17 +370,15 @@ def proximity(l, t, side, role):
 	html_writer.write(html_txt)
 	html_writer.close()
 
-# Buffs spawn at 90 seconds exactly, when they appear we use this to sync the time
-buff  = cv2.imread("assets/%s/blueside_blue_%s.jpg" % (league, league), 0)
-buff2 = cv2.imread("assets/%s/blueside_red_%s.jpg" % (league, league), 0)
-buff3 = cv2.imread("assets/%s/redside_blue_%s.jpg" % (league, league), 0)
-buff4 = cv2.imread("assets/%s/redside_red_%s.jpg" % (league,league), 0)
-
 # Baron spawns at 20mins, when it appears we use this to sync the time
 baron_template = cv2.imread("assets/baron.jpg", 0)
 
 # Scoreboard is only ever up during live footage, this will filter useless frames
-header = cv2.imread("assets/header.jpg", 0)
+if(overlay_swap):
+	header = cv2.imread("assets/lcsheader.jpg", 0)
+	header2 = cv2.imread("assets/lcsheader2.jpg", 0)
+else:
+	header = cv2.imread("assets/header.jpg", 0)
 
 # Iterate through each video in the playlist, grabbing their IDs
 playlist = pafy.get_playlist(playlist_url)
@@ -443,18 +445,31 @@ for i, video in enumerate(videos):
 		cropped = gray[0:hheight, hwidth1:hwidth2]
 
 		# Look for the scoreboard
-		matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
-		location = np.where(matched > 0.75)
-		
+		if(overlay_swap):
+			matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
+			location = np.where(matched > 0.75)
+			if(location[0].any()):
+				break
+
+			matched = cv2.matchTemplate(cropped, header2, cv2.TM_CCOEFF_NORMED)
+			location = np.where(matched > 0.75)
+			if(location[0].any()):
+				header = header2
+				break
+		else:
+			matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
+			location = np.where(matched > 0.75)
+			if(location[0].any()):
+				break
 		# Break when scoreboard found
-		if(location[0].any()):
-			break
+		
 
 		# Skip one second if not
 		for i in range(frames_to_skip):
 			cap.grab()
-	
-	threshold = 0.65
+	print("checked")
+
+	threshold = 0.67
 	portraits = os.listdir("classify/blue")
 	identified = 0 	
 
@@ -464,11 +479,11 @@ for i, video in enumerate(videos):
 		champs = [""]*10
 		
 		# Each champion has their own spot on the sidebar, we use that to identify which champions are in the game and which position they're in
-		blue_top = gray[108:133, 17:52]
-		blue_jgl = gray[178:203, 17:52]
-		blue_mid = gray[246:268, 17:52]
-		blue_adc = gray[314:336, 17:52]
-		blue_sup = gray[382:404, 17:52]
+		blue_top = gray[108:133, 24:46]
+		blue_jgl = gray[178:203, 24:46]
+		blue_mid = gray[246:268, 24:46]
+		blue_adc = gray[314:336, 24:46]
+		blue_sup = gray[382:404, 24:46]
 		
 		# Check the sidebar for each champion
 		for portrait in portraits:
@@ -560,7 +575,7 @@ for i, video in enumerate(videos):
 				timer_ordered = ''.join([timer_ordered, nums[num]])
 			
 			seconds_timer.append((timer(timer_ordered,"")))
-			
+
 			cropped = gray[map_0:map_1, map_2:map_3]
 			cropped_4 = gray[baron[0]- 4:baron[1]+ 4, baron[2]- 4:baron[3]+ 4]
 			
@@ -1200,4 +1215,4 @@ for i, video in enumerate(videos):
 	
 # Print final runtime
 time1 = time.time()
-print("Runtime: %.2f seconds" % (time1-time0))
+print("Runtime: %.2f seconds" % (time1 - time0))
