@@ -36,10 +36,10 @@ import youtube_dl
 playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPQkixYKTF3WkiyWwyP4BTzj"
 
 # Change until you get a frame with desired champion isolated on the minimap
-frames_to_skip = 6000
+frames_to_skip = 5000
 
 # Skip n videos in the playlist
-videos_to_skip = 82
+videos_to_skip = 75
 
 #-----------------------------
 

@@ -19,7 +19,7 @@ league = "lcsnew"
 playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPQkixYKTF3WkiyWwyP4BTzj"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 80
+videos_to_skip = 0
 
 #-----------------------------
 
@@ -42,6 +42,30 @@ leagues = {
 
 # LCS Summer 2020 has a different overlay
 overlay_swap = league == "lcsnew"
+
+test = ['top','jgl','mid','adc','sup']
+
+rows_list = []
+def proximity(l, t, side, role, role1):
+	plots = ""
+	for i in l: # For each allied champion
+		count = 0
+		champ = df.columns[i]
+		champ_to_check = pd.DataFrame((df[df.columns[t]]).apply(lambda x : np.array(x)))
+		champ_teammate =pd.DataFrame((df[champ]).apply(lambda x : np.array(x)))
+
+		diffs = [0]*len(champ_teammate)
+		for j in range(len(champ_teammate)): # For every pair of points gathered
+			try:	
+				dist = norm(champ_to_check[df.columns[t]][j] - champ_teammate[champ][j]) # Get the distance between the two
+				diffs[j] = dist
+
+				# If within 50 units, they're considered 'close'
+				if(dist < 50):
+					count+=1
+			except:
+				pass
+		rows_list.append({"video": video, "side":side, "role":role, "target":test[i%5], "player":role1, "teammate":champs[i], "proximity":100*count/len(df['Seconds'])})
 
 
 # Some broadcasts have the same dimensions
@@ -253,6 +277,13 @@ for i in (playlist['items']):
 # Skipping videos
 videos = videos[videos_to_skip:]
 
+test_dict = {
+	"top":[108,133], 
+	"jgl":[178,203], 
+	"mid":[246,268],
+	"adc":[310,340],
+	"sup":[380,410]}
+
 # Create output directory
 if(not(os.path.exists("output"))):
 	os.mkdir("output")
@@ -266,8 +297,8 @@ for index, video in enumerate(videos):
 	v = pafy.new(video)
 	play = v.getbest(preftype="mp4")
 	video = play.title
+
 	
-	# Create output folder
 	if not os.path.exists("output/%s" % video):
 		os.makedirs("output/%s" % video)
 
@@ -318,72 +349,70 @@ for index, video in enumerate(videos):
 		for i in range(frames_to_skip):
 			cap.grab()
 	
-	threshold = 0.67
-	portraits = os.listdir("classify/blue")
+		blue_portraits = os.listdir("classify/blue")
+	red_portraits = os.listdir("classify/red")
 	identified = 0 	
+
+	blue_champ_templates = [""]*len(blue_portraits)
+	red_champ_templates = [""]*len(red_portraits)
+	for portrait_i, portrait in enumerate(blue_portraits):
+		blue_champ_templates[portrait_i] = cv2.imread("classify/blue/%s" % portrait, 0)
+	for portrait_i, portrait in enumerate(red_portraits):	
+		red_champ_templates[portrait_i] = cv2.imread("classify/red/%s" % portrait, 0)
 
 	# Identify blue side champions
 	while(identified != 5):
 		identified = 0
 		champs = [""]*10
-		
-		# Each champion has their own spot on the sidebar, we use that to identify which champions are in the game and which position they're in
-		blue_top = gray[108:133, 24:46]
-		blue_jgl = gray[178:203, 24:46]
-		blue_mid = gray[246:268, 24:46]
-		blue_adc = gray[314:336, 24:46]
-		blue_sup = gray[382:404, 24:46]
-		
+
 		# Check the sidebar for each champion
-		for portrait in portraits:
-			template = cv2.imread("classify/blue/%s" % portrait, 0)
-			for i,role in enumerate(['top','jgl','mid','adc','sup']):
-				if(eval('np.where(cv2.matchTemplate(blue_%s, template, cv2.TM_CCOEFF_NORMED) > threshold)[0].any()' % (role))):
-					if(champs[i] == ""):
-						identified+=1
-						champs[i] = portrait[:-4]
-		
-		# If too many champions found, check again with stricter threshold
-		if(identified > 5):
-			threshold += 0.05
+		for i,role in enumerate(['top','jgl','mid','adc','sup']):
+			temp = 0.7
+			most_likely_champ = ""
+			champ_found = False
+			blue_crop = gray[test_dict[role][0]:test_dict[role][1], 20:50]
+			
+			for j, template in enumerate(blue_champ_templates):
+				champ_classify_percent = np.max(cv2.matchTemplate(blue_crop, template, cv2.TM_CCOEFF_NORMED))
+				if(champ_classify_percent > temp):
+					champ_found = True
+					temp = champ_classify_percent
+					most_likely_champ = blue_portraits[j][:-4]
+			champs[i] = most_likely_champ
+			identified += champ_found
 		
 		# If too few champions found, this is often due to an awkward frame transition. Skip a frame and try again
-		elif(identified < 5):
+		if(identified < 5):
 			for i in range(frames_to_skip):
 				cap.grab()
 			_, frame = cap.read()
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-	champstemp = champs
-	threshold = 0.7
-	portraits = os.listdir("classify/red")
-		
 	# Same for red side champions
 	while(identified != 10):
 		identified = 5
-		champs = champstemp
+
+		for i,role in enumerate(['top','jgl','mid','adc','sup']):
+			temp = 0.7
+			most_likely_champ = ""
+			champ_found = False
+			red_crop = gray[test_dict[role][0]:test_dict[role][1], 1228:1262]
 		
-		red_top = gray[108:133, 1228:1262]
-		red_jgl = gray[178:203, 1228:1262]
-		red_mid = gray[245:275, 1228:1262]
-		red_adc = gray[312:342, 1228:1262]
-		red_sup = gray[380:410, 1228:1262]
-		
-		for portrait in portraits:
-			template = cv2.imread("classify/red/%s" % portrait, 0)
-			for i,role in enumerate(['top','jgl','mid','adc','sup']):
-				if(eval('np.where(cv2.matchTemplate(red_%s, template, cv2.TM_CCOEFF_NORMED) > threshold)[0].any()' % (role))):
-					identified+=1
-					champs[i+5] = portrait[:-4]
+			for j, template in enumerate(red_champ_templates):
+				champ_classify_percent = np.max(cv2.matchTemplate(red_crop, template, cv2.TM_CCOEFF_NORMED))
+				if(champ_classify_percent > temp):
+					champ_found = True
+					temp = champ_classify_percent
+					most_likely_champ = red_portraits[j][:-4]
+			champs[i+5] = most_likely_champ
+			identified += champ_found
 
 		if(identified < 10):
 			for i in range(frames_to_skip):
 				cap.grab()
 			_, frame = cap.read()
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-		elif(identified > 10):
-			threshold += 0.05
-
+		
 	# Grab portraits of each champion found, to search for on the minimap
 	for i, champ in enumerate(champs):
 		templates[i] = cv2.imread('champs/%s.jpg' % champ,0)
@@ -465,10 +494,18 @@ for index, video in enumerate(videos):
 	df = df[df['Seconds'] < 1200]
 	df = df[df['Seconds'] > 0].sort_values("Seconds")
 
+	proximity([0,1,2,3], 4, "blue", "support", champs[4])
+	proximity([0,2,3,4], 1, "blue", "jungle", champs[1])
+	proximity([5,6,7,8], 9, "red", "support", champs[9])
+	proximity([5,7,8,9], 6, "red", "jungle", champs[6])
+
 	# Output raw locations to a csv
 	df.to_csv("output/%s/positions.csv" % video, index = False)
 	print("Game %d of %d complete: %s" % (index+1, len(videos), video))
-	
+
+	df2 = pd.DataFrame(rows_list)
+	df2.to_csv("output/proximities.csv")
+
 # Print final runtime
 time1 = time.time()
 print("Runtime: %.2f seconds" % (time1 - time0))

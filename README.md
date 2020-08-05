@@ -6,7 +6,7 @@ A program for tracking League of Legends players and providing analytics from Yo
 
 Change the lines
 ```
-# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', 'lcs', 'pcs', 'lpl', 'bl', 'lck', 'eum' and 'lec' supported so far
+# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', 'lcs', 'lcsnew', 'pcs', 'lpl', 'bl', 'lck', 'eum' and 'lec' supported so far
 league = "lec"
 
 # Change this url to get different videos
@@ -69,19 +69,13 @@ Currently optimised for:
 * LPL (China) - lpl
 * LCK (Korea) - lck
 * LCS (North America) - lcs
+* LCS (North America) (Summer 2020 overlay) - lcsnew
 * PCS (Pacific) - pcs
 
 ## Installation
 
-### Ubuntu 18.04:
-
 Install python and pip
 
-```
-$ sudo apt-get update
-$ sudo apt-get install python3.6
-$ sudo apt install python3-pip
-```
 Navigate to folder with levelone.py
 
 Install dependencies
@@ -94,26 +88,10 @@ Run program
 $ python loltracker.py
 ```
 
-### Windows
-
-Install [python 3.7](https://docs.python.org/3/using/windows.html), pip should automatically install as well
-
-Navigate to folder with levelone.py
-
-Install dependencies
-```
-$ pip install -r requirements_windows.txt
-```
-Run program
-
-```
-$ python loltracker.py
-```
-
 ## Issues
 
-The dimensions are *slightly* different for each league so the raw numbers in the csvs are not always directly comparable between different leagues. Vods with a lot of noise beforehand can slow down the program, vods with highlights beforehand can break the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is the biggest thing as the program will see the highlight, assume the game started and begin gathering data.
+The dimensions are *slightly* different for each league so the raw numbers in the csvs are not always directly comparable between different leagues. Any comparisons should be normalised to their respective league's dimensions and compared considering that.
 
-Replays no longer desync the time, but the new method of tracking time has only been tested for the LEC
+Vods with a lot of noise beforehand can slow down the program, vods with highlights beforehand can sometimes break the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is the biggest thing as the program will see the highlight, assume the game started and begin gathering data.
 
 Proximity graphs need to be smoothed

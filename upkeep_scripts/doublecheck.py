@@ -25,7 +25,7 @@ playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPQkixYKTF3WkiyW
 frames_to_skip = 8000
 
 # Skip n videos in the playlist
-videos_to_skip = 81
+videos_to_skip = 8
 
 #-----------------------------
 
@@ -65,6 +65,23 @@ hwidth2 = 7*(hwidth//13)
 
 cropped = gray[0:hheight, hwidth1:hwidth2]
 cv2.imshow("sword icon", cropped)
+cv2.waitKey()
+
+blue_top = gray[108:133, 20:50]
+blue_jgl = gray[178:203, 20:50]
+blue_mid = gray[246:268, 20:50]
+blue_adc = gray[310:340, 20:50]
+blue_sup = gray[380:410, 20:50]
+
+cv2.imshow("blue top", blue_top)
+cv2.waitKey()
+cv2.imshow("blue jgl", blue_jgl)
+cv2.waitKey()
+cv2.imshow("blue mid", blue_mid)
+cv2.waitKey()
+cv2.imshow("blue adc", blue_adc)
+cv2.waitKey()
+cv2.imshow("blue sup", blue_sup)
 cv2.waitKey()
 
 # Check baron timer, should be very clear in centre of image if correct

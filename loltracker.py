@@ -19,7 +19,7 @@ league = "lcsnew"
 playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPQkixYKTF3WkiyWwyP4BTzj"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 82
+videos_to_skip = 75
 
 #-----------------------------
 
@@ -380,6 +380,14 @@ if(overlay_swap):
 else:
 	header = cv2.imread("assets/header.jpg", 0)
 
+
+test_dict = {
+	"top":[108,133], 
+	"jgl":[178,203], 
+	"mid":[246,268],
+	"adc":[310,340],
+	"sup":[380,410]}
+
 # Iterate through each video in the playlist, grabbing their IDs
 playlist = pafy.get_playlist(playlist_url)
 videos = []
@@ -467,70 +475,69 @@ for i, video in enumerate(videos):
 		# Skip one second if not
 		for i in range(frames_to_skip):
 			cap.grab()
-	print("checked")
 
-	threshold = 0.67
-	portraits = os.listdir("classify/blue")
+	blue_portraits = os.listdir("classify/blue")
+	red_portraits = os.listdir("classify/red")
 	identified = 0 	
+
+	blue_champ_templates = [""]*len(blue_portraits)
+	red_champ_templates = [""]*len(red_portraits)
+	for portrait_i, portrait in enumerate(blue_portraits):
+		blue_champ_templates[portrait_i] = cv2.imread("classify/blue/%s" % portrait, 0)
+	for portrait_i, portrait in enumerate(red_portraits):	
+		red_champ_templates[portrait_i] = cv2.imread("classify/red/%s" % portrait, 0)
 
 	# Identify blue side champions
 	while(identified != 5):
 		identified = 0
 		champs = [""]*10
-		
-		# Each champion has their own spot on the sidebar, we use that to identify which champions are in the game and which position they're in
-		blue_top = gray[108:133, 24:46]
-		blue_jgl = gray[178:203, 24:46]
-		blue_mid = gray[246:268, 24:46]
-		blue_adc = gray[314:336, 24:46]
-		blue_sup = gray[382:404, 24:46]
-		
+
 		# Check the sidebar for each champion
-		for portrait in portraits:
-			template = cv2.imread("classify/blue/%s" % portrait, 0)
-			for i,role in enumerate(['top','jgl','mid','adc','sup']):
-				if(eval('np.where(cv2.matchTemplate(blue_%s, template, cv2.TM_CCOEFF_NORMED) > threshold)[0].any()' % (role))):
-					if(champs[i] == ""):
-						print("Blue %s Identified: %s" % (role,portrait[:-4]))
-						identified+=1
-						champs[i] = portrait[:-4]
-		
-		# If too many champions found, check again with stricter threshold
-		if(identified > 5):
-			threshold += 0.05
-			print("-"*30)
+		for i,role in enumerate(['top','jgl','mid','adc','sup']):
+			temp = 0.7
+			most_likely_champ = ""
+			champ_found = False
+			blue_crop = gray[test_dict[role][0]:test_dict[role][1], 20:50]
+			
+			for j, template in enumerate(blue_champ_templates):
+				champ_classify_percent = np.max(cv2.matchTemplate(blue_crop, template, cv2.TM_CCOEFF_NORMED))
+				if(champ_classify_percent > temp):
+					champ_found = True
+					temp = champ_classify_percent
+					most_likely_champ = blue_portraits[j][:-4]
+
+			print("Blue %s identified: %s (%.2f%%)" % (role, most_likely_champ, 100*temp))
+			champs[i] = most_likely_champ
+			identified += champ_found
 		
 		# If too few champions found, this is often due to an awkward frame transition. Skip a frame and try again
-		elif(identified < 5):
+		if(identified < 5):
 			for i in range(frames_to_skip):
 				cap.grab()
 			_, frame = cap.read()
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 			print("-"*30)
 	print("-"*30)
-
-	champstemp = champs
-	threshold = 0.7
-	portraits = os.listdir("classify/red")
 		
 	# Same for red side champions
 	while(identified != 10):
 		identified = 5
-		champs = champstemp
-		
-		red_top = gray[108:133, 1228:1262]
-		red_jgl = gray[178:203, 1228:1262]
-		red_mid = gray[245:275, 1228:1262]
-		red_adc = gray[312:342, 1228:1262]
-		red_sup = gray[380:410, 1228:1262]
-		
-		for portrait in portraits:
-			template = cv2.imread("classify/red/%s" % portrait, 0)
-			for i,role in enumerate(['top','jgl','mid','adc','sup']):
-				if(eval('np.where(cv2.matchTemplate(red_%s, template, cv2.TM_CCOEFF_NORMED) > threshold)[0].any()' % (role))):
-					print("Red %s Identified: %s" % (role,portrait[:-4]))
-					identified+=1
-					champs[i+5] = portrait[:-4]
+
+		for i,role in enumerate(['top','jgl','mid','adc','sup']):
+			temp = 0.7
+			most_likely_champ = ""
+			champ_found = False
+			red_crop = gray[test_dict[role][0]:test_dict[role][1], 1228:1262]
+
+			for j, template in enumerate(red_champ_templates):
+				champ_classify_percent = np.max(cv2.matchTemplate(red_crop, template, cv2.TM_CCOEFF_NORMED))
+				if(champ_classify_percent > temp):
+					champ_found = True
+					temp = champ_classify_percent
+					most_likely_champ = red_portraits[j][:-4]
+			print("Red %s identified: %s (%.2f%%)" % (role, most_likely_champ, 100*temp))
+			champs[i+5] = most_likely_champ
+			identified += champ_found
 
 		if(identified < 10):
 			for i in range(frames_to_skip):
@@ -538,10 +545,7 @@ for i, video in enumerate(videos):
 			_, frame = cap.read()
 			print("-"*30)
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-		elif(identified > 10):
-			threshold += 0.05
-			print("-"*30)
-
+		
 	# Grab portraits of each champion found, to search for on the minimap
 	for i, champ in enumerate(champs):
 		templates[i] = cv2.imread('champs/%s.jpg' % champ,0)

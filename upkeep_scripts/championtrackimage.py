@@ -23,13 +23,13 @@ import youtube_dl
 playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPQkixYKTF3WkiyWwyP4BTzj"
 
 # Change to desired champion
-champ = "volibear_"
+champ = "lux"
 
 # Change until you get a frame with desired champion isolated on the minimap
-frames_to_skip = 14000
+frames_to_skip = 31800
 
 # Skip n videos in the playlist
-videos_to_skip = 80
+videos_to_skip = 70
 
 #-----------------------------
 
@@ -49,7 +49,7 @@ ret, frame = cap.read()
 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
 # Change these dimensions until you only have the desired champion in an ~14x14px image
-cropped = gray[586:600,1188:1202] #--------------------------------------------------------------------------------------*
+cropped = gray[622:636, 1162:1176] #--------------------------------------------------------------------------------------*
 
 # Check image is ok
 cv2.imshow("ok",cropped)
