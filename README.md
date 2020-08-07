@@ -17,16 +17,36 @@ videos_to_skip = 0
 ```
 to fit your usage
 
-Output will be sent to the 'output' directory for each game in the playlist. Takes at least 100 seconds per game on my machine (Thinkpad T430)
+Currently optimised for:
+
+|Code|League	|
+|---|---|
+| lec 		| LEC (Europe) |
+| eum 		| EU Masters (Europe) |
+| lfl		| LFL (France) |
+| uklc 		| UK LoL Championship (Ireland & the UK) (Pre Summer 2020)|
+| slo 		| Superliga Orange (Spain)|
+| ncs 		| Nordic Championship Series (Nordic)|
+| pgn 		| PG Nationals (Italy)|
+| bl 		| Belgian League (Belgium)|
+| hpm 		| Hitpoint Masters (Czech Republic/Slovakia)|
+| lpl 		| LPL (China)|
+| lck 		| LCK (Korea) |
+| lcs 		| LCS (North America) (Pre Summer 2020)|
+| lcsnew	| LCS (North America) (Summer 2020 overlay)|
+| pcs		| PCS (Pacific)|
+
+Output will be sent to the 'output' directory for each game in the playlist. Takes at least 100 seconds per game on a Lenovo Thinkpad T430
 
 ## Output
 
-The raw data is saved as a csv, named positions.csv
+The raw data is saved as a csv named positions.csv
 
 As well as this, the program will automatically draw up some basic graphs about each individual game:
 
 ### Level One:
 An html for each champion on blue & red side, totalling 10. The file will contain interactive graphs of each player's in-game position until the 90 second mark. 
+
 ![Level One Example](/markdown_assets/levelone_example.png)
 
 ### Jungle Track:
@@ -51,42 +71,51 @@ All plots can be downloaded as a png by opening the html and clicking the corres
 
 ## Notes
 
-140 champions trackable so far; Ornn, Thresh and Trundle are known problem children, will be fixed in due time. Yuumi is a disaster
+143 champion portraits trackable so far
 
-110 blue side champions identifiable so far, 123 red side. Can check current progress [here](https://docs.google.com/spreadsheets/d/14pUWbDw32owzKmMUSGVbgytgAz0lY9U6FDAcrYU0Za4/edit?usp=sharing)
-
-Currently optimised for:
-
-* EU Masters (Europe) - eum
-* LEC (Europe) - lec
-* LFL (France) - lfl
-* UK LoL Championship (Ireland & the UK) - uklc
-* Superliga Orange (Spain) - slo
-* Nordic Championship Series (Nordic) - ncs
-* PG Nationals (Italy) - pgn
-* Belgian League (Belgium) - bl
-* Hitpoint Masters (Czech Republic/Slovakia) - hpm
-* LPL (China) - lpl
-* LCK (Korea) - lck
-* LCS (North America) - lcs
-* LCS (North America) (Summer 2020 overlay) - lcsnew
-* PCS (Pacific) - pcs
+124 blue side champions identifiable so far, 131 red side
 
 ## Installation
 
-Install python and pip
+* Download or clone loltracker directory
 
-Navigate to folder with levelone.py
+* Install python and pip
 
-Install dependencies
+* Navigate to folder with levelone.py
+
+* Install dependencies
 ```
 $ pip install -r requirements.txt
 ```
-Run program
+* Run program
 
 ```
 $ python loltracker.py
 ```
+* Alternatively, for more streamlined data collection
+```
+$ python data_collection.py
+```
+
+## Upkeep
+
+To keep the program up to date, several scripts are included in the *upkeep_scripts* folder
+
+#### Championtrackimage.py
+
+For adding champion portraits to be tracked on the in-game minimap. If a new champion is added to the game, their portraits must be added
+
+#### Createmapbase.py
+
+For creating a map base should you need to support a new minimap. This needs to be done for any new leagues the program supports and acts as a reference for the graphs
+
+#### Doublecheck.py
+
+This is for making sure that the dimensions of a video line up with the program's dimensions. Used to double check that the program will be cropping images properly
+
+#### Stripportraits.py
+
+For stripping champion portraits from the sidebars. These portraits are used for identifying the champions at the start of the game. 
 
 ## Issues
 

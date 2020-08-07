@@ -1,3 +1,31 @@
+"""
+
+.__         .__   __                        __                 
+|  |   ____ |  |_/  |_____________    ____ |  | __ ___________ 
+|  |  /  _ \|  |\   __\_  __ \__  \ _/ ___\|  |/ // __ \_  __ \
+|  |_(  <_> )  |_|  |  |  | \// __ \\  \___|    <\  ___/|  | \/
+|____/\____/|____/__|  |__|  (____  /\___  >__|_ \\___  >__|   
+                                  \/     \/     \/    \       
+
+Project 		: LolTracker 
+
+Version 		: 1.0.0
+
+Author 			: Stephen O' Farrell (stephen.ofarrell64@gmail.com)
+
+Purpose 		: Automatically track spatiotemporal data in League of Legends broadcast videos
+
+Usage 			: Change lines 48-54 to your desired values
+
+"""
+
+
+#-----------------------------
+
+# Imports
+
+#-----------------------------
+
 import pandas as pd
 import numpy as np 
 from numpy.linalg import norm as norm
@@ -12,14 +40,22 @@ import pafy
 
 #-----------------------------
 
-# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', 'lcs', 'lcsnew' 'pcs', 'lpl', 'bl', 'lck', 'eum' and 'lec' supported so far
+# Input
+
+#-----------------------------
+
+# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', 'lcs', 'lcsnew' 'pcs', 'lpl', 'bl', 'lck', 'eum' and 'lec' supported so far. See README for documentation
 league = "lcsnew"
 
 # Change this url to get different videos
 playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPQkixYKTF3WkiyWwyP4BTzj"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 75
+videos_to_skip = 0
+
+#-----------------------------
+
+# Variables
 
 #-----------------------------
 
@@ -43,13 +79,15 @@ leagues = {
 # LCS Summer 2020 has a different overlay
 overlay_swap = league == "lcsnew"
 
-
 # Some broadcasts have the same dimensions
 if league in ["lpl"]: league = "lck"
 if league in ["eum", 'lcsnew']: league = "lcs"
 if league in ["slo", 'lfl', 'ncs', 'pgn', 'bl', 'hpm']: league = "uklc"
 
+# Dimensions for cropping the map
 map_0, map_1, map_2, map_3 = leagues[league][:4]
+
+# Dimensions of in-game timer
 baron = [23, 50, 1207, 1230]
 
 # 8 minutes, 14 minutes and 20 minutes are important breakpoints in the game, we'll split our data into those time intervals
@@ -60,7 +98,38 @@ timesplits2 = {480:0, 840:480, 1200:840}
 h,w = cv2.imread('assets/%s/%s.png' % (league,league)).shape[:2]
 radius = int(w/2.5)
 
-# Filling in as many missing values as possible
+# Baron spawns at 20mins, when it appears we use this to sync the time
+baron_template = cv2.imread("assets/baron.jpg", 0)
+
+# Scoreboard is only ever up during live footage, this will filter useless frames
+if(overlay_swap):
+	# For new lcs overlay
+	header = cv2.imread("assets/lcsheader.jpg", 0)
+	header2 = cv2.imread("assets/lcsheader2.jpg", 0)
+else:
+	header = cv2.imread("assets/header.jpg", 0)
+
+# Dimensions of role portraits
+role_dict = {
+	"top":[108,133], 
+	"jgl":[178,203], 
+	"mid":[246,268],
+	"adc":[310,340],
+	"sup":[380,410]}
+
+# The digits for reading the timer 
+digit_templates = dict()
+
+for image_temp in os.listdir("assets/images"):
+	digit_templates[image_temp] = cv2.imread("assets/images/%s" % image_temp, 0)
+
+#-----------------------------
+
+# Functions
+
+#-----------------------------
+
+# Interpolation function
 def headfill(df):
 	cols = df.columns
 	for index,column in enumerate(cols):
@@ -78,7 +147,7 @@ def headfill(df):
 		if(np.all(np.all(np.isnan(colt)))): 
 			df[column] = [(np.nan,np.nan)]*len(col)
 		else:
-			x = col
+			col_temp = col
 			i = 0
 
 			# Search through points until an actual location is found
@@ -107,7 +176,7 @@ def headfill(df):
 					# If an ally was found near the first known location
 					if(found):
 						# Assume the two walked together
-						x = pd.concat([df[champ_found][:i],(col[i:])])
+						col_temp = pd.concat([df[champ_found][:i],(col[i:])])
 				except:
 					pass
 
@@ -133,22 +202,22 @@ def headfill(df):
 								found = True
 								champ_found = col_team
 					if(found):
-						x = pd.concat([(x[:j+1]),(df[champ_found][j+1:])])
+						col_temp = pd.concat([(col_temp[:j+1]),(df[champ_found][j+1:])])
 				except:
 					pass
 
 			count = 0
 			k = i
-			x2 = x
+			col_temp2 = col_temp
 
 			# Deal with large chunks of missing values in the middle
-			while(k < len(x2)-1):
+			while(k < len(col_temp2)-1):
 				k+=1
-				if(np.all(np.isnan(x[k]))):
+				if(np.all(np.isnan(col_temp[k]))):
 					count += 1
 				else:
 					if(count > 5): # Missing for more than 5 seconds
-						point = x[k]
+						point = col_temp[k]
 						if(index < 5): # Blue Side
 							circle_x = 0
 							circle_y = h
@@ -158,9 +227,9 @@ def headfill(df):
 						# If first location after disappearing is in the base
 						if(norm(np.array(point) - np.array([circle_x,circle_y])) < radius):
 							# Fill in with location just before disappearing (Assuming they died/recalled)
-							x2 = pd.concat([pd.Series(x2[:k-count]),
-											pd.Series([x2[k-count-1]]*count),
-											pd.Series(x2[k:])], ignore_index = True)
+							col_temp2 = pd.concat([pd.Series(col_temp2[:k-count]),
+											pd.Series([col_temp2[k-count-1]]*count),
+											pd.Series(col_temp2[k:])], ignore_index = True)
 						# Otherwise, check if there were any allies nearby before and after disappearing
 						else:
 							closest = 20
@@ -189,12 +258,12 @@ def headfill(df):
 									temp2 = 20
 									for i in range(5):
 										try:											
-											check2 = norm(np.array(x[k-count-1]) - np.array(df[col_team][k-count-1+i]))
+											check2 = norm(np.array(col_temp[k-count-1]) - np.array(df[col_team][k-count-1+i]))
 											if(check2 < temp2):
 												temp2 = check2
 												found_closest = True
 
-											check2 = norm(np.array(x[k-count-1]) - np.array(df[col_team][k-count-1-i]))
+											check2 = norm(np.array(col_temp[k-count-1]) - np.array(df[col_team][k-count-1-i]))
 											if(check2 < temp2):
 												temp2 = check2
 												found_closest = True
@@ -211,14 +280,14 @@ def headfill(df):
 
 							# Assume the two walked together
 							if(found_closest):
-								x2 = pd.concat([pd.Series(x2[:k-count]),
+								col_temp2 = pd.concat([pd.Series(col_temp2[:k-count]),
 												df[champ_found][k-count:k],
-												pd.Series(x2[k:])],ignore_index = True)
+												pd.Series(col_temp2[k:])],ignore_index = True)
 					count = 0
-			df[column] = x2
+			df[column] = col_temp2
 	return(df)
 
-# Function to recursively clean up the timer reading. Often will confuse 17:74 for 177:74 or miss a few digits, this removes as many of them as possible and converts the reading to the value in seconds
+# Function to recursively clean up and convert the timer reading to seconds.
 def timer(time_read, last):
 	if(len(time_read) < 1):
 		return(9999)
@@ -233,74 +302,75 @@ def timer(time_read, last):
 	else:
 		return(timer(time_read[1:], last + time_read[:1]))
 
-
-# Each position has different regions that are ideal to focus on. These functions will classify which region each point is in
+# Each position has different regions that are ideal to focus on. These functions will classify which region each point is in for junglers
 def classify_jgl(points):
 	reds = [0]*9
 	points.dropna(inplace=True)
 	for point in points:
-		if(norm(point - np.array([0,0]))   		< radius):
+		if(norm(point - np.array([0,0]))   		< radius): # Toplane
 			reds[5]+=1
-		elif(norm(point - np.array([149,0])) 	< radius):
+		elif(norm(point - np.array([149,0])) 	< radius): # Red base
 			reds[6]+=1
-		elif(norm(point - np.array([149,149])) 	< radius):
+		elif(norm(point - np.array([149,149])) 	< radius): # Botlane
 			reds[8]+=1
-		elif(norm(point - np.array([0,149])) 	< radius):
+		elif(norm(point - np.array([0,149])) 	< radius): # Blue base
 			reds[7]+=1
-		elif(point[0] < h - point[1] - h/10):
-			if(point[0] < point[1]):
-				reds[1]+=1
+		elif(point[0] < h - point[1] - h/10): # Above midlane upper border
+			if(point[0] < (5/4)*point[1]):
+				reds[1]+=1 # Blue side
 			else:
-				reds[0]+=1
-		elif(point[0] < h - point[1] + h/10):
-			reds[4]+=1
-		elif(point[0] > h - point[1] + h/10):
-			if(point[0] < point[1]):
+				reds[0]+=1 # Red side
+		elif(point[0] < h - point[1] + h/10): # Above midlane lower border (in midlane)
+			reds[4]+=1 
+		elif(point[0] > h - point[1] + h/10): # Below midlane lower border
+			if(point[0] < (5/4)*point[1]): # Blue side
 				reds[2]+=1
-			elif(point[0] > point[1]):
+			elif(point[0] > (5/4)*point[1]): # Red side
 				reds[3]+=1
 	return(reds)
 
+# For supports
 def classify_sup(points):
 	reds = [0]*7
 	points.dropna(inplace=True)
 	for point in points:
-		if(norm(point - np.array([149,0]))  < radius):
+		if(norm(point - np.array([149,0]))  < radius): # Red base
 			reds[6]+=1
-		elif(norm(point - np.array([0,149]))    < radius):
+		elif(norm(point - np.array([0,149]))    < radius): # Blue base
 			reds[3]+=1
-		elif(norm(point - np.array([149,149]))  < radius or point[0] > w-w/10 or point[1] > h-h/10):
+		elif(norm(point - np.array([149,149]))  < radius or point[0] > w-w/10 or point[1] > h-h/10): # Botlane
 			reds[5]+=1
-		elif(point[0] < h - point[1] - h/10):
+		elif(point[0] < h - point[1] - h/10): # Above midlane
 			reds[0]+=1
-		elif(point[0] > h - point[1] + h/10):
-			if(point[0] < point[1]):
+		elif(point[0] > h - point[1] + h/10): # Below midlane
+			if(point[0] < point[1]): # Blue side
 				reds[2]+=1
-			elif(point[0] > point[1]):
+			elif(point[0] > point[1]): # Red side
 				reds[1] += 1
-		elif(point[0] < h - point[1] + h/10):
+		elif(point[0] < h - point[1] + h/10): # Midlane
 			reds[4]+=1
 	return(reds)
 
+# And for midlaners
 def classify_mid(points):
 	reds = [0]*8
 	points.dropna(inplace=True)
 	for point in points:
-		if(norm(point - np.array([149,0]))	< radius):
+		if(norm(point - np.array([149,0]))	< radius): # Red base
 			reds[6]+=1
-		elif(norm(point - np.array([0,149])) 	< radius):
+		elif(norm(point - np.array([0,149])) 	< radius): # Blue base
 			reds[7]+=1
-		elif(norm(point - np.array([149,149])) 	< radius or point[0] > w-w/10 or point[1] > h-h/10):
+		elif(norm(point - np.array([149,149])) 	< radius or point[0] > w-w/10 or point[1] > h-h/10): # Botlane
 			reds[5]+=1
-		elif(norm(point - np.array([0,149])) 	< radius or point[0] < w/10 or point[1] < h/10):
+		elif(norm(point - np.array([0,149])) 	< radius or point[0] < w/10 or point[1] < h/10): # Toplane
 			reds[4]+=1
-		elif(point[0] < h - point[1] - h/10):
+		elif(point[0] < h - point[1] - h/10): # Topside jungle
 			reds[3]+=1
-		elif(point[0] > h - point[1] + h/10):
+		elif(point[0] > h - point[1] + h/10): # Botside jungle
 			reds[2]+=1
-		elif(point[0] < point[1]):
+		elif(point[0] < point[1]): # Past halfway point of midlane
 			reds[1]+=1
-		elif(point[0] > point[1]):
+		elif(point[0] > point[1]): # Behind halfway point of midlane
 			reds[0]+=1
 	return(reds)
 
@@ -321,9 +391,9 @@ def graph_html(div_plot, colour, champ):
 # This will graph the proximities for a given role and side, showing how close two players were throughout the game
 def proximity(l, t, side, role):
 	plots = ""
-	for i in l: # For each allied champion
+	for ally in l: # For each allied champion
 		count = 0
-		champ = df.columns[i]
+		champ = df.columns[ally]
 		champ_to_check = pd.DataFrame((df[df.columns[t]]).apply(lambda x : np.array(x)))
 		champ_teammate =pd.DataFrame((df[champ]).apply(lambda x : np.array(x)))
 
@@ -370,30 +440,17 @@ def proximity(l, t, side, role):
 	html_writer.write(html_txt)
 	html_writer.close()
 
-# Baron spawns at 20mins, when it appears we use this to sync the time
-baron_template = cv2.imread("assets/baron.jpg", 0)
+#-----------------------------
 
-# Scoreboard is only ever up during live footage, this will filter useless frames
-if(overlay_swap):
-	header = cv2.imread("assets/lcsheader.jpg", 0)
-	header2 = cv2.imread("assets/lcsheader2.jpg", 0)
-else:
-	header = cv2.imread("assets/header.jpg", 0)
+# Tracking
 
-
-test_dict = {
-	"top":[108,133], 
-	"jgl":[178,203], 
-	"mid":[246,268],
-	"adc":[310,340],
-	"sup":[380,410]}
+#-----------------------------
 
 # Iterate through each video in the playlist, grabbing their IDs
 playlist = pafy.get_playlist(playlist_url)
 videos = []
-
-for i in (playlist['items']):
-	videos.append(i['pafy'].videoid)
+for item_i in (playlist['items']):
+	videos.append(item_i['pafy'].videoid)
 
 # Skipping videos
 videos = videos[videos_to_skip:]
@@ -403,7 +460,7 @@ if(not(os.path.exists("output"))):
 	os.mkdir("output")
 
 # Run on each video
-for i, video in enumerate(videos):
+for video in videos:
 
 	# Get the video url using pafy
 	v = pafy.new(video)
@@ -412,7 +469,7 @@ for i, video in enumerate(videos):
 	
 	print("Game: %s" % video)
 	
-	# Create output folder
+	# Create output folders
 	if not os.path.exists("output/%s" % video):
 		os.makedirs("output/%s" % video)
 		os.makedirs("output/%s/red" % video)
@@ -436,6 +493,7 @@ for i, video in enumerate(videos):
 	# Skip one second each time, reduce this for longer runtime but better accuracy. The timer should still be synced up but hasn't been tested
 	frames_to_skip = int(cap.get(cv2.CAP_PROP_FPS))
 
+	# Get the dimensions needed to check for the header
 	_,frame = cap.read()
 	hheight,hwidth, _ = frame.shape
 	hheight = hheight//15
@@ -446,14 +504,14 @@ for i, video in enumerate(videos):
 	while(True):
 		_,frame = cap.read()
 
-		# Making the images gray will make it more efficient
+		# Making the images gray will make template matching more efficient
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
 		# Search only in a section near the top, again for efficiency
 		cropped = gray[0:hheight, hwidth1:hwidth2]
 
 		# Look for the scoreboard
-		if(overlay_swap):
+		if(overlay_swap): # If new lcs overlay, we have to check for both possibilities
 			matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
 			location = np.where(matched > 0.75)
 			if(location[0].any()):
@@ -461,58 +519,70 @@ for i, video in enumerate(videos):
 
 			matched = cv2.matchTemplate(cropped, header2, cv2.TM_CCOEFF_NORMED)
 			location = np.where(matched > 0.75)
-			if(location[0].any()):
-				header = header2
+			if(location[0].any()): # If it's the second one
+				header = header2  # Use the second one
 				break
-		else:
+		else: # Otherwise, check for the sword icon normally
 			matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
 			location = np.where(matched > 0.75)
 			if(location[0].any()):
 				break
-		# Break when scoreboard found
-		
 
 		# Skip one second if not
-		for i in range(frames_to_skip):
+		for _ in range(frames_to_skip):
 			cap.grab()
 
+	#-----------------------------
+
+	# Identifying Champions
+
+	#-----------------------------
+
+	# Grab portraits for identifying the champions played
 	blue_portraits = os.listdir("classify/blue")
 	red_portraits = os.listdir("classify/red")
 	identified = 0 	
 
 	blue_champ_templates = [""]*len(blue_portraits)
 	red_champ_templates = [""]*len(red_portraits)
+	
+	# Save templates for template matching
 	for portrait_i, portrait in enumerate(blue_portraits):
 		blue_champ_templates[portrait_i] = cv2.imread("classify/blue/%s" % portrait, 0)
 	for portrait_i, portrait in enumerate(red_portraits):	
 		red_champ_templates[portrait_i] = cv2.imread("classify/red/%s" % portrait, 0)
 
-	# Identify blue side champions
+	# Identify blue side champions until exactly 5 have been found
 	while(identified != 5):
 		identified = 0
 		champs = [""]*10
 
 		# Check the sidebar for each champion
-		for i,role in enumerate(['top','jgl','mid','adc','sup']):
+		for role_i,role in enumerate(['top','jgl','mid','adc','sup']):
 			temp = 0.7
 			most_likely_champ = ""
 			champ_found = False
-			blue_crop = gray[test_dict[role][0]:test_dict[role][1], 20:50]
+
+			# Crop to each role's portrait in the video
+			blue_crop = gray[role_dict[role][0]:role_dict[role][1], 20:50]
 			
+			# Scroll through each template and find the best match
 			for j, template in enumerate(blue_champ_templates):
 				champ_classify_percent = np.max(cv2.matchTemplate(blue_crop, template, cv2.TM_CCOEFF_NORMED))
+				
+				# If a better match than the previous best, log that champion
 				if(champ_classify_percent > temp):
 					champ_found = True
 					temp = champ_classify_percent
 					most_likely_champ = blue_portraits[j][:-4]
 
 			print("Blue %s identified: %s (%.2f%%)" % (role, most_likely_champ, 100*temp))
-			champs[i] = most_likely_champ
+			champs[role_i] = most_likely_champ
 			identified += champ_found
 		
 		# If too few champions found, this is often due to an awkward frame transition. Skip a frame and try again
 		if(identified < 5):
-			for i in range(frames_to_skip):
+			for _ in range(frames_to_skip):
 				cap.grab()
 			_, frame = cap.read()
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -523,11 +593,11 @@ for i, video in enumerate(videos):
 	while(identified != 10):
 		identified = 5
 
-		for i,role in enumerate(['top','jgl','mid','adc','sup']):
+		for role_i,role in enumerate(['top','jgl','mid','adc','sup']):
 			temp = 0.7
 			most_likely_champ = ""
 			champ_found = False
-			red_crop = gray[test_dict[role][0]:test_dict[role][1], 1228:1262]
+			red_crop = gray[role_dict[role][0]:role_dict[role][1], 1228:1262]
 
 			for j, template in enumerate(red_champ_templates):
 				champ_classify_percent = np.max(cv2.matchTemplate(red_crop, template, cv2.TM_CCOEFF_NORMED))
@@ -536,23 +606,30 @@ for i, video in enumerate(videos):
 					temp = champ_classify_percent
 					most_likely_champ = red_portraits[j][:-4]
 			print("Red %s identified: %s (%.2f%%)" % (role, most_likely_champ, 100*temp))
-			champs[i+5] = most_likely_champ
+			champs[role_i+5] = most_likely_champ
 			identified += champ_found
 
 		if(identified < 10):
-			for i in range(frames_to_skip):
+			for _ in range(frames_to_skip):
 				cap.grab()
 			_, frame = cap.read()
 			print("-"*30)
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		
 	# Grab portraits of each champion found, to search for on the minimap
-	for i, champ in enumerate(champs):
-		templates[i] = cv2.imread('champs/%s.jpg' % champ,0)
+	for champ_i, champ in enumerate(champs):
+		templates[champ_i] = cv2.imread('champs/%s.jpg' % champ,0)
 
 	# Every position will be stored
 	points = {key:[] for key in champs}
 	seconds_timer = []
+
+	#-----------------------------
+
+	# Track locations
+
+	#-----------------------------
+
 	while(True):
 		_, frame = cap.read()
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -563,23 +640,42 @@ for i, video in enumerate(videos):
 		if(location[0].any()):
 			cropped_timer = gray[23:50, 1210:1250]
 			
+			#-----------------------------
+
+			# Timer 
+
+			#-----------------------------
+
 			nums = dict()
-			for i in os.listdir("assets/images"):
-				template = cv2.imread("assets/images/%s" % i, 0)
-				res = cv2.matchTemplate(cropped_timer, template, cv2.TM_CCOEFF_NORMED)
+
+			# For each digit
+			for image_i in digit_templates:
+				res = cv2.matchTemplate(cropped_timer, digit_templates[image_i], cv2.TM_CCOEFF_NORMED)
+				
+				# Try to find each digit in the timer
 				digit = np.where(res > 0.75)
-				if(digit[0].any()):
-					seen = set()
+				if(digit[0].any()): # If found
+					seen = set() # Track horizontal locations
 					inp = (list(zip(*digit)))
-					outp = [(a, b) for a, b in inp if not (b in seen or seen.add(b) or seen.add(b+1) or seen.add(b-1))]
+					outp = [(a, b) for a, b in inp if not (b in seen or seen.add(b) or seen.add(b+1) or seen.add(b-1))] # Only add digit if the horizontal position hasn't already been filled
 					for out in outp:
-						nums[out[1]] = i[:1]
+						nums[out[1]] = image_i[:1] # Save digit
 			timer_ordered	 = ""
-			for i,num in enumerate(sorted(nums)):
+
+			# Sort time
+			for num in (sorted(nums)):
 				timer_ordered = ''.join([timer_ordered, nums[num]])
 			
+			# Add time to list as seconds value
 			seconds_timer.append((timer(timer_ordered,"")))
 
+			#-----------------------------
+
+			# Tracking champions
+
+			#-----------------------------
+
+			# Crop to minimap and Baron Nashor icon
 			cropped = gray[map_0:map_1, map_2:map_3]
 			cropped_4 = gray[baron[0]- 4:baron[1]+ 4, baron[2]- 4:baron[3]+ 4]
 			
@@ -591,31 +687,33 @@ for i, video in enumerate(videos):
 			if(buffs[0].any()):
 				break
 			else: 
-				for i, template in enumerate(templates):
+				for template_i, template in enumerate(templates):
 					matched = cv2.matchTemplate(cropped,template,cv2.TM_CCOEFF_NORMED)
 					location = np.where(matched >= 0.8)
 
+					# If champion found, save their location
 					try:
 						point = next(zip(*location[::-1]))
-						point_i[i] = point
+						point_i[template_i] = point
 						cv2.rectangle(cropped, point, (point[0] + 14, point[1] + 14), 255, 2)
 					except:
 						point = (np.nan,np.nan)
 						pass
 
 					temp = np.array([point[0] + 7, point[1] + 7])
-					points[champs[i]].append(temp)
+					points[champs[template_i]].append(temp)
 
+				# Show minimap with champions highlighted
 				cv2.imshow('minimap',cropped)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					break
-				for i in range(frames_to_skip):
+				for _ in range(frames_to_skip):
 					cap.grab()
-	# Same as above
+	
+	# Save data to Pandas dataframe
 	df = pd.DataFrame(points)
 
-	# collist= df.columns
-
+	# Interpolate
 	df = headfill(df)
 	for col in df.columns:
 		df[col] = list(zip(*map(
@@ -628,6 +726,7 @@ for i, video in enumerate(videos):
 	seconds_timer = np.array(seconds_timer).astype(int)
 	seconds_timer = seconds_timer[~np.isnan(seconds_timer)]
 
+	# Add seconds
 	df = pd.concat([df,pd.DataFrame({'Seconds':seconds_timer})], axis=1)
 	
 	# Remove the values that went wrong (9999 means the program's prediction was too low, a highly negative number means it was too high)
@@ -637,9 +736,15 @@ for i, video in enumerate(videos):
 	colour="blue"
 	cols = df.columns[:-1]
 
-	# Graph each champion's locations
-	for i, col in enumerate(cols):
-		if i > 4: # If we graphed all 5 blue side champions
+	#-----------------------------
+
+	# Graphs
+
+	#-----------------------------
+
+	# Graph each level one pattern
+	for col_i, col in enumerate(cols):
+		if col_i > 4: # If we graphed all 5 blue side champions
 			colour = "red"
 
 		temp_df = df[df['Seconds'] <= 90]
@@ -674,7 +779,7 @@ for i, video in enumerate(videos):
 
 		fig.add_layout_image(
 				dict(
-					source=Image.open('portraits/%sSquare.png' % col.capitalize()),
+					source=Image.open('portraits/%sSquare.png' % col.capitalize().replace("_", "")),
 					xref="x",
 					yref="y",
 					x=0,
@@ -699,12 +804,18 @@ for i, video in enumerate(videos):
 
 	print("Level One graphs complete")
 
+	# Graph junglers
+
 	colour = "blue"
 
-	for col in [df.columns[i] for i in [1,6]]:
+	for col in [df.columns[n] for n in [1,6]]:
 		# We split these up into our important intervals
 		for times in timesplits.keys():
+
+			# Get time intervals
 			times_floor = timesplits2[times]
+
+			# Classify points
 			reds = classify_jgl(df[col][(df['Seconds'] <= times) & (df['Seconds'] >= times_floor)])
 			
 			# We scale our points so that they fall nicely on [0,255], meaning easier to read graphs
@@ -833,9 +944,11 @@ for i, video in enumerate(videos):
 	
 	print("Jungler Region Maps complete")
 	
+	# Support graphs
+
 	colour = "blue"
 	
-	for col in [df.columns[i] for i in [4,9]]:
+	for col in [df.columns[n] for n in [4,9]]:
 		for times in timesplits.keys():
 			reds = classify_sup(df[col][df['Seconds'] <= times])
 			reds = list(map(lambda x : 255-255*(x - min(reds))/(max(reds)-min(reds)), reds))
@@ -988,9 +1101,11 @@ for i, video in enumerate(videos):
 	
 	print("Support Region Maps complete")
 
+	# Midlane graphs
+
 	colour = "blue"
 	
-	for col in [df.columns[i] for i in [2,7]]:
+	for col in [df.columns[n] for n in [2,7]]:
 		fill_team = "255, %d, %d" if colour == "red" else "%d, %d, 255"
 		for times in timesplits.keys():
 			reds = classify_mid(df[col][df['Seconds'] <= times])
