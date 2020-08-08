@@ -30,7 +30,7 @@ league = "lcsnew"
 playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPQkixYKTF3WkiyWwyP4BTzj"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 80
+videos_to_skip = 81
 
 #-----------------------------
 

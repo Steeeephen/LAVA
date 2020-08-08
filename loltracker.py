@@ -51,8 +51,7 @@ league = "lcsnew"
 playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPQkixYKTF3WkiyWwyP4BTzj"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 0
-
+videos_to_skip = 4
 #-----------------------------
 
 # Variables
@@ -1331,6 +1330,7 @@ for video in videos:
 
 	# Output raw locations to a csv
 	df.to_csv("output/%s/positions.csv" % video, index = False)
+	break
 	
 # Print final runtime
 time1 = time.time()
