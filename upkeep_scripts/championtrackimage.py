@@ -20,16 +20,16 @@ import youtube_dl
 #-----------------------------
 
 # Change this playlist to your own
-playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPQkixYKTF3WkiyWwyP4BTzj"
+playlist_url = "https://www.youtube.com/playlist?list=PLVgS_BIOY01xJhrU7MLw2dNY-fuCx-SAB"
 
 # Change to desired champion
-champ = "aatrox_"
+champ = "lillia"
 
 # Change until you get a frame with desired champion isolated on the minimap
-frames_to_skip = 10800
+frames_to_skip = 15000
 
 # Skip n videos in the playlist
-videos_to_skip = 3
+videos_to_skip = 22
 
 #-----------------------------
 
@@ -49,7 +49,7 @@ ret, frame = cap.read()
 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
 # Change these dimensions until you only have the desired champion in an ~14x14px image
-cropped = gray #--------------------------------------------------------------------------------------*
+cropped = gray[565:579, 1170:1184] #--------------------------------------------------------------------------------------*
 
 # Check image is ok
 cv2.imshow("ok",cropped)

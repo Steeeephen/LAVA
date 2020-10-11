@@ -2,7 +2,10 @@
 
 A program for tracking League of Legends players and providing analytics from Youtube videos
 
+***
 ## Usage
+
+### YouTube
 
 Change the lines
 ```
@@ -17,7 +20,12 @@ videos_to_skip = 0
 ```
 to fit your usage
 
-Currently optimised for:
+### Local
+
+Add your 720p videos to the `input/` folder and run the program with `python loltracker.py -t local`
+
+***
+Currently optimised for 2020 versions of:
 
 |Code|League	|
 |---|---|
@@ -36,6 +44,8 @@ Currently optimised for:
 | lcsnew	| LCS (North America) (Summer 2020 overlay)|
 | pcs		| PCS (Pacific)|
 
+Though small changes to the broadcast may throw some off
+
 Output will be sent to the 'output' directory for each game in the playlist. Takes at least 100 seconds per game on a Lenovo Thinkpad T430
 
 ## Output
@@ -47,24 +57,24 @@ As well as this, the program will automatically draw up some basic graphs about 
 ### Level One:
 An html for each champion on blue & red side, totalling 10. The file will contain interactive graphs of each player's in-game position until the 90 second mark. 
 
-![Level One Example](/markdown_assets/levelone_example.png)
+![Level One Example](/assets/markdown_assets/levelone_example.png)
 
 ### Jungle Track:
 An html for each jungler. The html file has choropleth maps showing the jungler's positions from 0-8, 8-14 and 14-20 minutes.
-![Jungle Example](/markdown_assets/jungle_example.png)
+![Jungle Example](/assets/markdown_assets/jungle_example.png)
 
 ### Mid Track:
 Similar to jungle track, but for midlaners. Focuses on different regions of the map
-![Midlane Example](/markdown_assets/midlane_example.png)
+![Midlane Example](/assets/markdown_assets/midlane_example.png)
 
 ### Support Track:
 Similar to mid track, but for supports.
-![Support Example](/markdown_assets/support_example.png)
+![Support Example](/assets/markdown_assets/support_example.png)
 
 ### Proximity Tracker:
 Tracks player proximity for supports and junglers throughout the game. Example shows a support's proximity to their adc
 <p align = "center">
-	<img src = "/markdown_assets/proximity_sample.png" width = 1200>
+	<img src = "/assets/markdown_assets/proximity_sample.png" width = 1200>
 </p> 
 
 All plots can be downloaded as a png by opening the html and clicking the corresponding button on each graph
@@ -90,9 +100,15 @@ $ pip install -r requirements.txt
 * Run program
 
 ```
-$ python loltracker.py
+$ python loltracker.py -t youtube
 ```
+or
+```
+$ python loltracker.py -t local
+```
+
 * Alternatively, for more streamlined data collection
+
 ```
 $ python data_collection.py
 ```
@@ -103,7 +119,7 @@ To keep the program up to date, several scripts are included in the *upkeep_scri
 
 #### Championtrackimage.py
 
-For adding champion portraits to be tracked on the in-game minimap. If a new champion is added to the game, their portraits must be added
+For adding champion portraits to be tracked on the in-game minimap. If a new champion is added to the game/portrait updated, their portraits must be added to the directory
 
 #### Createmapbase.py
 

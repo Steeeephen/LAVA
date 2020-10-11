@@ -24,14 +24,14 @@ import pafy
 #-----------------------------
 
 # Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', 'lcs', 'lcsnew' 'pcs', 'lpl', 'bl', 'lck', 'eum' and 'lec' supported so far
-league = "lcsnew"
+league = "lpl"
 
 # Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPQkixYKTF3WkiyWwyP4BTzj"
+playlist_url = "https://www.youtube.com/playlist?list=PLVgS_BIOY01xJhrU7MLw2dNY-fuCx-SAB"
 
 # Change this to skip the first n videos of the playlist
-videos_to_skip = 81
-
+videos_to_skip = 22
+	
 #-----------------------------
 
 # Variables
