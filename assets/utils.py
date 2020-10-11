@@ -191,6 +191,7 @@ def data_collect():
     	videos.remove("proximities.csv")
     if(os.path.exists("output/collected_data.csv")):
     	videos.remove("collected_data.csv")
+    videos.remove('.gitkeep')
 
     roles = ['top','jgl','mid','adc','sup']*2
 

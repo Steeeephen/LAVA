@@ -90,7 +90,9 @@ def main():
 			videos.append(item_i['pafy'].videoid)
 	else:
 		videos = os.listdir('input')
-		
+		videos.remove('.gitkeep')
+	
+
 	# Skipping videos
 	videos = videos[videos_to_skip:]
 
