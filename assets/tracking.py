@@ -15,7 +15,7 @@ from assets.utils import timer
 def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip, collect):
 	points = {key:[] for key in champs}
 	seconds_timer = []
-
+	
 	_,frame = cap.read()	
 	hheight,hwidth, _ = frame.shape
 	hheight = hheight//15

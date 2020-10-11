@@ -35,7 +35,7 @@ import argparse
 import os
 
 from assets.interpolation import interpolate 
-from assets.utils import change_league, identify, output_folders
+from assets.utils import change_league, identify, output_folders, data_collect
 from assets.graphing import draw_graphs
 from assets.tracking import tracker
 
@@ -64,6 +64,8 @@ def main():
 	playlist_url = args.playlist
 	league = args.league
 	videos_to_skip = args.videos_to_skip
+
+	rows_list = []
 	
 	overlay_swap = league == "lcsnew"
 
@@ -133,10 +135,12 @@ def main():
 		# Remove the values that went wrong (9999 means the program's prediction was too low, a highly negative number means it was too high)
 		df = df[(df.Seconds < 1200) & (df.Seconds > 0)].sort_values('Seconds')
 		
-		draw_graphs(df, H, W, league, video, collect)
+		rows_list = draw_graphs(df, H, W, league, video, collect, rows_list)
 
 		# Output raw locations to a csv
 		df.to_csv("output/%s/positions.csv" % video, index = False)
+	data_collect()
+	pd.DataFrame(rows_list).to_csv("output/proximities.csv")
 
 if __name__ == "__main__":
 	main()

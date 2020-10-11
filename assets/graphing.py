@@ -7,9 +7,9 @@ from PIL import Image
 from numpy.linalg import norm as norm
 from assets.utils import graph_html
 from assets.classifying import classify_jgl, classify_sup, classify_mid
-from assets.constants import TIMESPLITS, TIMESPLITS2
+from assets.constants import TIMESPLITS, TIMESPLITS2, ROLE_DICT
 
-def draw_graphs(df, H, W, LEAGUE, video, collect):
+def draw_graphs(df, H, W, LEAGUE, video, collect, rows_list):
 	RADIUS = int(W/2.5)	
 	# Graph each level one pattern
 	leveloneplots(df, H, W, LEAGUE, video)
@@ -32,17 +32,20 @@ def draw_graphs(df, H, W, LEAGUE, video, collect):
 		print("Mid Region Maps complete")
 
 	# Graph the proximities
-	proximity(df, [0,1,2,3], 4, "blue", "support", video) ################
-	proximity(df, [0,2,3,4], 1, "blue", "jungle", video)
-	proximity(df, [5,6,7,8], 9, "red", "support", video)
-	proximity(df, [5,7,8,9], 6, "red", "jungle", video)
+	rows_list = proximity(df, [0,1,2,3], 4, "blue", "support", video, rows_list) ################
+	rows_list = proximity(df, [0,2,3,4], 1, "blue", "jungle", video, rows_list)
+	rows_list = proximity(df, [5,6,7,8], 9, "red", "support", video, rows_list)
+	rows_list = proximity(df, [5,7,8,9], 6, "red", "jungle", video, rows_list)
 	if(not collect):
 		print("Proximity Graphs complete")
+	return rows_list
 
 
 # This will graph the proximities for a given role and side, showing how close two players were throughout the game
-def proximity(df, l, t, side, role, video):
+def proximity(df, l, t, side, role, video, rows_list):
+	roles = list(ROLE_DICT.keys())
 	plots = ""
+	role1 = df.columns[t]
 	for ally in l: # For each allied champion
 		count = 0
 		champ = df.columns[ally]
@@ -79,8 +82,11 @@ def proximity(df, l, t, side, role, video):
 		fig2.update_xaxes(rangeslider_visible=True, title = "Minute")
 		plots += plotly.offline.plot(fig2, output_type = 'div')
 	
-
+		rows_list.append({"video": video, "side":side, "role":role, "target":roles[ally%5], "player":role1, "teammate":df.columns[ally], "proximity":100*count/len(df['Seconds'])})
+	
 	graph_html(plots, video, side, role + "_proximities")
+	return rows_list
+	
 	
 def leveloneplots(df, H, W, LEAGUE, video):
 	colour = "blue"
