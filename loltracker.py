@@ -13,7 +13,7 @@ Version 		: 1.1.0
 
 Author 			: Stephen O' Farrell (stephen.ofarrell64@gmail.com)
 
-Purpose 		: Automatically track spatiotemporal data in League of Legends broadcast videos
+Purpose 		: Automatically track spatiotemporal data in league of Legends broadcast videos
 
 Usage 			: Change lines 48-54 to your desired values
 
@@ -41,31 +41,39 @@ from assets.tracking import tracker
 
 parser = argparse.ArgumentParser(description = "LolTracker")
 
-parser.add_argument('-t', '--video_type', type=str, default = 'youtube', help = 'youtube or local videos')
+parser.add_argument('-v', '--video', action = 'store_true', default =  False, help = 'Use local videos instead of Youtube playlist')
+parser.add_argument('-c', '--collect', action='store_true', default = False, help = 'Streamline data collection process')
+parser.add_argument('-l', '--league', type=str, default = 'lec', help = 'Choose the league, see README for documentation')
+parser.add_argument('-p', '--playlist', type=str, default = 'https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s', help = 'YouTube playlist')
+parser.add_argument('-n', '--videos_to_skip', type=int, default = 0, help = 'Number of Videos to skip')
+
 args = parser.parse_args()
 
-video_type = args.video_type
-
 def main():
-	# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', 'lcs', 'lcsnew' 'pcs', 'lpl', 'bl', 'lck', 'eum' and 'lec' supported so far. See README for documentation
-	LEAGUE = "lec"
+	# # Change this to get different leagues, see README for documentation
+	# league = "lec"
 
-	# Change this url to get different videos
-	PLAYLIST_URL = "https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s"
+	# # Change this url to get different videos, ignore if using local videos
+	# playlist_url = "https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s"
 
-	# Change this to skip the first n videos of the playlist
-	VIDEOS_TO_SKIP = 0
+	# # Change this to skip the first n videos of the playlist
+	# videos_to_skip = 0
 
-	# LCS Summer 2020 has a different overlay
-	OVERLAY_SWAP = LEAGUE == "lcsnew"
+	local = args.video
+	collect = args.collect
+	playlist_url = args.playlist
+	league = args.league
+	videos_to_skip = args.videos_to_skip
+	
+	overlay_swap = league == "lcsnew"
 
-	LEAGUE, MAP_COORDINATES = change_league(LEAGUE)
+	league, MAP_COORDINATES = change_league(league)
 
 	# Get the height and width of the chosen league's map as all measurements will be relative to that	
-	H, W = cv2.imread('assets/%s/%s.png' % (LEAGUE,LEAGUE)).shape[:2]
+	H, W = cv2.imread('assets/%s/%s.png' % (league,league)).shape[:2]
 
 	# Scoreboard is only ever up during live footage, this will filter useless frames
-	if(OVERLAY_SWAP):
+	if(overlay_swap):
 		# For new lcs overlay
 		header = cv2.imread("assets/lcsheader.jpg", 0)
 		header2 = cv2.imread("assets/lcsheader2.jpg", 0)
@@ -73,44 +81,45 @@ def main():
 		header = cv2.imread("assets/header.jpg", 0)
 
 	# Iterate through each video in the playlist, grabbing their IDs
-	if(video_type == 'youtube'):
-		playlist = pafy.get_playlist(PLAYLIST_URL)
+	if(not local):
+		playlist = pafy.get_playlist(playlist_url)
 		videos = []
 		for item_i in (playlist['items']):
 			videos.append(item_i['pafy'].videoid)
-	elif(video_type == 'local'):
+	else:
 		videos = os.listdir('input')
-
+		
 	# Skipping videos
-	videos = videos[VIDEOS_TO_SKIP:]
+	videos = videos[videos_to_skip:]
+
+	total_videos = len(videos)
 
 	# Run on each video
-	for video in videos:
+	for i, video in enumerate(videos):
 
 		# Get the video url using pafy
-		if(video_type == 'youtube'):
+		if(not local):
 			v = pafy.new(video)
 			play = v.getbest(preftype="mp4")
 			video = play.title
 			cap = cv2.VideoCapture(play.url)
-		elif(video_type == 'local'):
+		else:
 			cap = cv2.VideoCapture("input/%s" % video)
 			
-		print("Game: %s" % video)
+		print("Game %d of %d: %s" % (i+1, total_videos, video))
 		
 		# Create output folders
 		output_folders(video)
 
-		# Stream video url through OpenCV
-		
-		# cap = cv2.VideoCapture(video)
-
 		# Skip one second each time
 		frames_to_skip = int(cap.get(cv2.CAP_PROP_FPS))
 
-		templates, champs = identify(cap, frames_to_skip, OVERLAY_SWAP, header)
+		if(overlay_swap):
+			templates, champs = identify(cap, frames_to_skip, overlay_swap,  collect, header, header2)
+		else:
+			templates, champs = identify(cap, frames_to_skip, overlay_swap,  collect, header)
 
-		df, seconds_timer = tracker(champs, header, cap, templates, MAP_COORDINATES, frames_to_skip)
+		df, seconds_timer = tracker(champs, header, cap, templates, MAP_COORDINATES, frames_to_skip, collect)
 		
 		df = interpolate(df, H, W)
 
@@ -124,7 +133,7 @@ def main():
 		# Remove the values that went wrong (9999 means the program's prediction was too low, a highly negative number means it was too high)
 		df = df[(df.Seconds < 1200) & (df.Seconds > 0)].sort_values('Seconds')
 		
-		draw_graphs(df, H, W, LEAGUE, video)
+		draw_graphs(df, H, W, league, video, collect)
 
 		# Output raw locations to a csv
 		df.to_csv("output/%s/positions.csv" % video, index = False)

@@ -1,31 +1,45 @@
+
+
+***
 # LolTracker
 
 A program for tracking League of Legends players and providing analytics from Youtube videos
 
 ***
+## Installation
+
+* Download or clone loltracker directory
+
+* Install python and pip
+
+* Navigate to folder with levelone.py
+
+* Install dependencies
+```
+$ pip install -r requirements.txt
+```
+* Run program
+***
+
+
 ## Usage
 
-### YouTube
+Run with parser arguments:
 
-Change the lines
-```
-# Change this to get different leagues: 'uklc', 'slo', 'lfl', 'ncs', 'pgn', 'hpm', 'lcs', 'lcsnew', 'pcs', 'lpl', 'bl', 'lck', 'eum' and 'lec' supported so far
-league = "lec"
+|Argument|Addition|Explanation
+|---|---|---|
+|-l|League|Code corresponding to the league of the videos|
+|-n|Videos to skip| Number of videos to skip in the playlist| 
+|-c|Collect| Streamlined data collection (No printing/progress reports)|
 
-# Change this url to get different videos
-playlist_url = "https://www.youtube.com/playlist?list=PLQFWRIgi7fPSfHcBrLUqqOq96r_mqGR8c"
+The program can be used with either Youtube videos or local videos
 
-# Change this to skip the first n videos of the playlist
-videos_to_skip = 0
-```
-to fit your usage
+For local videos, add your 720p videos to the `input/` folder and run the program with `python loltracker.py -v`. 
 
-### Local
-
-Add your 720p videos to the `input/` folder and run the program with `python loltracker.py -t local`
+For Youtube playlists, add your playlist url with `python loltracker.py -p <playlist_url>`
 
 ***
-Currently optimised for 2020 versions of:
+Currently optimised for certain 2020 versions of:
 
 |Code|League	|
 |---|---|
@@ -44,10 +58,23 @@ Currently optimised for 2020 versions of:
 | lcsnew	| LCS (North America) (Summer 2020 overlay)|
 | pcs		| PCS (Pacific)|
 
-Though small changes to the broadcast may throw some off
+Output will be sent to the 'output' directory for each game in the playlist. 
 
-Output will be sent to the 'output' directory for each game in the playlist. Takes at least 100 seconds per game on a Lenovo Thinkpad T430
+***
 
+For example, to run the program on a local list of LCS videos:
+
+`$ python loltracker.py -v -l lcs`
+
+Or the streamlined version:
+
+`$ python loltracker.py -v -c -l lcs`
+
+Or to run it on a YouTube playlist of LEC vods, skipping the first 2:
+
+`$ python loltracker.py -l lec -p https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s -n 2`
+
+***
 ## Output
 
 The raw data is saved as a csv named positions.csv
@@ -85,33 +112,6 @@ All plots can be downloaded as a png by opening the html and clicking the corres
 
 124 blue side champions identifiable so far, 131 red side
 
-## Installation
-
-* Download or clone loltracker directory
-
-* Install python and pip
-
-* Navigate to folder with levelone.py
-
-* Install dependencies
-```
-$ pip install -r requirements.txt
-```
-* Run program
-
-```
-$ python loltracker.py -t youtube
-```
-or
-```
-$ python loltracker.py -t local
-```
-
-* Alternatively, for more streamlined data collection
-
-```
-$ python data_collection.py
-```
 
 ## Upkeep
 

@@ -61,7 +61,7 @@ def graph_html(div_plot, video, colour, champ):
 	html_writer.write(html_text)
 	html_writer.close()
 
-def identify(cap, frames_to_skip, OVERLAY_SWAP, header, header2 = ""):
+def identify(cap, frames_to_skip, OVERLAY_SWAP, collect, header, header2 = ""):
 	
 	_,frame = cap.read()	
 	hheight,hwidth, _ = frame.shape
@@ -130,8 +130,8 @@ def identify(cap, frames_to_skip, OVERLAY_SWAP, header, header2 = ""):
 					champ_found = True
 					temp = champ_classify_percent
 					most_likely_champ = BLUE_PORTRAITS[j][:-4]
-
-			print("Blue %s identified: %s (%.2f%%)" % (role, most_likely_champ, 100*temp))
+			if(not collect):
+				print("Blue %s identified: %s (%.2f%%)" % (role, most_likely_champ, 100*temp))
 			champs[role_i] = most_likely_champ
 			identified += champ_found
 		
@@ -141,8 +141,11 @@ def identify(cap, frames_to_skip, OVERLAY_SWAP, header, header2 = ""):
 				cap.grab()
 			_, frame = cap.read()
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-			print("-"*30)
-	print("-"*30)
+			if(not collect):
+				print("-"*30)
+	
+	if(not collect):
+		print("-"*30)
 		
 	# Same for red side champions
 	while(identified != 10):
@@ -160,7 +163,8 @@ def identify(cap, frames_to_skip, OVERLAY_SWAP, header, header2 = ""):
 					champ_found = True
 					temp = champ_classify_percent
 					most_likely_champ = RED_PORTRAITS[j][:-4]
-			print("Red %s identified: %s (%.2f%%)" % (role, most_likely_champ, 100*temp))
+			if(not collect):
+				print("Red %s identified: %s (%.2f%%)" % (role, most_likely_champ, 100*temp))
 			champs[role_i+5] = most_likely_champ
 			identified += champ_found
 
@@ -168,7 +172,8 @@ def identify(cap, frames_to_skip, OVERLAY_SWAP, header, header2 = ""):
 			for _ in range(frames_to_skip):
 				cap.grab()
 			_, frame = cap.read()
-			print("-"*30)
+			if(not collect):
+				print("-"*30)
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		
 	# Grab portraits of each champion found, to search for on the minimap

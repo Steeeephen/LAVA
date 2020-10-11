@@ -9,31 +9,35 @@ from assets.utils import graph_html
 from assets.classifying import classify_jgl, classify_sup, classify_mid
 from assets.constants import TIMESPLITS, TIMESPLITS2
 
-def draw_graphs(df, H, W, LEAGUE, video):
+def draw_graphs(df, H, W, LEAGUE, video, collect):
 	RADIUS = int(W/2.5)	
 	# Graph each level one pattern
-	leveloneplots(df, H, W, LEAGUE, video) #################graph
-	print("Level One graphs complete")
+	leveloneplots(df, H, W, LEAGUE, video)
+	if(not collect):
+		print("Level One graphs complete")
 
 	# Jungle graphs
 	jungleplots(df, H, W, RADIUS, video)
-	print("Jungler Region Maps complete")
+	if(not collect):
+		print("Jungler Region Maps complete")
 
 	# Support graphs
 	supportplots(df, H, W, RADIUS, video)
-	print("Support Region Maps complete")
+	if(not collect):
+		print("Support Region Maps complete")
 
 	# Midlane graphs
 	midlaneplots(df, H, W, RADIUS, video)
-	print("Mid Region Maps complete")
+	if(not collect):
+		print("Mid Region Maps complete")
 
 	# Graph the proximities
 	proximity(df, [0,1,2,3], 4, "blue", "support", video) ################
 	proximity(df, [0,2,3,4], 1, "blue", "jungle", video)
 	proximity(df, [5,6,7,8], 9, "red", "support", video)
 	proximity(df, [5,7,8,9], 6, "red", "jungle", video)
-
-	print("Proximity Graphs complete")
+	if(not collect):
+		print("Proximity Graphs complete")
 
 
 # This will graph the proximities for a given role and side, showing how close two players were throughout the game

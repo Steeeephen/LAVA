@@ -12,7 +12,7 @@ from assets.utils import timer
 
 #-----------------------------
 
-def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip):
+def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip, collect):
 	points = {key:[] for key in champs}
 	seconds_timer = []
 
@@ -99,10 +99,11 @@ def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip):
 					temp = np.array([point[0] + 7, point[1] + 7])
 					points[champs[template_i]].append(temp)
 
+				if(not collect):
 				# Show minimap with champions highlighted
-				cv2.imshow('minimap',cropped)
-				if cv2.waitKey(1) & 0xFF == ord('q'):
-					break
+					cv2.imshow('minimap',cropped)
+					if cv2.waitKey(1) & 0xFF == ord('q'):
+						break
 				for _ in range(frames_to_skip):
 					cap.grab()
 	return pd.DataFrame(points), seconds_timer 
