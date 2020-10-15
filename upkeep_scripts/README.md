@@ -11,7 +11,7 @@ The usage is simple enough, simply type `$ python championtrackimage.py` and fol
 First you must find a frame at which the champion portrait is isolated on the minimap. Just like the highlighted champions here:
 
 <p align = "center">
-	<img src = "/assets/markdown_assets/isolated_minimap.png" width = 1200>
+	<img src = "/assets/markdown_assets/isolated_minimap.png" width = 800>
 </p> 
 
 Then you must give the name of the champ and the 4 coordinates that result in a 14x14px image of the champion. This is best done through trial-and-error and multiple iterations until the perfect match is found
@@ -28,6 +28,8 @@ Then you must give the name of the champ and the 4 coordinates that result in a 
 For creating a map base should you need to support a new minimap. This needs to be done for any new leagues the program supports and acts as a reference for the graphs
 
 The usage is essentially the same as in `championtrackimage`, with the only real difference being that you input the code that you want to attribute to the league. Once you've found the 4 coordinates that cover the minimap, the program will draw up a base map without any champions present.
+
+Call with `$ python createmapbase.py`
 
 |Argument|Addition|Explanation
 |---|---|---|
