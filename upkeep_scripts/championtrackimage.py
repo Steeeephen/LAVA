@@ -42,8 +42,10 @@ def main():
 		play = v.getbest(preftype="mp4")
 		cap = cv2.VideoCapture(play.url)
 	else:
-		video = os.listdir("../input")[videos_to_skip]
-		cap = cv2.VideoCapture(video)
+		videos = os.listdir("../input")
+		videos.remove('.gitkeep')
+		video = videos[videos_to_skip]
+		cap = cv2.VideoCapture("../input/%s" % video)
 
 	while(True):
 		frame_input = input("Skip how many frames?: (q to continue) ")
