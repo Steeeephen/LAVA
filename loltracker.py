@@ -50,15 +50,6 @@ parser.add_argument('-n', '--videos_to_skip', type=int, default = 0, help = 'Num
 args = parser.parse_args()
 
 def main():
-	# # Change this to get different leagues, see README for documentation
-	# league = "lec"
-
-	# # Change this url to get different videos, ignore if using local videos
-	# playlist_url = "https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s"
-
-	# # Change this to skip the first n videos of the playlist
-	# videos_to_skip = 0
-
 	local = args.video
 	collect = args.collect
 	playlist_url = args.playlist

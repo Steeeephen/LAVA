@@ -16,44 +16,70 @@ import cv2
 import os 
 import pafy
 import youtube_dl
+import argparse
 
 #-----------------------------
 
-# Change this playlist to your own
-playlist_url = "https://www.youtube.com/playlist?list=PLVgS_BIOY01xJhrU7MLw2dNY-fuCx-SAB"
+parser = argparse.ArgumentParser(description = "Saving Images of Champions")
 
-# Change to desired champion
-champ = "lillia"
+parser.add_argument('-v', '--video', action = 'store_true', default =  False, help = 'Use local videos instead of Youtube playlist')
+parser.add_argument('-p', '--playlist', type=str, default = 'https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s', help = 'YouTube playlist')
+parser.add_argument('-n', '--videos_to_skip', type=int, default = 0, help = 'Number of Videos to skip')
 
-# Change until you get a frame with desired champion isolated on the minimap
-frames_to_skip = 15000
+args = parser.parse_args()
 
-# Skip n videos in the playlist
-videos_to_skip = 22
+def main():
+	local = args.video
+	playlist_url = args.playlist
+	videos_to_skip = args.videos_to_skip
 
-#-----------------------------
+	if(not local):
+		playlist = pafy.get_playlist(playlist_url)
+		videos = []
+		for i in (playlist['items']):
+			videos.append(i['pafy'].videoid)
+		v = pafy.new(videos[videos_to_skip])
+		play = v.getbest(preftype="mp4")
+		cap = cv2.VideoCapture(play.url)
+	else:
+		video = os.listdir("../input")[videos_to_skip]
+		cap = cv2.VideoCapture(video)
 
-playlist = pafy.get_playlist(playlist_url)
-videos = []
-for i in (playlist['items']):
-	videos.append(i['pafy'].videoid)
+	while(True):
+		frame_input = input("Skip how many frames?: (q to continue) ")
+		if(frame_input.lower() in ('q','quit')):
+			break
+		# Sets video to frame frames_to_skip. Change until you have a frame where desired champion is isolated
+		cap.set(1, int(frame_input))
+		ret, frame = cap.read()
+		cv2.imshow("Is the champion isolated?", frame)
+		cv2.waitKey()
+	
+	cv2.destroyAllWindows()
+	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-v = pafy.new(videos[videos_to_skip])
-play = v.getbest(preftype="mp4")
-cap = cv2.VideoCapture(play.url)
+	champ = input("Champion Name: ")
 
-# Sets video to frame frames_to_skip. Change until you have a frame where desired champion is isolated
-cap.set(1, frames_to_skip)
+	count=0
+	while(True):
+		count+=1
+		input0 = input("Y-coordinate upper: (q to quit) ")
+		if(input0.lower() in ('q','quit')):
+			break
+		else:
+			input1 = int(input("Y-coordinate lower: "))
+			input2 = int(input("X-coordinate left: "))
+			input3 = int(input("X-coordinate right: "))
+		# Change these dimensions until you only have the desired champion in an ~14x14px image
+		cropped = gray[int(input0):input1, input2:input3]
 
-ret, frame = cap.read()
-gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+		# Check image is ok
+		cv2.imshow("Attempt #%s" % count,cropped)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
 
-# Change these dimensions until you only have the desired champion in an ~14x14px image
-cropped = gray[565:579, 1170:1184] #--------------------------------------------------------------------------------------*
+	# Saves image in correct directory
+	cv2.imwrite('../assets/champs/%s.jpg' % champ, cropped)
 
-# Check image is ok
-cv2.imshow("ok",cropped)
-cv2.waitKey()
-
-# Saves image in correct directory
-cv2.imwrite('../champs/%s.jpg' % champ, cropped)
+if __name__ == "__main__":
+	main()

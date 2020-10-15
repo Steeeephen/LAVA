@@ -140,3 +140,5 @@ The dimensions are *slightly* different for each league so the raw numbers in th
 Vods with a lot of noise beforehand can slow down the program, vods with highlights beforehand can sometimes break the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is the biggest thing as the program will see the highlight, assume the game started and begin gathering data.
 
 Proximity graphs need to be smoothed
+
+For queries: stephen.ofarrell64 (a t) gmail (d o t) com
