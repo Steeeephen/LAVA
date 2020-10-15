@@ -8,7 +8,7 @@ This script is for isolating champion portraits from the minimap and adding them
 
 First you must find a frame at which the champion portrait is isolated on the minimap. Just like the highlighted champions here:
 
-![Isolated Example](/markdown_assets/isolated_minimap.png)
+![Isolated Example](../assets/markdown_assets/isolated_minimap.png)
 
 Then you must give the name of the champ and the 4 coordinates that result in a 14x14px image of the champion. This is best done through trial-and-error and multiple iterations until the perfect match is found
 
