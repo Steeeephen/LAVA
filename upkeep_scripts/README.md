@@ -11,7 +11,7 @@ The usage is simple enough, simply type `$ python championtrackimage.py` and fol
 First you must find a frame at which the champion portrait is isolated on the minimap. Just like the highlighted champions here:
 
 <p align = "center">
-	<img src = "/assets/markdown_assets/isolated_minimap.png" width = 800>
+	<img src = "/assets/markdown_assets/isolated_minimap.png" width = 300>
 </p> 
 
 Then you must give the name of the champ and the 4 coordinates that result in a 14x14px image of the champion. This is best done through trial-and-error and multiple iterations until the perfect match is found

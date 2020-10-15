@@ -11,7 +11,7 @@ if(not(os.path.exists("output"))):
 
 def change_league(league):
 	if league in ["lpl"]: league = "lck"
-	elif league in ["eum", 'lcsnew']: league = "lcs"
+	elif league in ["eum", 'lcsnew', 'w20']: league = "lcs"
 	elif league in ["slo", 'lfl', 'ncs', 'pgn', 'bl', 'hpm']: league = "uklc"
 
 
@@ -132,7 +132,7 @@ def identify(cap, frames_to_skip, OVERLAY_SWAP, collect, header, header2 = ""):
 					temp = champ_classify_percent
 					most_likely_champ = BLUE_PORTRAITS[j][:-4]
 			if(not collect):
-				print("Blue %s identified: %s (%.2f%%)" % (role, most_likely_champ, 100*temp))
+				print("Blue %s identified: %s (%.2f%%)" % (role, most_likely_champ, 100*temp)) ##maybe reformat to avoid constant printing on premature identifying
 			champs[role_i] = most_likely_champ
 			identified += champ_found
 		

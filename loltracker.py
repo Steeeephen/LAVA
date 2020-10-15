@@ -59,6 +59,7 @@ def main():
 	rows_list = []
 	
 	overlay_swap = league == "lcsnew"
+	overlay_swap_w20 = league == 'w20' # to be reformatted for better scalability
 
 	league, MAP_COORDINATES = change_league(league)
 
@@ -70,6 +71,8 @@ def main():
 		# For new lcs overlay
 		header = cv2.imread("assets/lcsheader.jpg", 0)
 		header2 = cv2.imread("assets/lcsheader2.jpg", 0)
+	elif(overlay_swap_w20):
+		header = cv2.imread('assets/w20header.jpg',0)
 	else:
 		header = cv2.imread("assets/header.jpg", 0)
 

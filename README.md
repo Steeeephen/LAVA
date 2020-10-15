@@ -57,6 +57,7 @@ Currently optimised for certain 2020 versions of:
 | lcs 		| LCS (North America) (Pre Summer 2020)|
 | lcsnew	| LCS (North America) (Summer 2020 overlay)|
 | pcs		| PCS (Pacific)|
+| w20		| Worlds 2020|
 
 Output will be sent to the 'output' directory for each game in the playlist. 
 
@@ -112,26 +113,9 @@ All plots can be downloaded as a png by opening the html and clicking the corres
 
 124 blue side champions identifiable so far, 131 red side
 
-
 ## Upkeep
 
 To keep the program up to date, several scripts are included in the *upkeep_scripts* folder
-
-#### Championtrackimage.py
-
-For adding champion portraits to be tracked on the in-game minimap. If a new champion is added to the game/portrait updated, their portraits must be added to the directory
-
-#### Createmapbase.py
-
-For creating a map base should you need to support a new minimap. This needs to be done for any new leagues the program supports and acts as a reference for the graphs
-
-#### Doublecheck.py
-
-This is for making sure that the dimensions of a video line up with the program's dimensions. Used to double check that the program will be cropping images properly
-
-#### Stripportraits.py
-
-For stripping champion portraits from the sidebars. These portraits are used for identifying the champions at the start of the game. 
 
 ## Issues
 
@@ -141,4 +125,20 @@ Vods with a lot of noise beforehand can slow down the program, vods with highlig
 
 Proximity graphs need to be smoothed
 
-For queries: stephen.ofarrell64 (a t) gmail (d o t) com
+Testing on Windows is no longer an option for the immediate future
+
+## To-do
+
+Track items (big job)
+
+Track events (big job)
+
+Upkeep Scripts 2.0
+
+Continue repo format improvements
+
+Follow time from in-game timer instead of baron countdown
+
+Update to support more leagues
+
+Finish champion support
