@@ -7,15 +7,15 @@
 |____/\____/|____/__|  |__|  (____  /\___  >__|_ \\___  >__|   
                                   \/     \/     \/    \       
 
-Project 		: LolTracker 
+Project     : LolTracker 
 
-Version 		: 1.1.0
+Version     : 1.1.0
 
-Author 			: Stephen O' Farrell (stephen.ofarrell64@gmail.com)
+Author      : Stephen O' Farrell (stephen.ofarrell64@gmail.com)
 
-Purpose 		: Automatically track spatiotemporal data in league of Legends broadcast videos
+Purpose     : Automatically track spatiotemporal data in league of Legends broadcast videos
 
-Usage 			: Change lines 48-54 to your desired values
+Usage       : Change lines 48-54 to your desired values
 
 """
 
@@ -50,93 +50,93 @@ parser.add_argument('-n', '--videos_to_skip', type=int, default = 0, help = 'Num
 args = parser.parse_args()
 
 def main():
-	local = args.video
-	collect = args.collect
-	playlist_url = args.playlist
-	league = args.league
-	videos_to_skip = args.videos_to_skip
+  local = args.video
+  collect = args.collect
+  playlist_url = args.playlist
+  league = args.league
+  videos_to_skip = args.videos_to_skip
 
-	rows_list = []
-	
-	overlay_swap = league == "lcsnew"
-	overlay_swap_w20 = league == 'w20' # to be reformatted for better scalability
+  rows_list = []
+  
+  overlay_swap = league == "lcsnew"
+  overlay_swap_w20 = league == 'w20' # to be reformatted for better scalability
 
-	league, MAP_COORDINATES = change_league(league)
+  league, MAP_COORDINATES = change_league(league)
 
-	# Get the height and width of the chosen league's map as all measurements will be relative to that	
-	H, W = cv2.imread('assets/%s/%s.png' % (league,league)).shape[:2]
+  # Get the height and width of the chosen league's map as all measurements will be relative to that  
+  H, W = cv2.imread('assets/%s/%s.png' % (league,league)).shape[:2]
 
-	# Scoreboard is only ever up during live footage, this will filter useless frames
-	if(overlay_swap):
-		# For new lcs overlay
-		header = cv2.imread("assets/lcsheader.jpg", 0)
-		header2 = cv2.imread("assets/lcsheader2.jpg", 0)
-	elif(overlay_swap_w20):
-		header = cv2.imread('assets/w20header.jpg',0)
-	else:
-		header = cv2.imread("assets/header.jpg", 0)
+  # Scoreboard is only ever up during live footage, this will filter useless frames
+  if(overlay_swap):
+    # For new lcs overlay
+    header = cv2.imread("assets/lcsheader.jpg", 0)
+    header2 = cv2.imread("assets/lcsheader2.jpg", 0)
+  elif(overlay_swap_w20):
+    header = cv2.imread('assets/w20header.jpg',0)
+  else:
+    header = cv2.imread("assets/header.jpg", 0)
 
-	# Iterate through each video in the playlist, grabbing their IDs
-	if(not local):
-		playlist = pafy.get_playlist(playlist_url)
-		videos = []
-		for item_i in (playlist['items']):
-			videos.append(item_i['pafy'].videoid)
-	else:
-		videos = os.listdir('input')
-		videos.remove('.gitkeep')
-	
+  # Iterate through each video in the playlist, grabbing their IDs
+  if(not local):
+    playlist = pafy.get_playlist(playlist_url)
+    videos = []
+    for item_i in (playlist['items']):
+      videos.append(item_i['pafy'].videoid)
+  else:
+    videos = os.listdir('input')
+    videos.remove('.gitkeep')
+  
 
-	# Skipping videos
-	videos = videos[videos_to_skip:]
+  # Skipping videos
+  videos = videos[videos_to_skip:]
 
-	total_videos = len(videos)
+  total_videos = len(videos)
 
-	# Run on each video
-	for i, video in enumerate(videos):
+  # Run on each video
+  for i, video in enumerate(videos):
 
-		# Get the video url using pafy
-		if(not local):
-			v = pafy.new(video)
-			play = v.getbest(preftype="mp4")
-			video = play.title
-			cap = cv2.VideoCapture(play.url)
-		else:
-			cap = cv2.VideoCapture("input/%s" % video)
-			
-		print("Game %d of %d: %s" % (i+1, total_videos, video))
-		
-		# Create output folders
-		output_folders(video)
+    # Get the video url using pafy
+    if(not local):
+      v = pafy.new(video)
+      play = v.getbest(preftype="mp4")
+      video = play.title
+      cap = cv2.VideoCapture(play.url)
+    else:
+      cap = cv2.VideoCapture("input/%s" % video)
+      
+    print("Game %d of %d: %s" % (i+1, total_videos, video))
+    
+    # Create output folders
+    output_folders(video)
 
-		# Skip one second each time
-		frames_to_skip = int(cap.get(cv2.CAP_PROP_FPS))
+    # Skip one second each time
+    frames_to_skip = int(cap.get(cv2.CAP_PROP_FPS))
 
-		if(overlay_swap):
-			templates, champs = identify(cap, frames_to_skip, overlay_swap,  collect, header, header2)
-		else:
-			templates, champs = identify(cap, frames_to_skip, overlay_swap,  collect, header)
+    if(overlay_swap):
+      templates, champs = identify(cap, frames_to_skip, overlay_swap,  collect, header, header2)
+    else:
+      templates, champs = identify(cap, frames_to_skip, overlay_swap,  collect, header)
 
-		df, seconds_timer = tracker(champs, header, cap, templates, MAP_COORDINATES, frames_to_skip, collect)
-		
-		df = interpolate(df, H, W)
+    df, seconds_timer = tracker(champs, header, cap, templates, MAP_COORDINATES, frames_to_skip, collect)
+    
+    df = interpolate(df, H, W)
 
-		# Use the seconds array to sync up the points with the ingame timer
-		seconds_timer = np.array(seconds_timer).astype(int)
-		seconds_timer = seconds_timer[~np.isnan(seconds_timer)]
+    # Use the seconds array to sync up the points with the ingame timer
+    seconds_timer = np.array(seconds_timer).astype(int)
+    seconds_timer = seconds_timer[~np.isnan(seconds_timer)]
 
-		# Add seconds
-		df = pd.concat([df,pd.DataFrame({'Seconds':seconds_timer})], axis=1)
-		
-		# Remove the values that went wrong (9999 means the program's prediction was too low, a highly negative number means it was too high)
-		df = df[(df.Seconds < 1200) & (df.Seconds > 0)].sort_values('Seconds')
-		
-		rows_list = draw_graphs(df, H, W, league, video, collect, rows_list)
+    # Add seconds
+    df = pd.concat([df,pd.DataFrame({'Seconds':seconds_timer})], axis=1)
+    
+    # Remove the values that went wrong (9999 means the program's prediction was too low, a highly negative number means it was too high)
+    df = df[(df.Seconds < 1200) & (df.Seconds > 0)].sort_values('Seconds')
+    
+    rows_list = draw_graphs(df, H, W, league, video, collect, rows_list)
 
-		# Output raw locations to a csv
-		df.to_csv("output/%s/positions.csv" % video, index = False)
-	data_collect()
-	pd.DataFrame(rows_list).to_csv("output/proximities.csv")
+    # Output raw locations to a csv
+    df.to_csv("output/%s/positions.csv" % video, index = False)
+  data_collect()
+  pd.DataFrame(rows_list).to_csv("output/proximities.csv")
 
 if __name__ == "__main__":
-	main()
+  main()

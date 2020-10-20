@@ -121,11 +121,9 @@ To keep the program up to date, several scripts are included in the *upkeep_scri
 
 The dimensions are *slightly* different for each league so the raw numbers in the csvs are not always directly comparable between different leagues. Any comparisons should be normalised to their respective league's dimensions and compared considering that.
 
-Vods with a lot of noise beforehand can slow down the program, vods with highlights beforehand can sometimes break the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is the biggest thing as the program will see the highlight, assume the game started and begin gathering data.
+Vods with a lot of noise beforehand can slow down the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is ideal as the program may assume the game has started when it sees the highlight
 
-Proximity graphs need to be smoothed
-
-Testing on Windows is no longer an option for the immediate future
+Testing on Windows is no longer an option for at least the immediate future
 
 ## To-do
 
@@ -142,3 +140,5 @@ Follow time from in-game timer instead of baron countdown
 Update to support more leagues
 
 Finish champion support
+
+Proximity graphs need to be smoothed

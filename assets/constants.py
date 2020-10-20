@@ -1,8 +1,6 @@
 import cv2
 import os
 
-
-
 # Minimap dimensions
 LEAGUES = {
 	"uklc":	[
@@ -41,17 +39,19 @@ ROLE_DICT = {
 # The digits for reading the timer 
 DIGIT_TEMPLATES = dict()
 
-for image_temp in os.listdir("assets/images"):
-	DIGIT_TEMPLATES[image_temp] = cv2.imread("assets/images/%s" % image_temp, 0)
+# won't be run if constants imported from another directory
+if(os.path.exists("assets/images")):
+	for image_temp in os.listdir("assets/images"):
+		DIGIT_TEMPLATES[image_temp] = cv2.imread("assets/images/%s" % image_temp, 0)
 
-BLUE_PORTRAITS = os.listdir("assets/classify/blue")
-RED_PORTRAITS = os.listdir("assets/classify/red")	
+	BLUE_PORTRAITS = os.listdir("assets/classify/blue")
+	RED_PORTRAITS = os.listdir("assets/classify/red")	
 
-BLUE_CHAMP_TEMPLATES = [""]*len(BLUE_PORTRAITS)
-RED_CHAMP_TEMPLATES = [""]*len(RED_PORTRAITS)
+	BLUE_CHAMP_TEMPLATES = [""]*len(BLUE_PORTRAITS)
+	RED_CHAMP_TEMPLATES = [""]*len(RED_PORTRAITS)
 
-# Save templates for template matching
-for portrait_i, portrait in enumerate(BLUE_PORTRAITS):
-	BLUE_CHAMP_TEMPLATES[portrait_i] = cv2.imread("assets/classify/blue/%s" % portrait, 0)
-for portrait_i, portrait in enumerate(RED_PORTRAITS):	
-	RED_CHAMP_TEMPLATES[portrait_i] = cv2.imread("assets/classify/red/%s" % portrait, 0)
+	# Save templates for template matching
+	for portrait_i, portrait in enumerate(BLUE_PORTRAITS):
+		BLUE_CHAMP_TEMPLATES[portrait_i] = cv2.imread("assets/classify/blue/%s" % portrait, 0)
+	for portrait_i, portrait in enumerate(RED_PORTRAITS):	
+		RED_CHAMP_TEMPLATES[portrait_i] = cv2.imread("assets/classify/red/%s" % portrait, 0)

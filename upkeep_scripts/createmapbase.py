@@ -31,11 +31,6 @@ def main():
 	playlist_url = args.playlist
 	videos_to_skip = args.videos_to_skip
 
-	playlist = pafy.get_playlist(playlist_url)
-	videos = []
-	for i in (playlist['items']):
-		videos.append(i['pafy'].videoid)
-
 	if(not local):
 		playlist = pafy.get_playlist(playlist_url)
 		videos = []
