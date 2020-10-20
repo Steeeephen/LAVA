@@ -132,7 +132,7 @@ def identify(cap, frames_to_skip, OVERLAY_SWAP, collect, header, header2 = ""):
 					temp = champ_classify_percent
 					most_likely_champ = BLUE_PORTRAITS[j][:-4]
 			if(not collect):
-				print("Blue %s identified: %s (%.2f%%)" % (role, most_likely_champ, 100*temp)) ##maybe reformat to avoid constant printing on premature identifying
+				print("Blu %s identified (%.2f%%):  %s" % (role, 100*temp, most_likely_champ.capitalize())) ##maybe reformat to avoid constant printing on premature identifying
 			champs[role_i] = most_likely_champ
 			identified += champ_found
 		
@@ -165,7 +165,7 @@ def identify(cap, frames_to_skip, OVERLAY_SWAP, collect, header, header2 = ""):
 					temp = champ_classify_percent
 					most_likely_champ = RED_PORTRAITS[j][:-4]
 			if(not collect):
-				print("Red %s identified: %s (%.2f%%)" % (role, most_likely_champ, 100*temp))
+				print("Red %s identified (%.2f%%):  %s" % (role, 100*temp, most_likely_champ.capitalize()))
 			champs[role_i+5] = most_likely_champ
 			identified += champ_found
 

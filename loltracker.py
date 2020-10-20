@@ -69,12 +69,12 @@ def main():
   # Scoreboard is only ever up during live footage, this will filter useless frames
   if(overlay_swap):
     # For new lcs overlay
-    header = cv2.imread("assets/lcsheader.jpg", 0)
-    header2 = cv2.imread("assets/lcsheader2.jpg", 0)
+    header = cv2.imread("assets/headers/lcsheader.jpg", 0)
+    header2 = cv2.imread("assets/headers/lcsheader2.jpg", 0)
   elif(overlay_swap_w20):
-    header = cv2.imread('assets/w20header.jpg',0)
+    header = cv2.imread('assets/headers/w20header.jpg',0)
   else:
-    header = cv2.imread("assets/header.jpg", 0)
+    header = cv2.imread("assets/headers/header.jpg", 0)
 
   # Iterate through each video in the playlist, grabbing their IDs
   if(not local):
