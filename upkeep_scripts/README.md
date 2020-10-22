@@ -1,6 +1,19 @@
+***
+
 # Upkeep Scripts 2.0
 
-The upkeep scripts are undergoing an overhaul, as they are changed the instructions will be added here. The old scripts will become deprecated as updates continue
+These are the scripts needed to maintain and update the project as new LoL/broadcast updates come out
+
+***
+All four of these take the same arguments
+
+|Argument|Addition|Explanation
+|---|---|---|
+|-v|Videos|Call to use local videos instead of YouTube|
+|-n|Videos to skip| Number of videos to skip in the playlist| 
+|-p|Playlist|YouTube playlist URL|
+
+***
 
 ## ChampionTrackImage
 
@@ -31,20 +44,22 @@ This is for making sure that the dimensions of a video line up with the program'
 
 Usage is just like the previous two, all you have to do is check if the pictures line up as you would expect
 
-***
-All three of these take the same arguments
-
-|Argument|Addition|Explanation
-|---|---|---|
-|-v|Videos|Call to use local videos instead of YouTube|
-|-n|Videos to skip| Number of videos to skip in the playlist| 
-|-p|Playlist|YouTube playlist URL|
-
-***
-
 
 #### Stripportraits.py
 
 For stripping champion portraits from the sidebars. These portraits are used for identifying the champions at the start of the game. 
 
-to be updated
+Once you have found a frame with all champions at level one, you must fill in their position's number and name and their portrait will be added to the db
+
+Numbers: 
+* 1  : Blue side toplaner
+* 2  : Blue side jungler
+* 3  : Blue side midlaner
+* 4  : Blue side ADC
+* 5  : Blue side support
+
+* 6  : Red side toplaner
+* 7  : Red side jungler
+* 8  : Red side midlaner
+* 9  : Red side ADC
+* 10 : Red side support
