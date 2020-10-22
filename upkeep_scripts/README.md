@@ -38,14 +38,14 @@ The usage is essentially the same as in `championtrackimage`, with the only real
 Call with `$ python createmapbase.py`
 
 
-#### DoubleCheck
+## DoubleCheck
 
 This is for making sure that the dimensions of a video line up with the program's dimensions. Used to double check that the program will be cropping images properly
 
 Usage is just like the previous two, all you have to do is check if the pictures line up as you would expect
 
 
-#### Stripportraits.py
+## Stripportraits.py
 
 For stripping champion portraits from the sidebars. These portraits are used for identifying the champions at the start of the game. 
 
@@ -63,3 +63,5 @@ Numbers:
 * 8  : Red side midlaner
 * 9  : Red side ADC
 * 10 : Red side support
+
+***

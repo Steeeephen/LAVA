@@ -3,7 +3,7 @@
 ***
 # LolTracker
 
-A program for tracking League of Legends players and providing analytics from Youtube videos
+A program for gathering information and providing analytics from League of Legends videos
 
 ***
 ## Installation
