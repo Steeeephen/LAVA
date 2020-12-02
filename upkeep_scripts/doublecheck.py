@@ -30,6 +30,7 @@ parser = argparse.ArgumentParser(description = "Saving Images of Champions")
 
 parser.add_argument('-v', '--video', action = 'store_true', default =  False, help = 'Use local videos instead of Youtube playlist')
 parser.add_argument('-p', '--playlist', type=str, default = 'https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s', help = 'YouTube playlist')
+parser.add_argument('-u', '--url', type=str, default =  '', help = 'Link to single Youtube video')
 parser.add_argument('-n', '--videos_to_skip', type=int, default = 0, help = 'Number of Videos to skip')
 
 args = parser.parse_args()
@@ -37,21 +38,26 @@ args = parser.parse_args()
 def main():
   local = args.video
   playlist_url = args.playlist
+  url = args.url
   videos_to_skip = args.videos_to_skip
 
-  if(not local):
-    playlist = pafy.get_playlist(playlist_url)
-    videos = []
-    for i in (playlist['items']):
-      videos.append(i['pafy'].videoid)
-    v = pafy.new(videos[videos_to_skip])
-    play = v.getbest(preftype="mp4")
-    cap = cv2.VideoCapture(play.url)
-  else:
-    videos = os.listdir("../input")
-    videos.remove('.gitkeep')
-    video = videos[videos_to_skip]
-    cap = cv2.VideoCapture("../input/%s" % video)
+  if(url == ''):
+        if(not local):
+          playlist = pafy.get_playlist(playlist_url)
+          videos = []
+          for item_i in (playlist['items']):
+            videos.append(item_i['pafy'].videoid)
+            v = pafy.new(videos[videos_to_skip])
+            play = v.getbest(preftype="mp4")
+            cap = cv2.VideoCapture(play.url)
+        elif(local):
+            videos = os.listdir('../input')
+            videos.remove('.gitkeep')
+            video = videos[videos_to_skip]
+            cap = cv2.VideoCapture("../input/%s" % video)   
+    else:
+        play = pafy.new(url.split('v=')[1]).getbest(preftype="mp4")
+        cap = cv2.VideoCapture(play.url)
 
   while(True):
     frame_input = input("Skip how many frames?: (q to continue) ")
