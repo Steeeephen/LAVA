@@ -113,6 +113,8 @@ All plots can be downloaded as a png by opening the html and clicking the corres
 
 124 blue side champions identifiable so far, 131 red side
 
+[Check out the progress so far](https://docs.google.com/spreadsheets/d/14pUWbDw32owzKmMUSGVbgytgAz0lY9U6FDAcrYU0Za4/edit#gid=1790319529)
+
 ## Upkeep
 
 To keep the program up to date, several scripts are included in the *upkeep_scripts* folder

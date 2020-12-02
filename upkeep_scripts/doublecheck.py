@@ -36,12 +36,12 @@ parser.add_argument('-n', '--videos_to_skip', type=int, default = 0, help = 'Num
 args = parser.parse_args()
 
 def main():
-  local = args.video
-  playlist_url = args.playlist
-  url = args.url
-  videos_to_skip = args.videos_to_skip
+    local = args.video
+    playlist_url = args.playlist
+    url = args.url
+    videos_to_skip = args.videos_to_skip
 
-  if(url == ''):
+    if(url == ''):
         if(not local):
           playlist = pafy.get_playlist(playlist_url)
           videos = []
@@ -59,72 +59,72 @@ def main():
         play = pafy.new(url.split('v=')[1]).getbest(preftype="mp4")
         cap = cv2.VideoCapture(play.url)
 
-  while(True):
-    frame_input = input("Skip how many frames?: (q to continue) ")
-    if(frame_input.lower() in ('q','quit')):
-      break
-    # Sets video to frame frames_to_skip. Change until you have a frame where desired champion is isolated
-    cap.set(1, int(frame_input))
+    while(True):
+        frame_input = input("Skip how many frames?: (q to continue) ")
+        if(frame_input.lower() in ('q','quit')):
+            break
+        # Sets video to frame frames_to_skip. Change until you have a frame where desired champion is isolated
+        cap.set(1, int(frame_input))
+        ret, frame = cap.read()
+        cv2.imshow("Is this the start of the game?", frame)
+        cv2.waitKey()
+    cv2.destroyAllWindows()
+
     ret, frame = cap.read()
-    cv2.imshow("Is this the start of the game?", frame)
-    cv2.waitKey()
-  cv2.destroyAllWindows()
+    gray = frame
 
-  ret, frame = cap.read()
-  gray = frame
-
-  print("Click on the window and press any key to continue, find the one that fits best")
+    print("Click on the window and press any key to continue, find the one that fits best")
   
-  for league in LEAGUES.keys():
-    mmap0, mmap1, mmap2, mmap3 = LEAGUES[league]
-    cropped = gray[mmap0:mmap1, mmap2:mmap3]
-    cv2.imshow(league, cropped)
+    for league in LEAGUES.keys():
+        mmap0, mmap1, mmap2, mmap3 = LEAGUES[league]
+        cropped = gray[mmap0:mmap1, mmap2:mmap3]
+        cv2.imshow(league, cropped)
+        cv2.waitKey()
+
+    # Check for sword icon in overlay, should be visible if correct
+    hheight,hwidth, _ = frame.shape
+    hheight = hheight//15
+    hwidth1 = 6*(hwidth//13)
+    hwidth2 = 7*(hwidth//13)
+
+    cropped = gray[0:hheight, hwidth1:hwidth2]
+    cv2.imshow("sword icon", cropped)
     cv2.waitKey()
-  
-  # Check for sword icon in overlay, should be visible if correct
-  hheight,hwidth, _ = frame.shape
-  hheight = hheight//15
-  hwidth1 = 6*(hwidth//13)
-  hwidth2 = 7*(hwidth//13)
+    cv2.destroyAllWindows() 
 
-  cropped = gray[0:hheight, hwidth1:hwidth2]
-  cv2.imshow("sword icon", cropped)
-  cv2.waitKey()
-  cv2.destroyAllWindows() 
+    blue_top = gray[108:133, 20:50]
+    blue_jgl = gray[178:203, 20:50]
+    blue_mid = gray[246:268, 20:50]
+    blue_adc = gray[310:340, 20:50]
+    blue_sup = gray[380:410, 20:50]
 
-  blue_top = gray[108:133, 20:50]
-  blue_jgl = gray[178:203, 20:50]
-  blue_mid = gray[246:268, 20:50]
-  blue_adc = gray[310:340, 20:50]
-  blue_sup = gray[380:410, 20:50]
+    cv2.imshow("top", blue_top)
+    cv2.waitKey()
+    cv2.imshow("jgl", blue_jgl)
+    cv2.waitKey()
+    cv2.imshow("mid", blue_mid)
+    cv2.waitKey()
+    cv2.imshow("adc", blue_adc)
+    cv2.waitKey()
+    cv2.imshow("sup", blue_sup)
+    cv2.waitKey()
 
-  cv2.imshow("top", blue_top)
-  cv2.waitKey()
-  cv2.imshow("jgl", blue_jgl)
-  cv2.waitKey()
-  cv2.imshow("mid", blue_mid)
-  cv2.waitKey()
-  cv2.imshow("adc", blue_adc)
-  cv2.waitKey()
-  cv2.imshow("sup", blue_sup)
-  cv2.waitKey()
+    # Check baron timer, should be very clear in centre of image if correct
+    cropped = gray[23:50, 1210:1250] #timer
+    cv2.imshow("timer", cropped)
+    cv2.waitKey()
 
-  # Check baron timer, should be very clear in centre of image if correct
-  cropped = gray[23:50, 1210:1250] #timer
-  cv2.imshow("timer", cropped)
-  cv2.waitKey()
+    # Check blue- & redside sidebar, should cut the side off a little bit if correct
+    cropped = gray[110:403, 25:45]
+    cv2.imshow("blue side sidebar", cropped)
+    cv2.waitKey()
 
-  # Check blue- & redside sidebar, should cut the side off a little bit if correct
-  cropped = gray[110:403, 25:45]
-  cv2.imshow("blue side sidebar", cropped)
-  cv2.waitKey()
+    cropped = gray[110:403, 1235:1255]
+    cv2.imshow("red side sidebar", cropped)
+    cv2.waitKey()
 
-  cropped = gray[110:403, 1235:1255]
-  cv2.imshow("red side sidebar", cropped)
-  cv2.waitKey()
-
-  # Clear windows
-  cv2.destroyAllWindows()
+    # Clear windows
+cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()

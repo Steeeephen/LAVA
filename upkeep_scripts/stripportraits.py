@@ -74,7 +74,7 @@ def main():
         cv2.waitKey()
 
     ret, frame = cap.read()
-    gray = frame
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # 5 different vertical coordinates for 5 different roles
     locations = [110,180,247,315,383]
@@ -115,6 +115,7 @@ def main():
 
         # Save image to directory
         cv2.imwrite('../assets/classify/%s/%s.jpg' % (col, name),cropped)
+        print("%s saved to %s side" % (name, col))
 
 if __name__ == "__main__":
     main()
