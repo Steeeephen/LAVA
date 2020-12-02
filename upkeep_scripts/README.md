@@ -12,6 +12,7 @@ All four of these take the same arguments
 |-v|Videos|Call to use local videos instead of YouTube|
 |-n|Videos to skip| Number of videos to skip in the playlist| 
 |-p|Playlist|YouTube playlist URL|
+|-u|url|YouTube video URL|
 
 ***
 

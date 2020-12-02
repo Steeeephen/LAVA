@@ -42,6 +42,7 @@ from assets.tracking import tracker
 parser = argparse.ArgumentParser(description = "LolTracker")
 
 parser.add_argument('-v', '--video', action = 'store_true', default =  False, help = 'Use local videos instead of Youtube playlist')
+parser.add_argument('-u', '--url', type=str, default =  '', help = 'Link to single Youtube video')
 parser.add_argument('-c', '--collect', action='store_true', default = False, help = 'Streamline data collection process')
 parser.add_argument('-l', '--league', type=str, default = 'lec', help = 'Choose the league, see README for documentation')
 parser.add_argument('-p', '--playlist', type=str, default = 'https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s', help = 'YouTube playlist')
@@ -54,6 +55,7 @@ def main():
   collect = args.collect
   playlist_url = args.playlist
   league = args.league
+  url = args.url
   videos_to_skip = args.videos_to_skip
 
   rows_list = []
@@ -77,24 +79,25 @@ def main():
     header = cv2.imread("assets/headers/header.jpg", 0)
 
   # Iterate through each video in the playlist, grabbing their IDs
-  if(not local):
-    playlist = pafy.get_playlist(playlist_url)
-    videos = []
-    for item_i in (playlist['items']):
-      videos.append(item_i['pafy'].videoid)
+  if(url == ''):
+    if(not local):
+      playlist = pafy.get_playlist(playlist_url)
+      videos = []
+      for item_i in (playlist['items']):
+        videos.append(item_i['pafy'].videoid)
+    elif(local):
+      videos = os.listdir('input')
+      videos.remove('.gitkeep')
   else:
-    videos = os.listdir('input')
-    videos.remove('.gitkeep')
+    videos = [url.split('v=')[1]]
   
-
-  # Skipping videos
+  # Skipping videos     
   videos = videos[videos_to_skip:]
 
   total_videos = len(videos)
 
   # Run on each video
   for i, video in enumerate(videos):
-
     # Get the video url using pafy
     if(not local):
       v = pafy.new(video)
