@@ -9,13 +9,11 @@
 
 Project     : LolTracker 
 
-Version     : 1.1.0
+Version     : 1.2.0
 
 Author      : Stephen O' Farrell (stephen.ofarrell64@gmail.com)
 
 Purpose     : Automatically track spatiotemporal data in league of Legends broadcast videos
-
-Usage       : Change lines 48-54 to your desired values
 
 """
 
