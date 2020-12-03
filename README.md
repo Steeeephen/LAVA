@@ -3,14 +3,14 @@
 ***
 # LolTracker
 
-A program for gathering information and providing analytics from League of Legends videos
+A program for gathering positional data and providing analytics from League of Legends videos
 
 ***
 ## Installation
 
 * Download or clone loltracker directory
 
-* Install python and pip
+* Install python 3.6 and pip
 
 * Navigate to folder with levelone.py
 
@@ -21,7 +21,6 @@ $ pip install -r requirements.txt
 * Run program
 ***
 
-
 ## Usage
 
 Run with parser arguments:
@@ -31,6 +30,10 @@ Run with parser arguments:
 |-l|League|Code corresponding to the league of the videos|
 |-n|Videos to skip| Number of videos to skip in the playlist| 
 |-c|Collect| Streamlined data collection (No printing/progress reports)|
+|-p|Playlist| YouTube Playlist URL|
+|-u|URL| YouTube Video URL|
+|-v|Video| Use local `input/` directory|
+
 
 The program can be used with either Youtube videos or local videos
 
@@ -109,11 +112,13 @@ All plots can be downloaded as a png by opening the html and clicking the corres
 
 ## Notes
 
-143 champion portraits trackable so far
+152 champion portraits trackable so far
 
-124 blue side champions identifiable so far, 131 red side
+152 blue side champions identifiable so far, 137 red side
 
 [Check out the progress so far](https://docs.google.com/spreadsheets/d/14pUWbDw32owzKmMUSGVbgytgAz0lY9U6FDAcrYU0Za4/edit#gid=1790319529)
+
+Note that this includes champions with updated splash arts (e.g. Morgana/Morgana updated, Volibear/Volibear updated) so the total amount of possible supported champions is higher than the actual amount of champions
 
 ## Upkeep
 
