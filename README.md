@@ -112,25 +112,19 @@ All plots can be downloaded as a png by opening the html and clicking the corres
 
 ## Notes
 
-152 champion portraits trackable so far
-
-152 blue side champions identifiable so far, 137 red side
+All champs can be identified & tracked but outdated splash arts may not be (or new splash art updates that I don't hear about). If you need a new one added just look in `upkeep_scripts/` and open a PR or ask me
 
 [Check out the progress so far](https://docs.google.com/spreadsheets/d/14pUWbDw32owzKmMUSGVbgytgAz0lY9U6FDAcrYU0Za4/edit#gid=1790319529)
 
-Note that this includes champions with updated splash arts (e.g. Morgana/Morgana updated, Volibear/Volibear updated) so the total amount of possible supported champions is higher than the actual amount of champions
-
 ## Upkeep
 
-To keep the program up to date, several scripts are included in the *upkeep_scripts* folder
+To keep the program up to date, several scripts are included in the `upkeep_scripts/` folder
 
 ## Issues
 
-The dimensions are *slightly* different for each league so the raw numbers in the csvs are not always directly comparable between different leagues. Any comparisons should be normalised to their respective league's dimensions and compared considering that.
+The dimensions are *slightly* different for each league (due to differing overlay sizes) so the raw numbers in the csvs are not always directly comparable between different leagues. Any comparisons should be normalised to their respective league's dimensions and compared considering that.
 
 Vods with a lot of noise beforehand can slow down the program. Best input is a vod with only in-game footage, but avoiding pre-game highlights is ideal as the program may assume the game has started when it sees the highlight
-
-Testing on Windows is no longer an option for at least the immediate future
 
 ## To-do
 
@@ -138,14 +132,8 @@ Track items (big job)
 
 Track events (big job)
 
-Upkeep Scripts 2.0
+Continue repo/code format improvements (low prio)
 
-Continue repo format improvements
+Follow time from in-game timer instead of baron countdown (high prio)
 
-Follow time from in-game timer instead of baron countdown
-
-Update to support more leagues
-
-Finish champion support
-
-Proximity graphs need to be smoothed
+Proximity graphs need to be smoothed (low prio)

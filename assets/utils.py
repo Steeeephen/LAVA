@@ -260,5 +260,7 @@ def data_collect():
     df1.index = range(10)
     df = pd.concat([df,df1], ignore_index=True)
 
+  # Replace '_' character from champ names (Caused by champ having multiple splash arts after a visual update)
+  df['champ'] = df['champ'].apply(lambda x : x.replace("_", ""))
   # Save data
   df.to_csv("output/collected_data.csv")
