@@ -7,3 +7,5 @@ output/*
 __pycache__/*
 
 envi/
+
+scrape.py

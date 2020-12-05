@@ -9,7 +9,7 @@
 
 Project     : LolTracker 
 
-Version     : 1.2.0
+Version     : 1.2.1
 
 Author      : Stephen O' Farrell (stephen.ofarrell64@gmail.com)
 
@@ -31,29 +31,31 @@ import youtube_dl
 import pafy
 import argparse
 import os
+import sys
 
 from assets.interpolation import interpolate 
 from assets.utils import change_league, identify, output_folders, data_collect
 from assets.graphing import draw_graphs
 from assets.tracking import tracker
 
-parser = argparse.ArgumentParser(description = "LolTracker")
+def main(args):
+  parser = argparse.ArgumentParser(description = "LolTracker")
 
-parser.add_argument('-v', '--video', action = 'store_true', default =  False, help = 'Use local videos instead of Youtube playlist')
-parser.add_argument('-u', '--url', type=str, default =  '', help = 'Link to single Youtube video')
-parser.add_argument('-c', '--collect', action='store_true', default = False, help = 'Streamline data collection process')
-parser.add_argument('-l', '--league', type=str, default = 'lec', help = 'Choose the league, see README for documentation')
-parser.add_argument('-p', '--playlist', type=str, default = 'https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s', help = 'YouTube playlist')
-parser.add_argument('-n', '--videos_to_skip', type=int, default = 0, help = 'Number of Videos to skip')
+  parser.add_argument('-v', '--video', action = 'store_true', default =  False, help = 'Use local videos instead of Youtube playlist')
+  parser.add_argument('-u', '--url', type=str, default =  '', help = 'Link to single Youtube video')
+  parser.add_argument('-c', '--collect', action='store_true', default = False, help = 'Streamline data collection process')
+  parser.add_argument('-l', '--league', type=str, default = 'lec', help = 'Choose the league, see README for documentation')
+  parser.add_argument('-p', '--playlist', type=str, default = 'https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s', help = 'YouTube playlist')
+  parser.add_argument('-n', '--videos_to_skip', type=int, default = 0, help = 'Number of Videos to skip')
 
-args = parser.parse_args()
+  args = parser.parse_args(args)
 
-def main():
   local = args.video
   collect = args.collect
   playlist_url = args.playlist
   league = args.league
   url = args.url
+  single_video = url != ''
   videos_to_skip = args.videos_to_skip
 
   rows_list = []
@@ -68,16 +70,16 @@ def main():
 
   # Scoreboard is only ever up during live footage, this will filter useless frames
   if(overlay_swap):
-    # For new lcs overlay
+    # For summer 2020 lcs overlay, which inexplicably changes halfway through the split :))
     header = cv2.imread("assets/headers/lcsheader.jpg", 0)
     header2 = cv2.imread("assets/headers/lcsheader2.jpg", 0)
   elif(overlay_swap_w20):
     header = cv2.imread('assets/headers/w20header.jpg',0)
   else:
     header = cv2.imread("assets/headers/header.jpg", 0)
-
+  
   # Iterate through each video in the playlist, grabbing their IDs
-  if(url == ''):
+  if(not single_video):
     if(not local):
       playlist = pafy.get_playlist(playlist_url)
       videos = []
@@ -87,8 +89,8 @@ def main():
       videos = os.listdir('input')
       videos.remove('.gitkeep')
   else:
-    videos = [url.split('v=')[1]]
-  
+    videos = [url]
+
   # Skipping videos     
   videos = videos[videos_to_skip:]
 
@@ -113,12 +115,16 @@ def main():
     # Skip one second each time
     frames_to_skip = int(cap.get(cv2.CAP_PROP_FPS))
 
-    if(overlay_swap):
-      templates, champs = identify(cap, frames_to_skip, overlay_swap,  collect, header, header2)
-    else:
-      templates, champs = identify(cap, frames_to_skip, overlay_swap,  collect, header)
+    seconds_timer = []
 
-    df, seconds_timer = tracker(champs, header, cap, templates, MAP_COORDINATES, frames_to_skip, collect)
+    # Repeat if < 3 mins gameplay found (avoids pre-show replays ruining the data)
+    while(len(seconds_timer) < 180):
+      if(overlay_swap):
+        templates, champs, header = identify(cap, frames_to_skip, overlay_swap,  collect, header, header2)
+      else:
+        templates, champs, header = identify(cap, frames_to_skip, overlay_swap,  collect, header)
+
+      df, seconds_timer = tracker(champs, header, cap, templates, MAP_COORDINATES, frames_to_skip, collect)
     
     df = interpolate(df, H, W)
 
@@ -136,8 +142,15 @@ def main():
 
     # Output raw locations to a csv
     df.to_csv("output/%s/positions.csv" % video, index = False)
-  data_collect()
+
   pd.DataFrame(rows_list).to_csv("output/proximities.csv")
+  
+  if(not single_video):
+    final_df = data_collect()
+    final_df.to_csv("output/collected_data.csv")
+    return(final_df)
+  else:
+    return(df)
 
 if __name__ == "__main__":
-  main()
+  main(sys.argv[1:])

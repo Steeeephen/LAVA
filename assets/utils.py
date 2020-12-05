@@ -181,18 +181,24 @@ def identify(cap, frames_to_skip, OVERLAY_SWAP, collect, header, header2 = ""):
   for champ_i, champ in enumerate(champs):
     templates[champ_i] = cv2.imread('assets/champs/%s.jpg' % champ,0)
 
-  return templates, champs
+  return templates, champs, header
 
 def data_collect():
-  videos = os.listdir("output")
+  directory = os.listdir("output")
 
   # In case data_collection.py was run
-  if(os.path.exists("output/proximities.csv")):
-    videos.remove("proximities.csv")
-  if(os.path.exists("output/collected_data.csv")):
-    videos.remove("collected_data.csv")
-  videos.remove('.gitkeep')
-
+  # if(os.path.exists("output/proximities.csv")):
+  #   videos.remove("proximities.csv")
+  # if(os.path.exists("output/collected_data.csv")):
+  #   videos.remove("collected_data.csv")
+  # videos.remove('.gitkeep')
+  videos = []
+  for video in directory:
+    print(os.path.exists("output/%s/positions.csv" % video))
+    print(video)
+    if os.path.exists("output/%s/positions.csv" % video):
+      videos.append(video)
+  print(videos)
   roles = ['top','jgl','mid','adc','sup']*2
 
   # Read first dataframe
@@ -262,5 +268,4 @@ def data_collect():
 
   # Replace '_' character from champ names (Caused by champ having multiple splash arts after a visual update)
   df['champ'] = df['champ'].apply(lambda x : x.replace("_", ""))
-  # Save data
-  df.to_csv("output/collected_data.csv")
+  return(df)

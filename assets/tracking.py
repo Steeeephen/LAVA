@@ -106,4 +106,5 @@ def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip, col
 						break
 				for _ in range(frames_to_skip):
 					cap.grab()
+	
 	return pd.DataFrame(points), seconds_timer 
