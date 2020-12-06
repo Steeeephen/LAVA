@@ -19,6 +19,13 @@ def change_league(league):
   MAP_0, MAP_1, MAP_2, MAP_3 = LEAGUES[league][:4]
   return league, [MAP_0, MAP_1, MAP_2, MAP_3]
 
+def clean_for_directory(video_title):
+  for ch in ['*','.','"','/','\\',':',';','|',',']:
+    if ch in video_title:
+      video_title = video_title.replace(ch, '')
+
+  return video_title
+
 def output_folders(video):
   if not os.path.exists("output/%s" % video):
     os.makedirs("output/%s" % video)

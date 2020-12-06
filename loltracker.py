@@ -9,7 +9,7 @@
 
 Project     : LolTracker 
 
-Version     : 1.2.1
+Version     : 1.2.2
 
 Author      : Stephen O' Farrell (stephen.ofarrell64@gmail.com)
 
@@ -34,7 +34,7 @@ import os
 import sys
 
 from assets.interpolation import interpolate 
-from assets.utils import change_league, identify, output_folders, data_collect
+from assets.utils import change_league, identify, output_folders, data_collect, clean_for_directory
 from assets.graphing import draw_graphs
 from assets.tracking import tracker
 
@@ -70,7 +70,7 @@ def main(args):
 
   # Scoreboard is only ever up during live footage, this will filter useless frames
   if(overlay_swap):
-    # For summer 2020 lcs overlay, which inexplicably changes halfway through the split :))
+    # For summer 2020 lcs overlay, which inexplicably changes halfway through the split :))`
     header = cv2.imread("assets/headers/lcsheader.jpg", 0)
     header2 = cv2.imread("assets/headers/lcsheader2.jpg", 0)
   elif(overlay_swap_w20):
@@ -102,7 +102,7 @@ def main(args):
     if(not local):
       v = pafy.new(video)
       play = v.getbest(preftype="mp4")
-      video = play.title
+      video = clean_for_directory(play.title)
       cap = cv2.VideoCapture(play.url)
     else:
       cap = cv2.VideoCapture("input/%s" % video)
