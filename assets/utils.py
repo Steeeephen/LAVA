@@ -112,7 +112,7 @@ def identify(cap, frames_to_skip, OVERLAY_SWAP, collect, header, header2 = ""):
       cap.grab()
 
 
-  # Grab portraits for identifying the champions played  #########cons
+  # Grab portraits for identifying the champions played
   identified = 0  
 
   # Identify blue side champions until exactly 5 have been found

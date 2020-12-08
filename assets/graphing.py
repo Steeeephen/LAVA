@@ -54,16 +54,13 @@ def proximity(df, l, t, side, role, video, rows_list):
 
 		diffs = [0]*len(champ_teammate)
 		for j in range(len(champ_teammate)): # For every pair of points gathered
-			# try:	
-
 			dist = norm(champ_to_check[df.columns[t]].tolist()[j] - champ_teammate[champ].tolist()[j]) # Get the distance between the two
 			diffs[j] = dist
 
 			# If within 50 units, they're considered 'close'
 			if(dist < 50):
 				count+=1
-			# except:
-			# 	pass
+		
 		# Graph the distances over time
 		fig2 = px.line(y=diffs, title = "%.2f%% Proximity" % (100*count/len(df['Seconds'])), x=df["Seconds"]/60)
 		fig2.update_yaxes(title="Distance to: %s" % champ.capitalize())

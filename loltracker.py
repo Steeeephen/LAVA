@@ -9,7 +9,7 @@
 
 Project     : LolTracker 
 
-Version     : 1.2.2
+Version     : 1.2.3
 
 Author      : Stephen O' Farrell (stephen.ofarrell64@gmail.com)
 
@@ -115,16 +115,19 @@ def main(args):
     # Skip one second each time
     frames_to_skip = int(cap.get(cv2.CAP_PROP_FPS))
 
+    try:
+      cap.set(1, frames_to_skip*int(url.split('t=')[1]))
+    except:
+      pass
+
     seconds_timer = []
 
-    # Repeat if < 3 mins gameplay found (avoids pre-show replays ruining the data)
-    while(len(seconds_timer) < 180):
-      if(overlay_swap):
-        templates, champs, header = identify(cap, frames_to_skip, overlay_swap,  collect, header, header2)
-      else:
-        templates, champs, header = identify(cap, frames_to_skip, overlay_swap,  collect, header)
+    if(overlay_swap):
+      templates, champs, header = identify(cap, frames_to_skip, overlay_swap,  collect, header, header2)
+    else:
+      templates, champs, header = identify(cap, frames_to_skip, overlay_swap,  collect, header)
 
-      df, seconds_timer = tracker(champs, header, cap, templates, MAP_COORDINATES, frames_to_skip, collect)
+    df, seconds_timer = tracker(champs, header, cap, templates, MAP_COORDINATES, frames_to_skip, collect)
     
     df = interpolate(df, H, W)
 
