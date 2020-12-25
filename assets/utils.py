@@ -192,13 +192,6 @@ def identify(cap, frames_to_skip, OVERLAY_SWAP, collect, header, header2 = ""):
 
 def data_collect():
   directory = os.listdir("output")
-
-  # In case data_collection.py was run
-  # if(os.path.exists("output/proximities.csv")):
-  #   videos.remove("proximities.csv")
-  # if(os.path.exists("output/collected_data.csv")):
-  #   videos.remove("collected_data.csv")
-  # videos.remove('.gitkeep')
   videos = []
   for video in directory:
     print(os.path.exists("output/%s/positions.csv" % video))
