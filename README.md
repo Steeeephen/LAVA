@@ -11,11 +11,7 @@ For more information, see the [wiki](https://github.com/Steeeephen/loltracker/wi
 
 ### 1. Download or clone loltracker directory
 
-Download directly from github and unzip
-
-[[/images/download.png|Like here]]
-
-Or clone from the command line
+Download directly from github and unzip or clone from the command line
 
 ```
 $ git clone https://github.com/Steeeephen/loltracker
