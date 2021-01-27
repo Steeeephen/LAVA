@@ -2,7 +2,7 @@ import cv2
 import pandas as pd
 import numpy as np
 
-from assets.constants import DIGIT_TEMPLATES, BARON_TEMPLATE, BARON
+from assets.constants import DIGIT_TEMPLATES, BARON_TEMPLATE, BARON, ROLE_DICT
 # from assets.utils import timer
 
 
@@ -43,7 +43,11 @@ def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip, col
 	# point_i = [(0,0)]*10
 	data_entries = []
 
-	while(True):
+	roles = list(ROLE_DICT.keys())
+
+	count=1
+	while(count < 1000):
+		count+=1
 		_, frame = cap.read()
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -116,7 +120,11 @@ def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip, col
 					except:
 						point = [np.nan,np.nan]
 						pass
-					data_entries.append({'champ':champs[template_i], 'side':'blue', 'x':(point[0] + 7)/H, 'y':(point[1] + 7)/W, 'second':second})
+
+					side = 'blue' if template_i <= 4 else 'red'
+					role = roles[template_i % 5]
+
+					data_entries.append({'champ':champs[template_i], 'role': role, 'side':side, 'x':(point[0] + 7)/H, 'y':(point[1] + 7)/W, 'second':second})
 					# temp = np.array([(point[0] + 7)/H, (point[1] + 7)/W])
 					# points[champs[template_i]].append(temp)
 				# df = pd.DataFrame(d)
