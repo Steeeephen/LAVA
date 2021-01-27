@@ -2,22 +2,24 @@ import cv2
 import numpy as np
 import pandas as pd
 import os 
+from sympy.geometry import Point, Circle, intersection, Line
+from sympy import N
 
-from assets.constants import LEAGUES, ROLE_DICT, BLUE_PORTRAITS, RED_PORTRAITS, RED_CHAMP_TEMPLATES, BLUE_CHAMP_TEMPLATES
+from assets.constants import ROLE_DICT, BLUE_PORTRAITS, RED_PORTRAITS, RED_CHAMP_TEMPLATES, BLUE_CHAMP_TEMPLATES
 
 # Create output directory
 if(not(os.path.exists("output"))):
   os.mkdir("output")
 
-def change_league(league):
-  if league in ["lpl"]: league = "lck"
-  elif league in ["eum", 'lcsnew', 'w20']: league = "lcs"
-  elif league in ["slo", 'lfl', 'ncs', 'pgn', 'bl', 'hpm']: league = "uklc"
+# def change_league(league):
+#   if league in ["lpl"]: league = "lck"
+#   elif league in ["eum", 'lcsnew', 'w20']: league = "lcs"
+#   elif league in ["slo", 'lfl', 'ncs', 'pgn', 'bl', 'hpm']: league = "uklc"
 
 
-  # Dimensions for cropping the map
-  MAP_0, MAP_1, MAP_2, MAP_3 = LEAGUES[league][:4]
-  return league, [MAP_0, MAP_1, MAP_2, MAP_3]
+#   # Dimensions for cropping the map
+#   MAP_0, MAP_1, MAP_2, MAP_3 = LEAGUES[league][:4]
+#   return league, [MAP_0, MAP_1, MAP_2, MAP_3]
 
 def clean_for_directory(video_title):
   for ch in ['*','.','"','/','\\',':',';','|',',']:
@@ -40,20 +42,112 @@ def output_folders(video):
     os.makedirs("output/%s/red/support" % video)
     os.makedirs("output/%s/red/mid" % video)
 
-  # Function to recursively clean up and convert the timer reading to seconds.
-def timer(time_read, last):
-  if(len(time_read) < 1):
-    return(9999)
-  if(len(time_read) == 1):
-    timer_clean = last + time_read
-    try:
-      return(1200-(int(timer_clean[:-2])*60+int(timer_clean[-2:])))
-    except:
-      return(9999)
-  elif(time_read[0] == '7' and time_read[1] == '7'):
-    return(timer(time_read[2:], last+time_read[:1]))
-  else:
-    return(timer(time_read[1:], last + time_read[:1]))
+def headers(cap, frames_to_skip, collect):
+  headers_list = os.listdir('assets/headers')
+  header_templates = []
+  
+  for header in headers_list:
+    header_directory = os.path.join('assets', 'headers', header)
+    header_templates.append(cv2.imread(header_directory, 0))
+  
+  ret, frame = cap.read()
+  frame_height, frame_width, _ = frame.shape
+  header_height = frame_height//15
+  header_width_left = 6*(frame_width//13)
+  header_width_right = 7*(frame_width//13)
+
+  header_found = False
+  count = 0
+  while(ret and not header_found):
+    count+=1
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    cropped = gray[0:header_height, header_width_left:header_width_right]  
+    for header in header_templates:
+      matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
+      location = np.where(matched > 0.75)
+      if(location[0].any()):
+        header_found = True
+        break
+    cap.set(1, frames_to_skip*120*count)
+    ret, frame = cap.read()
+  return frame_height, frame_width, header, count
+
+def map_borders(cap, frames_to_skip, header, frame_height, frame_width):
+  inhib_templates = []
+  
+  for i in range(4):
+    inhib_templates.append(cv2.imread('assets/map/inhib%d.jpg' % i, 0))
+
+  inhibs_found = 0
+  while(inhibs_found < 4):
+      _, frame = cap.read()
+      gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+      
+      h,w,_ = frame.shape #####
+
+      cropped = gray[h//2:h, (4*w)//5:w] #####
+      
+      inhib_locations = []
+      inhibs_found = 0
+      for inhib in inhib_templates:
+          res = cv2.matchTemplate(cropped, inhib, cv2.TM_CCOEFF_NORMED)
+          location = (np.where(res == max(0.65, np.max(res))))
+
+          try:
+              point = next(zip(*location[::-1]))
+              inhibs_found += 1
+              cv2.rectangle(cropped, point, (point[0] + 18, point[1] + 12), 255, 2)
+          except:
+              inhibs_found = 0
+              print("not all inhibs found")
+              for i in range(30):
+                  cap.grab()
+              break
+          inhib_locations.append(point)
+      if(inhibs_found == 4):
+          # check
+          swapped_inhibs = [coord[::-1] for coord in inhib_locations[2:] + inhib_locations[:2]]
+          if(inhib_locations != sorted(inhib_locations) or swapped_inhibs != sorted(swapped_inhibs)):
+              print('inhibs not in correct order')
+              inhibs_found = 0
+              for i in range(30):
+                  cap.grab()
+
+  inhib_blue_top = inhib_locations[0]
+  inhib_blue_bot = inhib_locations[1]
+  inhib_red_top = inhib_locations[2]
+  inhib_red_bot = inhib_locations[3]
+
+  dist2 = (np.linalg.norm(np.array(inhib_blue_top) - np.array(inhib_blue_bot)))
+  dist4 = (np.linalg.norm(np.array(inhib_red_bot) - np.array(inhib_red_top)))
+
+  inhib_blue_top = ((inhib_blue_bot[0] - inhib_blue_top[0])//4 + inhib_blue_top[0], (inhib_blue_bot[1] - inhib_blue_top[1])//4 + inhib_blue_top[1])
+  x = Point(inhib_blue_top[0], inhib_blue_top[1])
+  y = Point(inhib_blue_bot[0], inhib_blue_bot[1])
+
+  c1 = Circle(x, dist2)
+  c2 = Circle(y, dist2)
+  points = np.array([np.array([N(i).x, N(i).y]) for i in intersection(c1, c2)])
+  intersect1 = points[np.argmin(points[:,1])]
+
+  inhib_red_top = ((inhib_red_bot[0] - inhib_red_top[0])//4 + inhib_red_top[0], (inhib_red_bot[1] - inhib_red_top[1])//4 + inhib_red_top[1])
+  x = Point(inhib_red_bot[0], inhib_red_bot[1])
+  y = Point(inhib_red_top[0], inhib_red_top[1])
+
+  c3 = Circle(x, dist4)
+  c4 = Circle(y, dist4)
+  points = np.array([np.array([N(i).x, N(i).y]) for i in intersection(c3, c4)])
+  intersect2 = points[np.argmin(points[:,0])]
+
+  l = Line(intersect1, intersect2)
+  points = (np.array([np.array([N(i).x, N(i).y]) for i in intersection(l, c1)]))
+  border1 = points[np.argmin(points[:,0])]
+
+  points = (np.array([np.array([N(i).x, N(i).y]) for i in intersection(l, c4)]))
+  border2 = points[np.argmin(points[:,1])]
+
+  cropped = cropped[int(border2[1]):int(border1[1]), int(border1[0]):int(border2[0])]
+  return([frame_height//2+int(border2[1]), frame_height//2+int(border1[1]), (4*frame_width)//5 + int(border1[0]), (4*frame_width)//5 + int(border2[0])])
 
 # Putting graphs to a html file
 def graph_html(div_plot, video, colour, champ):
@@ -69,43 +163,29 @@ def graph_html(div_plot, video, colour, champ):
   html_writer.write(html_text)
   html_writer.close()
 
-def identify(cap, frames_to_skip, OVERLAY_SWAP, collect, header, header2 = ""):
-  
-  _,frame = cap.read()    
-  hheight,hwidth, _ = frame.shape
-  hheight = hheight//15
-  hwidth1 = 6*(hwidth//13)
-  hwidth2 = 7*(hwidth//13)
+def identify(cap, frames_to_skip, collect, header, frame_height, frame_width):
+  ret, frame = cap.read()
+  header_height = frame_height//15
+  header_width_left = 6*(frame_width//13)
+  header_width_right = 7*(frame_width//13)
 
   # Templates stores the champion pictures to search for, while point_i saves the most recent point found for that champion
   templates = [0]*10
 
-  while(True):
-    _,frame = cap.read()
+  while(ret):
+    ret,frame = cap.read()
 
     # Making the images gray will make template matching more efficient
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # Search only in a section near the top, again for efficiency
-    cropped = gray[0:hheight, hwidth1:hwidth2]
-    
-    # Look for the scoreboard
-    if(OVERLAY_SWAP): # If new lcs overlay, we have to check for both possibilities
-      matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
-      location = np.where(matched > 0.75)
-      if(location[0].any()):
-        break
+    cropped = gray[0:header_height, header_width_left:header_width_right]
 
-      matched = cv2.matchTemplate(cropped, header2, cv2.TM_CCOEFF_NORMED)
-      location = np.where(matched > 0.75)
-      if(location[0].any()): # If it's the second one
-        header = header2  # Use the second one
-        break
-    else: # Otherwise, check for the sword icon normally
-      matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
-      location = np.where(matched > 0.75)
-      if(location[0].any()):
-        break
+    # Look for the scoreboard
+    matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
+    location = np.where(matched > 0.75)
+    if(location[0].any()):
+      break
 
     # Skip one second if not
     for _ in range(frames_to_skip):
@@ -188,17 +268,15 @@ def identify(cap, frames_to_skip, OVERLAY_SWAP, collect, header, header2 = ""):
   for champ_i, champ in enumerate(champs):
     templates[champ_i] = cv2.imread('assets/champs/%s.jpg' % champ,0)
 
-  return templates, champs, header
+  return templates, champs
 
 def data_collect():
   directory = os.listdir("output")
   videos = []
   for video in directory:
-    print(os.path.exists("output/%s/positions.csv" % video))
-    print(video)
     if os.path.exists("output/%s/positions.csv" % video):
       videos.append(video)
-  print(videos)
+
   roles = ['top','jgl','mid','adc','sup']*2
 
   # Read first dataframe

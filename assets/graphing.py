@@ -9,7 +9,9 @@ from assets.utils import graph_html
 from assets.classifying import classify_jgl, classify_sup, classify_mid
 from assets.constants import TIMESPLITS, TIMESPLITS2, ROLE_DICT
 
-def draw_graphs(df, H, W, LEAGUE, video, collect, rows_list):
+def draw_graphs(df, map_coordinates, video, collect, rows_list, LEAGUE = 'lec'):
+	H = map_coordinates[1] - map_coordinates[0]
+	W = map_coordinates[3] - map_coordinates[2]
 	RADIUS = int(W/2.5)	
 	# Graph each level one pattern
 	leveloneplots(df, H, W, LEAGUE, video)

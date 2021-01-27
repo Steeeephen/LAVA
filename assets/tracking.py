@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from assets.constants import DIGIT_TEMPLATES, BARON_TEMPLATE, BARON
-from assets.utils import timer
+# from assets.utils import timer
 
 
 #-----------------------------
@@ -12,9 +12,24 @@ from assets.utils import timer
 
 #-----------------------------
 
+  # Function to recursively clean up and convert the timer reading to seconds.
+def timer(time_read, last):
+  if(len(time_read) < 1):
+    return(9999)
+  if(len(time_read) == 1):
+    timer_clean = last + time_read
+    try:
+      return(1200-(int(timer_clean[:-2])*60+int(timer_clean[-2:])))
+    except:
+      return(9999)
+  elif(time_read[0] == '7' and time_read[1] == '7'):
+    return(timer(time_read[2:], last+time_read[:1]))
+  else:
+    return(timer(time_read[1:], last + time_read[:1]))
+
 def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip, collect):
-	points = {key:[] for key in champs}
-	seconds_timer = []
+	# points = {key:[] for key in champs}
+	# seconds_timer = []
 	
 	_,frame = cap.read()	
 	hheight,hwidth, _ = frame.shape
@@ -22,7 +37,11 @@ def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip, col
 	hwidth1 = 6*(hwidth//13)
 	hwidth2 = 7*(hwidth//13)
 
-	point_i = [(0,0)]*10
+	H = map_coordinates[1] - map_coordinates[0]
+	W = map_coordinates[3] - map_coordinates[2]
+
+	# point_i = [(0,0)]*10
+	data_entries = []
 
 	while(True):
 		_, frame = cap.read()
@@ -62,7 +81,9 @@ def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip, col
 				timer_ordered = ''.join([timer_ordered, nums[num]])
 			
 			# Add time to list as seconds value
-			seconds_timer.append((timer(timer_ordered,"")))
+			# print(timer(timer_ordered, ""))
+			second = timer(timer_ordered, "")
+			# seconds_timer.append((timer(timer_ordered,"")))
 
 			#-----------------------------
 
@@ -76,7 +97,7 @@ def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip, col
 			
 			# Check for the baron spawning
 			buffcheck  = cv2.matchTemplate(cropped_4, BARON_TEMPLATE,  cv2.TM_CCOEFF_NORMED)
-			buffs  = np.where(buffcheck  > 0.9)
+			buffs  = np.where(buffcheck > 0.9)
 			
 			# Stop when the baron spawns
 			if(buffs[0].any()):
@@ -85,20 +106,24 @@ def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip, col
 				for template_i, template in enumerate(templates):
 					
 					matched = cv2.matchTemplate(cropped,template,cv2.TM_CCOEFF_NORMED)
-					location = np.where(matched >= 0.8)
+					location = (np.where(matched == max(0.8, np.max(matched))))
 				
 					# If champion found, save their location
 					try:
 						point = next(zip(*location[::-1]))
-						point_i[template_i] = point
+						# point_i[template_i] = point
 						cv2.rectangle(cropped, point, (point[0] + 14, point[1] + 14), 255, 2)
 					except:
-						point = (np.nan,np.nan)
+						point = [np.nan,np.nan]
 						pass
-
-					temp = np.array([point[0] + 7, point[1] + 7])
-					points[champs[template_i]].append(temp)
-
+					data_entries.append({'champ':champs[template_i], 'side':'blue', 'x':(point[0] + 7)/H, 'y':(point[1] + 7)/W, 'second':second})
+					# temp = np.array([(point[0] + 7)/H, (point[1] + 7)/W])
+					# points[champs[template_i]].append(temp)
+				# df = pd.DataFrame(d)
+				# df.to_csv("ok.csv")
+				# cv2.imshow('minimap',cropped)
+				# cv2.waitKey()
+				# break
 				if(not collect):
 				# Show minimap with champions highlighted
 					cv2.imshow('minimap',cropped)
@@ -107,4 +132,4 @@ def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip, col
 				for _ in range(frames_to_skip):
 					cap.grab()
 	
-	return pd.DataFrame(points), seconds_timer 
+	return pd.DataFrame(data_entries)

@@ -3,7 +3,9 @@ import pandas as pd
 
 from numpy.linalg import norm as norm
 
-def interpolate(df, H, W):
+def interpolate(df, map_coordinates):
+	H = map_coordinates[1] - map_coordinates[0]
+	W = map_coordinates[3] - map_coordinates[2]
 	RADIUS = int(W/2.5)
 	cols = df.columns
 	for index,column in enumerate(cols):
