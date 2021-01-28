@@ -46,7 +46,7 @@ def tracker(champs, header, cap, templates, map_coordinates, frames_to_skip, col
 	roles = list(ROLE_DICT.keys())
 
 	count=1
-	while(count < 1000):
+	while(True):
 		count+=1
 		_, frame = cap.read()
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

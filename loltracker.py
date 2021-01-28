@@ -124,7 +124,7 @@ def main(args):
 
     # headers
     frame_height, frame_width, header, count = headers(cap, frames_to_skip, collect)
-
+    
     cap.set(1, frames_to_skip*120*(count-2))
 
     # if(overlay_swap):
