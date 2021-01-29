@@ -26,6 +26,9 @@ def draw_graphs(df, map_coordinates, video, collect, rows_list, LEAGUE = 'lec'):
     graph_dict['blue_jungle'] = jungleplots(df, 'blue')
     graph_dict['red_jungle'] = jungleplots(df, 'red')
 
+    graph_dict['blue_support'] = supportplots(df, 'blue')
+    graph_dict['red_support'] = supportplots(df, 'red')
+
     inject_html(graph_dict)
     # Jungle graphs
     # jungleplots(df, H, W, RADIUS, video)
@@ -164,70 +167,7 @@ def leveloneplots(df, H, W, LEAGUE, video):
     fig.update_xaxes(showgrid=False, showticklabels = False)
     fig.update_yaxes(showgrid=False, showticklabels = False)
 
-
-    # colour = "blue"
-    # cols = df.columns[:-1]
-
-    # for col_i, col in enumerate(cols):
-    #   if col_i > 4: # If we graphed all 5 blue side champions
-    #       colour = "red"
-
-    #   temp_df = df[df['second'] <= 90]
-    #   champ = temp_df[col]
-    #   axes = list(zip(*champ))
-
-    #   fig = px.scatter(
-    #       temp_df,
-    #       x = axes[0], 
-    #       y = axes[1],
-    #       range_x = [0, 1],
-    #       range_y = [1, 0],
-    #       width = 800,
-    #       height = 800,
-    #       hover_name = 'second',
-    #       color = 'second',
-    #       color_continuous_scale = "Oranges")
-
-    #   fig.add_layout_image(
-    #       dict(
-    #           source=Image.open("assets/hq_map.png"),
-    #           xref="x",
-    #           yref="y",
-    #           x=0,
-    #           y=0,
-    #           sizex = 1,
-    #           sizey = 1, 
-    #           sizing="stretch",
-    #           opacity=1,
-    #           layer="below")
-    #   )
-
-    #   fig.add_layout_image(
-    #           dict(
-    #               source=Image.open('assets/portraits/%sSquare.png' % col.capitalize().replace("_", "")),
-    #               xref="x",
-    #               yref="y",
-    #               x=0,
-    #               y=0,
-    #               sizex=20,
-    #               sizey=20,
-    #               sizing="stretch",
-    #               opacity=1,
-    #               layer="below")
-    #   )
-
-    #   fig.update_layout(
-    #       title = "%s: Level One" % col.capitalize(),
-    #       template = "plotly_white",
-    #       xaxis_showgrid = False,
-    #       yaxis_showgrid = False
-    #       )
-        
-    #   fig.update_xaxes(showticklabels = False, title_text = "")
-    #   fig.update_yaxes(showticklabels = False, title_text = "")
-
     return plotly.offline.plot(fig, output_type = 'div')
-    # graph_html(plotly.offline.plot(fig, output_type = 'div'), video, colour, "levelone/%s" % col)
 
 
 def classify_jgl(x, regions):
@@ -252,6 +192,27 @@ def classify_jgl(x, regions):
             regions[2]+=1
         elif(point[0] > 1.05*point[1]): # Red side
             regions[3]+=1
+
+def classify_sup(x, regions):
+    point = np.array([x.x, x.y])
+    if(norm(point - np.array([1,0])) < 0.4): # Red base
+        regions[6] += 1
+    elif(norm(point - np.array([0,1])) < 0.4): # Blue base
+        regions[3]+=1
+    elif(
+        norm(point - np.array([1,1])) < 0.4
+        or point[0] > 0.9 
+        or point[1] > 0.9): # Botlane
+            regions[5]+=1
+    elif(point[0] < 0.9 - point[1]): # Above midlane upper border
+        regions[0]+=1
+    elif(point[0] < 1.1 - point[1]): # Above midlane lower border (in midlane)
+        regions[4]+=1 
+    elif(point[0] > 1.1 - point[1]): # Below midlane lower border
+        if(point[0] < 1.05*point[1]): # Blue side
+            regions[2]+=1
+        elif(point[0] > 1.05*point[1]): # Red side
+            regions[1]+=1
 
 def jungleplots(df, colour):
     df_jungle = df[(df.role == 'jgl')]
@@ -288,20 +249,20 @@ def jungleplots(df, colour):
         dict(
                 type="path",
                 path = "M 0,0 L 0.5,0.5 L 1,0 Z",
-                line=dict(
-                    color="white",
-                    width=2,
-                ),
+                line={
+                    'color':"black",
+                    'width':0.5,
+                },
                 xref=subplot,
                 fillcolor=('rgba(%s,1)' % fill_team) % (reds[0],reds[0]),
             ),
         dict(
                 type="path",
                 path = "M 0,0 L 0.5,0.5 L 0,1 Z",
-                line=dict(
-                    color="white",
-                    width=2,
-                ),
+                line={
+                    'color':"black",
+                    'width':0.5,
+                },
                 xref=subplot,
                 fillcolor=('rgba(%s,1)' % fill_team) % (reds[1],reds[1]),
             ),
@@ -309,30 +270,30 @@ def jungleplots(df, colour):
         dict(
                 type="path",
                 path = "M 1,1 L 0.5,0.5 L 0,1 Z",
-                line=dict(
-                    color="white",
-                    width=2,
-                ),
+                line={
+                    'color':"black",
+                    'width':0.5,
+                },
                 xref=subplot,
                 fillcolor=('rgba(%s,1)' % fill_team) % (reds[2],reds[2]),
             ),
         dict(
                 type="path",
                 path = "M 1,1 L 0.5,0.5 L 1,0 Z",
-                line=dict(
-                    color="white",
-                    width=2,
-                ),
+                line={
+                    'color':"black",
+                    'width':0.5,
+                },
                 xref=subplot,
                 fillcolor=('rgba(%s,1)' % fill_team) % (reds[3],reds[3]),
             ),
         dict(
                 type="path",
                 path = "M 0.1,1 L 1,0.1 L 0.9,0 L 0,0.9 Z",
-                line=dict(
-                    color="white",
-                    width=2,
-                ),
+                line={
+                    'color':"black",
+                    'width':0.5,
+                },
                 xref=subplot,
                 fillcolor=('rgba(%s,1)' % fill_team) % (reds[4],reds[4]),
             ),
@@ -345,7 +306,10 @@ def jungleplots(df, colour):
                 y0=0.4,
                 x1=0.4,
                 y1=-0.4,
-                line_color="white",
+                line={
+                    'color':"black",
+                    'width':0.5,
+                },
                 xref=subplot,
             ),
         dict(
@@ -356,7 +320,10 @@ def jungleplots(df, colour):
                 y0=0.4,
                 x1=1.4,
                 y1=-0.4,
-                line_color="white",
+                line={
+                    'color':"black",
+                    'width':0.5,
+                },
                 xref=subplot,
             ),
         dict(
@@ -367,7 +334,10 @@ def jungleplots(df, colour):
                 y0=1.4,
                 x1=0.4,
                 y1=0.6,
-                line_color="white",
+                line={
+                    'color':"black",
+                    'width':0.5,
+                },
                 xref=subplot,
             ),
         dict(
@@ -378,7 +348,10 @@ def jungleplots(df, colour):
                 y0=1.4,
                 x1=1.4,
                 y1=0.6,
-                line_color="white",
+                line={
+                    'color':"black",
+                    'width':0.5,
+                },
                 xref=subplot,
             )])
 
@@ -398,296 +371,193 @@ def jungleplots(df, colour):
 
     fig2.add_trace(fig.data[0])
     return plotly.offline.plot(fig2, output_type='div')
-    # colour = "blue"
 
-    # for col in [df.columns[n] for n in [1,6]]:
-    #     # We split these up into our important intervals
-    #     for times in TIMESPLITS.keys():
-
-    #         # Get time intervals
-    #         times_floor = TIMESPLITS2[times]
-
-    #         # Classify points
-    #         reds = classify_jgl(df[col][(df['Seconds'] <= times) & (df['Seconds'] >= times_floor)], H, W, RADIUS)
-            
-    #         # We scale our points so that they fall nicely on [0,255], meaning easier to read graphs
-    #         reds = list(map(lambda x : 255-255*(x - min(reds))/(max(reds)), reds))
-    #         fig = px.scatter(
-    #                 x = [0], 
-    #                 y = [0],
-    #                 range_x = [0, W],
-    #                 range_y = [H, 0],
-    #                 width = 800,
-    #                 height = 800)
-
-
-    #         fig.update_layout(
-    #                 template = "plotly_white",
-    #                 xaxis_showgrid = False,
-    #                 yaxis_showgrid = False
-    #                 )
-
-    #         fig.update_xaxes(showticklabels = False, title_text = "")
-    #         fig.update_yaxes(showticklabels = False, title_text = "")
-
-    #         # Different colours for each team
-    #         fill_team = "255, %d, %d" if colour == "red" else "%d, %d, 255"
-    #         fig.update_layout(
-    #             shapes=[
-    #             dict(
-    #                     type="path",
-    #                     path = "M 0,0 L %d,%d L %d,0 Z" % (W/2,H/2,W),
-    #                     line=dict(
-    #                         color="white",
-    #                         width=2,
-    #                     ),
-    #                     fillcolor=('rgba(%s,1)' % fill_team) % (reds[0],reds[0]),
-    #                 ),
-    #             dict(
-    #                     type="path",
-    #                     path = "M 0,0 L %d,%d L 0,%d Z" % (W/2,H/2,W),
-    #                     line=dict(
-    #                         color="white",
-    #                         width=2,
-    #                     ),
-    #                     fillcolor=('rgba(%s,1)' % fill_team) % (reds[1],reds[1]),
-    #                 ),
-                
-    #             dict(
-    #                     type="path",
-    #                     path = "M %d,%d L %d,%d L 0,%d Z" % (W,H,W/2, H/2,H),
-    #                     line=dict(
-    #                         color="white",
-    #                         width=2,
-    #                     ),
-    #                     fillcolor=('rgba(%s,1)' % fill_team) % (reds[2],reds[2]),
-    #                 ),
-    #             dict(
-    #                     type="path",
-    #                     path = "M %d,%d L %d,%d L %d,0 Z" % (W,H,W/2,H/2,W),
-    #                     line=dict(
-    #                         color="white",
-    #                         width=2,
-    #                     ),
-    #                     fillcolor=('rgba(%s,1)' % fill_team) % (reds[3],reds[3]),
-    #                 ),
-    #             dict(
-    #                     type="path",
-    #                     path = "M %d,%d L %d,%d L %d,0 L 0,%d Z" % (W/10,H, W,H/10,W-W/10,H-H/10),
-    #                     line=dict(
-    #                         color="white",
-    #                         width=2,
-    #                     ),
-    #                     fillcolor=('rgba(%s,1)' % fill_team) % (reds[4],reds[4]),
-    #                 ),
-                    
-    #             dict(
-    #                     type="circle",
-    #                     xref="x",
-    #                     yref="y",
-    #                     x0=-RADIUS,
-    #                     fillcolor=('rgba(%s,1)' % fill_team) % (reds[5],reds[5]),
-    #                     y0=RADIUS,
-    #                     x1=RADIUS,
-    #                     y1=-RADIUS,
-    #                     line_color="white",
-    #                 ),
-    #             dict(
-    #                     type="circle",
-    #                     xref="x",
-    #                     yref="y",
-    #                     fillcolor=('rgba(%s,1)' % fill_team) % (reds[6],reds[6]),
-    #                     x0=W-RADIUS,
-    #                     y0=RADIUS,
-    #                     x1=W+RADIUS,
-    #                     y1=-RADIUS,
-    #                     line_color="white",
-    #                 ),
-    #             dict(
-    #                     type="circle",
-    #                     xref="x",
-    #                     yref="y",
-    #                     fillcolor=('rgba(%s,1)' % fill_team) % (reds[7],reds[7]),
-    #                     x0=-RADIUS,
-    #                     y0=H+RADIUS,
-    #                     x1=RADIUS,
-    #                     y1=H-RADIUS,
-    #                     line_color="white",
-    #                 ),
-    #             dict(
-    #                     type="circle",
-    #                     xref="x",
-    #                     yref="y",
-    #                     fillcolor=('rgba(%s,1)' % fill_team) % (reds[8],reds[8]),
-    #                     x0=W-RADIUS,
-    #                     y0=H+RADIUS,
-    #                     x1=W+RADIUS,
-    #                     y1=H-RADIUS,
-    #                     line_color="white",
-    #                 )])
-    #         fig.update_layout(
-    #             title = "%s: %s" % (col.capitalize(), TIMESPLITS[times]),
-    #             template = "plotly_white",
-    #             xaxis_showgrid = False,
-    #             yaxis_showgrid = False
-    #             )
-    #         graph_html(plotly.offline.plot(fig, output_type = 'div'), video, colour, "jungle/%s_%s" % (col, TIMESPLITS[times]))
-    #     colour = "red"
     
-def supportplots(df, H, W, RADIUS, video):
-    colour = "blue"
-    
-    for col in [df.columns[n] for n in [4,9]]:
-        for times in TIMESPLITS.keys():
-            reds = classify_sup(df[col][df['Seconds'] <= times], H, W, RADIUS)
-            reds = list(map(lambda x : 255-255*(x - min(reds))/(max(reds)-min(reds)), reds))
-            
-            fig = px.scatter(
-                    x = [0], 
-                    y = [0],
-                    range_x = [0, W],
-                    range_y = [H, 0],
-                    width = 800,
-                    height = 800)
+def supportplots(df, colour):
+    df_support = df[(df.role == 'sup')]
+
+    graph_dict = {}
+    df_side = df_support[df_support.side == colour]
+
+    subplots = {'x':[0, 480], 'x2':[480, 840], 'x3':[840, 1200]}
+    areas = {}
+    for subplot in subplots.keys():
+        df_timesplit = df_side[(df_side.second >= subplots[subplot][0]) & (df_side.second < subplots[subplot][1])]
+        regions=[0]*7
+        df_timesplit.apply(lambda x : classify_sup(x, regions), axis=1)
+        areas[subplot] = regions
+
+    fig2 = plotly.subplots.make_subplots(
+        rows=1, 
+        cols=3,
+        subplot_titles=(
+            '0-8 Minutes',
+            '8-14 Minutes',
+            '14-20 Minutes'),
+    )
 
 
-            fig.update_layout(
-                    template = "plotly_white",
-                    xaxis_showgrid = False,
-                    yaxis_showgrid = False
-                    )
+    shapes = []
+    for subplot in ['x', 'x2', 'x3']:
+        reds = areas[subplot]
+        reds = list(map(lambda x : 255-255*(x - min(reds))/(max(reds)), reds))
 
-            fig.update_xaxes(showticklabels = False, title_text = "")
-            fig.update_yaxes(showticklabels = False, title_text = "")
-            fill_team = "255, %d, %d" if colour == "red" else "%d, %d, 255"
-            fig.update_layout(
-                shapes=[
-                    dict(
-                            type="path",
-                            path = "M 0,0 L %d,%d L %d,0 Z" % (W, H, W),
-                            line=dict(
-                                color='white',
-                                width=2,
-                            ),
-                            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[1],reds[1]),
-                    ),
-                    dict(
-                            type="path",
-                            path = "M 0,0 L %d,%d L 0,%d Z" % (W, H, H),
-                            line=dict(
-                                color='white',
-                                width=2,
-                            ),
-                            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[2],reds[2]),
-                    ),
-                    dict(
-                            type="path",
-                            path = "M 0,%d L %d,0 L 0,0 Z" % (H, W),
-                            line=dict(
-                                color='white',
-                                width=2,
-                            ),
-                            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[0],reds[0]),
-                    ),
-                    dict(
-                            type="rect",
-                            x0=0,
-                            y0=H,
-                            x1=W,
-                            y1=H-H/10,
-                            line=dict(
-                                color="white",
-                                width=2,
-                            ),
-                            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-                        ),
-                    dict(
-                            type="rect",
-                            x0=W-W/10,
-                            y0=H,
-                            x1=W,
-                            y1=0,
-                            line=dict(
-                                color='white',
-                                width=2,
-                            ),
-                            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-                        ),
-                    dict(
-                            type="circle",
-                            xref="x",
-                            yref="y",
-                            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-                            x0=W-RADIUS,
-                            y0=H+RADIUS,
-                            x1=W+RADIUS,
-                            y1=H-RADIUS,
-                            line_color='white',
-                        ),
-                    dict( # Plotly doesn't accept the Arc SVG command so this is a workaround to make the lanes look smooth
-                            type="rect",
-                            x0=0,
-                            y0=H,
-                            x1=W,
-                            y1=H-H/10+0.5,
-                            line=dict(
-                                color=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-                                width=2,
-                            ),
-                            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-                        ),
-                    dict(
-                            type="rect",
-                            x0=W-W/10+0.5,
-                            y0=H,
-                            x1=W,
-                            y1=0,
-                            line=dict(
-                                color=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-                                width=2,
-                            ),
-                            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
-                        ),
-                    dict(
-                            type="path",
-                            path = "M %d,%d L %d,%d L %d,0 L 0,%d Z" % (W/10,H, W,H/10,W-W/10,H-H/10),
-                            line=dict(
-                                color="white",
-                                width=2,
-                            ),
-                            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[4],reds[4]),
-                        ),
-                    dict(
-                            type="circle",
-                            xref="x",
-                            yref="y",
-                            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[6],reds[6]),
-                            x0=W-RADIUS,
-                            y0=RADIUS,
-                            x1=W+RADIUS,
-                            y1=-RADIUS,
-                            line_color='white',
-                        ),
-                    dict(
-                            type="circle",
-                            xref="x",
-                            yref="y",
-                            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[3],reds[3]),
-                            x0=-RADIUS,
-                            y0=H+RADIUS,
-                            x1=RADIUS,
-                            y1=H-RADIUS,
-                            line_color="white",
-                        )]) 
-            fig.update_layout(
-                title = "%s: %s" % (col.capitalize(), TIMESPLITS[times]),
-                template = "plotly_white",
-                xaxis_showgrid = False,
-                yaxis_showgrid = False
-                )
-            graph_html(plotly.offline.plot(fig, output_type = 'div'), video, colour, "support/%s_%s" % (col,TIMESPLITS[times]))
-        colour = "red"
-    
+        # Different colours for each team
+        fill_team = "255, %d, %d" if colour == "red" else "%d, %d, 255"
+        shapes.extend([
+        dict(
+            type="path",
+            path = "M 0,0 L 1,1 L 1,0 Z",
+            line={
+                'color':"black",
+                'width':0.5,
+            },
+            xref=subplot,
+            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[1],reds[1]),
+        ),
+        dict(
+            type="path",
+            path = "M 0,0 L 1,1 L 0,1 Z",
+            line={
+                'color':"black",
+                'width':0.5,
+            },
+            xref=subplot,
+            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[2],reds[2]),
+        ),
+        dict(
+            type="path",
+            path = "M 0,1 L 1,0 L 0,0 Z",
+            line={
+                'color':"black",
+                'width':0.5,
+            },
+            xref=subplot,
+            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[0],reds[0]),
+        ),
+        dict(
+            type="rect",
+            x0=0,
+            y0=1,
+            x1=1,
+            y1=0.9,
+            line={
+                'color':"black",
+                'width':0.5,
+            },
+            xref=subplot,
+            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+            ),
+        dict(
+            type="rect",
+            x0=0.9,
+            y0=1,
+            x1=1,
+            y1=0,
+            line={
+                'color':"black",
+                'width':0.5,
+            },
+            xref=subplot,
+            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+            ),
+        dict(
+            type="circle",
+            yref="y",
+            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+            x0=0.6,
+            y0=1.4,
+            x1=1.4,
+            y1=0.6,
+            xref=subplot,
+            line={
+                'color':"black",
+                'width':0.5,
+            }
+            ),
+        dict( # Plotly doesn't accept the Arc SVG command so this is a workaround to make the lanes look smooth
+            type="rect",
+            x0=0,
+            y0=1,
+            x1=1,
+            y1=0.91,
+            xref=subplot,
+            line=dict(
+                color=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+                width=2,
+            ),
+            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+            ),
+        dict(
+            type="rect",
+            x0=0.91,
+            y0=1,
+            x1=1,
+            y1=0,
+            xref=subplot,
+            line=dict(
+                color=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+                width=2,
+            ),
+            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+            ),
+        dict(
+            type="path",
+            path = "M 0.1,1 L 1,0.1 L 0.9,0 L 0,0.9 Z",
+            line={
+                'color':"black",
+                'width':0.5,
+            },
+            xref=subplot,
+            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[4],reds[4]),
+            ),
+        dict(
+            type="circle",
+            xref=subplot,
+            yref="y",
+            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[6],reds[6]),
+            x0=0.6,
+            y0=0.4,
+            x1=1.4,
+            y1=-0.4,
+            line={
+                'color':"black",
+                'width':0.5,
+            }
+        ),
+        dict(
+            type="circle",
+            xref=subplot,
+            yref="y",
+            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[3],reds[3]),
+            x0=-0.4,
+            y0=1.4,
+            x1=0.4,
+            y1=0.6,
+            line={
+                'color':"black",
+                'width':0.5,
+            }
+            )])
+
+    fig2.update_layout(
+        title = "%s Support Locations" % colour.title(),
+        template = "plotly_white",
+        shapes=shapes,
+        width=1200,
+        height=500,
+        coloraxis = dict(colorscale=['white',colour],colorbar=dict(tickmode = 'array', ticktext=['Rarely Here', 'Often Here'], tickvals=[0,1]))
+    )
+
+    fig2.update_yaxes(range=[1,0], showgrid=False, showticklabels=False)
+    fig2.update_xaxes(range=[0,1], showgrid=False, showticklabels=False)
+
+    fig = px.scatter(x=[0, 100], y=[0, 1], color=[0, 1])
+
+    fig2.add_trace(fig.data[0])
+    return plotly.offline.plot(fig2, output_type='div')
+
+
 def midlaneplots(df, H, W, RADIUS, video):
     colour = "blue"
     
