@@ -11,16 +11,6 @@ from assets.constants import ROLE_DICT, BLUE_PORTRAITS, RED_PORTRAITS, RED_CHAMP
 if(not(os.path.exists("output"))):
   os.mkdir("output")
 
-# def change_league(league):
-#   if league in ["lpl"]: league = "lck"
-#   elif league in ["eum", 'lcsnew', 'w20']: league = "lcs"
-#   elif league in ["slo", 'lfl', 'ncs', 'pgn', 'bl', 'hpm']: league = "uklc"
-
-
-#   # Dimensions for cropping the map
-#   MAP_0, MAP_1, MAP_2, MAP_3 = LEAGUES[league][:4]
-#   return league, [MAP_0, MAP_1, MAP_2, MAP_3]
-
 def clean_for_directory(video_title):
   for ch in ['*','.','"','/','\\',':',';','|',',']:
     if ch in video_title:
@@ -43,11 +33,11 @@ def output_folders(video):
     os.makedirs("output/%s/red/mid" % video)
 
 def headers(cap, frames_to_skip, collect):
-  headers_list = os.listdir('assets/headers')
+  headers_list = os.listdir('assets/tracking/headers')
   header_templates = []
   
   for header in headers_list:
-    header_directory = os.path.join('assets', 'headers', header)
+    header_directory = os.path.join('assets', 'tracking', 'headers', header)
     header_templates.append(cv2.imread(header_directory, 0))
   
   ret, frame = cap.read()
@@ -76,7 +66,7 @@ def map_borders(cap, frames_to_skip, header, frame_height, frame_width):
   inhib_templates = []
   
   for i in range(4):
-    inhib_templates.append(cv2.imread('assets/map/inhib%d.jpg' % i, 0))
+    inhib_templates.append(cv2.imread('assets/tracking/minimap/inhib%d.jpg' % i, 0))
 
   inhibs_found = 0
   while(inhibs_found < 4):
@@ -148,20 +138,6 @@ def map_borders(cap, frames_to_skip, header, frame_height, frame_width):
 
   cropped = cropped[int(border2[1]):int(border1[1]), int(border1[0]):int(border2[0])]
   return([frame_height//2+int(border2[1]), frame_height//2+int(border1[1]), (4*frame_width)//5 + int(border1[0]), (4*frame_width)//5 + int(border2[0])])
-
-# Putting graphs to a html file
-def graph_html(div_plot, video, colour, champ):
-  html_writer = open('output/%s/%s/%s.html' % (video, colour, champ),'w')
-  html_text = """
-    <html>
-      <body>
-        <center>{0}</center>
-      </body>
-    </html>
-    """.format(div_plot)
-
-  html_writer.write(html_text)
-  html_writer.close()
 
 def identify(cap, frames_to_skip, collect, header, frame_height, frame_width):
   ret, frame = cap.read()
@@ -266,7 +242,7 @@ def identify(cap, frames_to_skip, collect, header, frame_height, frame_width):
     
   # Grab portraits of each champion found, to search for on the minimap
   for champ_i, champ in enumerate(champs):
-    templates[champ_i] = cv2.imread('assets/champs/%s.jpg' % champ,0)
+    templates[champ_i] = cv2.imread('assets/tracking/champ_tracking/%s.jpg' % champ,0)
 
   return templates, champs
 

@@ -44,7 +44,6 @@ def main(args):
   parser.add_argument('-v', '--video', action = 'store_true', default =  False, help = 'Use local videos instead of Youtube playlist')
   parser.add_argument('-u', '--url', type=str, default =  '', help = 'Link to single Youtube video')
   parser.add_argument('-c', '--collect', action='store_true', default = False, help = 'Streamline data collection process')
-  # parser.add_argument('-l', '--league', type=str, default = 'lec', help = 'Choose the league, see README for documentation')
   parser.add_argument('-p', '--playlist', type=str, default = 'https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s', help = 'YouTube playlist')
   parser.add_argument('-n', '--videos_to_skip', type=int, default = 0, help = 'Number of Videos to skip')
 
@@ -53,30 +52,11 @@ def main(args):
   local = args.video
   collect = args.collect
   playlist_url = args.playlist
-  # league = args.league
   url = args.url
   single_video = url != ''
   videos_to_skip = args.videos_to_skip
 
   rows_list = []
-  
-  # overlay_swap = league == "lcsnew"
-  # overlay_swap_w20 = league == 'w20' # to be reformatted for better scalability
-
-  # league, MAP_COORDINATES = change_league(league)
-
-  # Get the height and width of the chosen league's map as all measurements will be relative to that  
-  # H, W = cv2.imread('assets/%s/%s.png' % (league,league)).shape[:2]
-
-  # # Scoreboard is only ever up during live footage, this will filter useless frames
-  # if(overlay_swap):
-  #   # For summer 2020 lcs overlay, which inexplicably changes halfway through the split :))`
-  #   header = cv2.imread("assets/headers/lcsheader.jpg", 0)
-  #   header2 = cv2.imread("assets/headers/lcsheader2.jpg", 0)
-  # elif(overlay_swap_w20):
-  #   header = cv2.imread('assets/headers/w20header.jpg',0)
-  # else:
-  #   header = cv2.imread("assets/headers/header.jpg", 0)
   
   # Iterate through each video in the playlist, grabbing their IDs
   if(not single_video):
@@ -106,6 +86,7 @@ def main(args):
       cap = cv2.VideoCapture(play.url)
     else:
       cap = cv2.VideoCapture("input/%s" % video)
+      video = clean_for_directory(video.split('.')[0])
       
     print("Game %d of %d: %s" % (i+1, total_videos, video))
     
@@ -127,11 +108,7 @@ def main(args):
     
     cap.set(1, frames_to_skip*120*(count-2))
 
-    # if(overlay_swap):
-      # templates, champs, header = identify(cap, frames_to_skip, overlay_swap,  collect, header, header2)
     templates, champs = identify(cap, frames_to_skip, collect, header, frame_height, frame_width)
-    # else:
-      # templates, champs, header = identify(cap, frames_to_skip, overlay_swap,  collect, header)
 
     # map borders
     map_coordinates = map_borders(cap, frames_to_skip, header, frame_height, frame_width)
@@ -139,24 +116,15 @@ def main(args):
     df = tracker(champs, header, cap, templates, map_coordinates, frames_to_skip, collect)
 
     # df = interpolate(df, map_coordinates)
-
-    # Use the seconds array to sync up the points with the ingame timer
-    # seconds_timer = np.array(seconds_timer).astype(int)
-    # seconds_timer = seconds_timer[~np.isnan(seconds_timer)]
-
-    # Add seconds
-    # df = pd.concat([df,pd.DataFrame({'Seconds':seconds_timer})], axis=1)
     
     # Remove the values that went wrong (9999 means the program's prediction was too low, a highly negative number means it was too high)
     df = df[(df.second < 1200) & (df.second > 0)].sort_values('second')
-    df.to_csv("ok.csv")
+    df.to_csv("test_output.csv")
     
-    rows_list = draw_graphs(df, video, collect)
+    draw_graphs(df, video, collect)
 
     # Output raw locations to a csv
     df.to_csv("output/%s/positions.csv" % video, index = False)
-
-  # pd.DataFrame(rows_list).to_csv("output/proximities.csv")
   
   if(not single_video):
     final_df = data_collect()

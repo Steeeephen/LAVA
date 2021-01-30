@@ -8,7 +8,6 @@ from jinja2 import Environment, FileSystemLoader
 
 from PIL import Image
 from numpy.linalg import norm as norm
-from assets.utils import graph_html
 
 def draw_graphs(df, video, collect):
     graph_dict = {}
@@ -27,15 +26,15 @@ def draw_graphs(df, video, collect):
 
     graph_dict['prox_blue'], graph_dict['prox_red'] = proximities(df)
     
-    inject_html(graph_dict)
+    inject_html(graph_dict, video)
 
-def inject_html(graph_dict):
-    file_loader = FileSystemLoader('assets')
+def inject_html(graph_dict, video):
+    file_loader = FileSystemLoader('assets/templates')
     env = Environment(loader=file_loader)
-    template = env.get_template('template.html')
+    template = env.get_template('game_graphs.html')
     source_html = template.render(**graph_dict)
 
-    with open("filename.html","w") as html_file:
+    with open("%s.html" % video,"w") as html_file:
         html_file.write(source_html)
 
 def for_each_side(df_side):
@@ -100,7 +99,7 @@ def proximities(df):
             for champ in champs:
                 fig.add_layout_image(
                     dict(
-                        source=Image.open("../loltracker/assets/portraits/%sSquare.png" % champ.title()),
+                        source=Image.open("assets/graphing/portraits/%sSquare.png" % champ.title()),
                         xref=subplot,
                         yref="y",
                         x=df_means['x'][champ][0]-0.05,
@@ -124,7 +123,7 @@ def proximities(df):
             fig.add_trace(fig2.data[0], col=i+1, row=1)
         fig.add_layout_image(
             dict(
-                source=Image.open("../loltracker/assets/map2.png"),
+                source=Image.open("assets/graphing/map.png"),
                 xref="x",
                 yref="y",
                 x=0,
@@ -172,7 +171,7 @@ def leveloneplots(df):
 
     fig.add_layout_image(
         dict(
-            source=Image.open("assets/map2.png"),
+            source=Image.open("assets/graphing/map.png"),
             xref="x",
             yref="y",
             x=0,
@@ -189,7 +188,7 @@ def leveloneplots(df):
     for i in range(10):
         fig.add_layout_image(
             dict(
-                source=Image.open('assets/portraits/%sSquare.png' % champs[i].capitalize().replace("_", "")),
+                source=Image.open('assets/graphing/portraits/%sSquare.png' % champs[i].capitalize().replace("_", "")),
                 xref="x",
                 yref="y",
                 x=0,
@@ -256,27 +255,24 @@ def classify_sup(x, regions):
             regions[1]+=1
 
 # And for midlaners
-def classify_mid(points, H, W, RADIUS):
-    reds = [0]*8
-    points.dropna(inplace=True)
-    for point in points:
-        if(norm(point - np.array([1,0])) < 0.4): # Red base
-            reds[6]+=1
-        elif(norm(point - np.array([0,1])) < 0.4): # Blue base
-            reds[7]+=1
-        elif(norm(point - np.array([1,1])) < 0.4 or point[0] > 0.9 or point[1] > 0.9): # Botlane
-            reds[5]+=1
-        elif(norm(point - np.array([0,1])) < 0.4 or point[0] < 0.1 or point[1] < 0.1): # Toplane
-            reds[4]+=1
-        elif(point[0] < H - point[1] - 0.1): # Topside jungle
-            reds[3]+=1
-        elif(point[0] > H - point[1] + 0.1): # Botside jungle
-            reds[2]+=1
-        elif(point[0] < point[1]): # Past halfway point of midlane
-            reds[1]+=1
-        elif(point[0] > point[1]): # Behind halfway point of midlane
-            reds[0]+=1
-    return(reds)
+def classify_mid(x, regions):
+    point = np.array([x.x, x.y])
+    if(norm(point - np.array([1,0])) < 0.4): # Red base
+        regions[6]+=1
+    elif(norm(point - np.array([0,1])) < 0.4): # Blue base
+        regions[7]+=1
+    elif(norm(point - np.array([1,1])) < 0.4 or point[0] > 0.9 or point[1] > 0.9): # Botlane
+        regions[5]+=1
+    elif(norm(point - np.array([0,1])) < 0.4 or point[0] < 0.1 or point[1] < 0.1): # Toplane
+        regions[4]+=1
+    elif(point[0] < 0.875 - point[1]): # Topside jungle
+        regions[3]+=1
+    elif(point[0] > 1.125 - point[1]): # Botside jungle
+        regions[2]+=1
+    elif(point[0] < 1.05*point[1]): # Past halfway point of midlane
+        regions[1]+=1
+    elif(point[0] > 1.05*point[1]): # Behind halfway point of midlane
+        regions[0]+=1
 
 def jungleplots(df, colour):
     df_jungle = df[(df.role == 'jgl')]
@@ -623,18 +619,18 @@ def supportplots(df, colour):
 
 
 def midplots(df, colour):
-    df_jungle = df[(df.role == 'jgl')]
+    df_mid = df[(df.role == 'mid')]
     
     graph_dict = {}
-    df_side = df_jungle[df_jungle.side == colour]
+    df_side = df_mid[df_mid.side == colour]
     
     subplots = {'x':[0, 480], 'x2':[480, 840], 'x3':[840, 1200]}
     areas = {}
     for subplot in subplots.keys():
         df_timesplit = df_side[(df_side.second >= subplots[subplot][0]) & (df_side.second < subplots[subplot][1])]
         
-        regions=[0]*9
-        df_timesplit.apply(lambda x : classify_jgl(x, regions), axis=1)
+        regions=[0]*8
+        df_timesplit.apply(lambda x : classify_mid(x, regions), axis=1)
         areas[subplot] = regions
 
     fig2 = plotly.subplots.make_subplots(
