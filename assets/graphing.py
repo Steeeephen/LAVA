@@ -2,59 +2,32 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 import plotly
+from scipy.spatial.distance import pdist
 
 from jinja2 import Environment, FileSystemLoader
 
 from PIL import Image
 from numpy.linalg import norm as norm
 from assets.utils import graph_html
-# from assets.classifying import classify_jgl, classify_sup, classify_mid
-from assets.constants import TIMESPLITS, TIMESPLITS2, ROLE_DICT
 
-def draw_graphs(df, map_coordinates, video, collect, rows_list, LEAGUE = 'lec'):
-    H = map_coordinates[1] - map_coordinates[0]
-    W = map_coordinates[3] - map_coordinates[2]
-    RADIUS = int(W/2.5) 
-    
+def draw_graphs(df, video, collect):
     graph_dict = {}
 
     # Graph each level one pattern
-    graph_dict['level_ones'] = leveloneplots(df, H, W, LEAGUE, video)
+    graph_dict['level_ones'] = leveloneplots(df)#, H, W, LEAGUE, video)
     if(not collect):
         print("Level One graphs complete")
 
-    # Jungle graphs
-    graph_dict['blue_jungle'] = jungleplots(df, 'blue')
-    graph_dict['red_jungle'] = jungleplots(df, 'red')
-    if(not collect):
-        print("Jungler Region Maps complete")
+    # Role Region Maps
+    for role in ['jungle', 'support', 'mid']:
+        for side in ['blue', 'red']:
+            graph_dict["%s_%s" % (side, role)] = eval("%splots(df, '%s')" % (role, side))
+        if(not collect):
+            print("%s Region Maps Complete" % role.title())
 
-    # Support graphs
-    graph_dict['blue_support'] = supportplots(df, 'blue')
-    graph_dict['red_support'] = supportplots(df, 'red')
-    if(not collect):
-        print("Support Region Maps complete")
-
-    graph_dict['blue_mid'] = midlaneplots(df, 'blue')
-    graph_dict['red_mid'] = midlaneplots(df, 'red')
-    if(not collect):
-        print("Mid Region Maps complete")
-
-    if(not collect):
-        print("Proximity Graphs complete")
-
+    graph_dict['prox'] = proximities(df)
+    
     inject_html(graph_dict)
-    
-    # Midlane graphs
-    # midlaneplots(df, H, W, RADIUS, video)
-    
-    # Graph the proximities
-    # rows_list = proximity(df, [0,1,2,3], 4, "blue", "support", video, rows_list) ################
-    # rows_list = proximity(df, [0,2,3,4], 1, "blue", "jungle", video, rows_list)
-    # rows_list = proximity(df, [5,6,7,8], 9, "red", "support", video, rows_list)
-    # rows_list = proximity(df, [5,7,8,9], 6, "red", "jungle", video, rows_list)
-    
-    # return rows_list
 
 def inject_html(graph_dict):
     file_loader = FileSystemLoader('assets')
@@ -65,51 +38,101 @@ def inject_html(graph_dict):
     with open("filename.html","w") as html_file:
         html_file.write(source_html)
 
-# This will graph the proximities for a given role and side, showing how close two players were throughout the game
-def proximity(df, l, t, side, role, video, rows_list):
-    roles = list(ROLE_DICT.keys())
-    plots = ""
-    role1 = df.columns[t]
-    for ally in l: # For each allied champion
-        count = 0
-        champ = df.columns[ally]
-        champ_to_check = pd.DataFrame((df[df.columns[t]]).apply(lambda x : np.array(x)))
-        champ_teammate =pd.DataFrame((df[champ]).apply(lambda x : np.array(x)))
+def for_each_side(df_side):
+    combos = np.array([
+        'adc_jgl',
+        'adc_mid',
+        'adc_sup',
+        'adc_top',
+        'jgl_mid',
+        'jgl_sup',
+        'jgl_top',
+        'mid_sup',
+        'mid_top',
+        'sup_top'
+    ])
+    
+    proximities = dict([(combo,0) for combo in combos])
+    seconds = df_side.second.unique()
+    for second in seconds:
+        df_second = df_side[df_side.second == second]
+        df_array = df_second[["x", "y"]].to_numpy()
+        dist_mat = pdist(df_array)
+        # pd.DataFrame(dist_mat, index=l)
+        close_proximities = combos[np.where(dist_mat < 0.15)]
+        for combo in close_proximities:
+            proximities[combo] += 1
+    return pd.Series(proximities)
 
-        diffs = [0]*len(champ_teammate)
-        for j in range(len(champ_teammate)): # For every pair of points gathered
-            dist = norm(champ_to_check[df.columns[t]].tolist()[j] - champ_teammate[champ].tolist()[j]) # Get the distance between the two
-            diffs[j] = dist
-
-            # If within 50 units, they're considered 'close'
-            if(dist < 50):
-                count+=1
+def proximities(df):
+    df.drop_duplicates(subset=['second', 'side', 'role'], inplace=True)
+    df.sort_values(['second', 'side', 'role'], inplace=True)
+    prox = df.groupby('side').apply(for_each_side).T
+    prox.blue = (prox.blue - prox.blue.min()) / (prox.blue.max() - prox.blue.min())
+    prox.red = (prox.red - prox.red.min()) / (prox.red.max() - prox.red.min())
+    prox.loc[prox.blue < 0.35, 'blue'] = 0
+    prox.loc[prox.red < 0.35, 'red'] = 0
+    
+    df_means = df[(df.side=='blue') & (df.second > 0) & (df.second < 480)].groupby(['champ', 'role','side'])['x','y'].mean()
+    
+    fig = px.scatter(
+        df_means,
+        x='x', 
+        y='y',
+        range_x = [0, 1],
+        range_y = [1, 0],
+        width = 800,
+        color_discrete_sequence=['white'],
+        height = 800
+    )
+    champs = df_means.reset_index().champ.tolist()
+    combos = prox.index.tolist()
+    df_means_reset = df_means.reset_index()
         
-        # Graph the distances over time
-        fig2 = px.line(y=diffs, title = "%.2f%% Proximity" % (100*count/len(df['Seconds'])), x=df["Seconds"]/60)
-        fig2.update_yaxes(title="Distance to: %s" % champ.capitalize())
-        fig2.add_shape( 
-                type="line",
-                x0=df['Seconds'].min()/60,
-                y0=50,
-                x1=20,
-                y1=50,
-                line=dict(
-                    color="MediumPurple",
-                    width=4,
-                    dash="dot",
-                )
+    fig.add_layout_image(
+        dict(
+            source=Image.open("../loltracker/assets/hq_map.png"),
+            xref="x",
+            yref="y",
+            x=0,
+            y=0,
+            sizex = 1,
+            sizey = 1, 
+            sizing="stretch",
+            opacity=1,
+            layer="below")
+    )
+    for champ in champs:
+        fig.add_layout_image(
+            dict(
+                source=Image.open("../loltracker/assets/portraits/%sSquare.png" % champ.title()),
+                xref="x",
+                yref="y",
+                x=df_means['x'][champ][0]-0.05,
+                y=df_means['y'][champ][0]-0.05,
+                sizex = 0.1,
+                sizey = 0.1, 
+                sizing="stretch",
+                opacity=1,
+                layer="above"),
+            col='all',
+            row='all'
         )
-        fig2.update_xaxes(rangeslider_visible=True, title = "Minute")
-        plots += plotly.offline.plot(fig2, output_type = 'div')
+        
+    for combo in combos:
+        combo_roles = combo.split('_')
+        dft=(df_means_reset[df_means_reset.role.isin(combo_roles)][['x','y']]).values.tolist()
+        
+        fig.add_shape(type="line", layer='above',
+            x0=dft[0][0], y0=dft[0][1], x1=dft[1][0], y1=dft[1][1],
+            line=dict(color="white",width=30*prox.loc[combo]['blue'])
+        )
     
-        rows_list.append({"video": video, "side":side, "role":role, "target":roles[ally%5], "player":role1, "teammate":df.columns[ally], "proximity":100*count/len(df['Seconds'])})
+    fig.update_yaxes(range=[1,0], showgrid=False, showticklabels=False)
+    fig.update_xaxes(range=[0,1], showgrid=False, showticklabels=False)
+    return plotly.offline.plot(fig, output_type = 'div')
     
-    graph_html(plots, video, side, role + "_proximities")
-    return rows_list
-    
-    
-def leveloneplots(df, H, W, LEAGUE, video):
+def leveloneplots(df):
     champs = df.champ.unique()
     df = df[df.second <= 90]
     
@@ -164,7 +187,6 @@ def leveloneplots(df, H, W, LEAGUE, video):
         )
 
     fig.for_each_annotation(lambda a: a.update(text="<b>{}</b>".format(a.text.split("=")[-1].title())))
-
 
     fig.update_xaxes(showgrid=False, showticklabels = False)
     fig.update_yaxes(showgrid=False, showticklabels = False)
@@ -583,7 +605,7 @@ def supportplots(df, colour):
     return plotly.offline.plot(fig2, output_type='div')
 
 
-def midlaneplots(df, colour):
+def midplots(df, colour):
     df_jungle = df[(df.role == 'jgl')]
     
     graph_dict = {}
@@ -835,40 +857,3 @@ def midlaneplots(df, colour):
 
     fig2.add_trace(fig.data[0])
     return plotly.offline.plot(fig2, output_type='div')
-    # colour = "blue"
-    
-    # for col in [df.columns[n] for n in [2,7]]:
-    #     fill_team = "255, %d, %d" if colour == "red" else "%d, %d, 255"
-    #     for times in TIMESPLITS.keys():
-    #         reds = classify_mid(df[col][df['Seconds'] <= times], H, W, RADIUS)
-    #         reds = list(map(lambda x : 255-255*(x - min(reds))/(max(reds)-min(reds)), reds))
-            
-    #         fig = px.scatter(
-    #                 x = [0], 
-    #                 y = [0],
-    #                 range_x = [0,W],
-    #                 range_y = [H, 0],
-    #                 width = 800,
-    #                 height = 800)
-
-
-    #         fig.update_layout(
-    #                 template = "plotly_white",
-    #                 xaxis_showgrid = False,
-    #                 yaxis_showgrid = False
-    #                 )
-
-    #         fig.update_xaxes(showticklabels = False, title_text = "")
-    #         fig.update_yaxes(showticklabels = False, title_text = "")
-
-    #         fig.update_layout(
-                # shapes=)
-    #         fig.update_layout(
-    #             title = "%s: %s" % (col.capitalize(), TIMESPLITS[times]),
-    #             template = "plotly_white",
-    #             xaxis_showgrid = False,
-    #             yaxis_showgrid = False
-    #             )
-    #         graph_html(plotly.offline.plot(fig, output_type = 'div'), video, colour, "mid/%s_%s" % (col,TIMESPLITS[times]))
-    #     colour = "red"
-    

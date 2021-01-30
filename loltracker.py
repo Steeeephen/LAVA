@@ -151,12 +151,12 @@ def main(args):
     df = df[(df.second < 1200) & (df.second > 0)].sort_values('second')
     df.to_csv("ok.csv")
     
-    rows_list = draw_graphs(df, map_coordinates, video, collect, rows_list)
+    rows_list = draw_graphs(df, video, collect)
 
     # Output raw locations to a csv
     df.to_csv("output/%s/positions.csv" % video, index = False)
 
-  pd.DataFrame(rows_list).to_csv("output/proximities.csv")
+  # pd.DataFrame(rows_list).to_csv("output/proximities.csv")
   
   if(not single_video):
     final_df = data_collect()
