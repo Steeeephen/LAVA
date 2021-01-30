@@ -25,7 +25,7 @@ def draw_graphs(df, video, collect):
         if(not collect):
             print("%s Region Maps Complete" % role.title())
 
-    graph_dict['prox'] = proximities(df)
+    graph_dict['prox_blue'], graph_dict['prox_red'] = proximities(df)
     
     inject_html(graph_dict)
 
@@ -73,64 +73,81 @@ def proximities(df):
     prox.loc[prox.blue < 0.35, 'blue'] = 0
     prox.loc[prox.red < 0.35, 'red'] = 0
     
-    df_means = df[(df.side=='blue') & (df.second > 0) & (df.second < 480)].groupby(['champ', 'role','side'])['x','y'].mean()
-    
-    fig = px.scatter(
-        df_means,
-        x='x', 
-        y='y',
-        range_x = [0, 1],
-        range_y = [1, 0],
-        width = 800,
-        color_discrete_sequence=['white'],
-        height = 800
-    )
-    champs = df_means.reset_index().champ.tolist()
-    combos = prox.index.tolist()
-    df_means_reset = df_means.reset_index()
-        
-    fig.add_layout_image(
-        dict(
-            source=Image.open("../loltracker/assets/hq_map.png"),
-            xref="x",
-            yref="y",
-            x=0,
-            y=0,
-            sizex = 1,
-            sizey = 1, 
-            sizing="stretch",
-            opacity=1,
-            layer="below")
-    )
-    for champ in champs:
+    subplots = {'x':[0, 480], 'x2':[480, 840], 'x3':[840, 1200]}
+    graphs = {}
+    for side in ['red', 'blue']:
+        fig = plotly.subplots.make_subplots(rows=1, cols=3, subplot_titles=[
+            '0-8 Minutes',
+            '8-14 Minutes',
+            '14-20 Minutes'])
+        for i, subplot in enumerate(subplots.keys()):
+            df_means = df[(df.side==side) & (df.second > subplots[subplot][0]) & (df.second < subplots[subplot][1])].groupby(['champ', 'role'])['x','y'].mean()
+
+            fig2 = px.scatter(
+                df_means,
+                x='x', 
+                y='y',
+                range_x = [0, 1],
+                range_y = [1, 0],
+                width = 800,
+                color_discrete_sequence=['white'],
+                height = 800
+            )
+            champs = df_means.reset_index().champ.tolist()
+            combos = prox.index.tolist()
+            df_means_reset = df_means.reset_index()
+
+            for champ in champs:
+                fig.add_layout_image(
+                    dict(
+                        source=Image.open("../loltracker/assets/portraits/%sSquare.png" % champ.title()),
+                        xref=subplot,
+                        yref="y",
+                        x=df_means['x'][champ][0]-0.05,
+                        y=df_means['y'][champ][0]-0.05,
+                        sizex = 0.1,
+                        sizey = 0.1, 
+                        sizing="stretch",
+                        opacity=1,
+                        layer="above")
+                )
+
+            for combo in combos:
+                combo_roles = combo.split('_')
+                dft=(df_means_reset[df_means_reset.role.isin(combo_roles)][['x','y']]).values.tolist()
+
+                fig.add_shape(type="line", layer='above', xref=subplot,
+                    x0=dft[0][0], y0=dft[0][1], x1=dft[1][0], y1=dft[1][1],
+                    line=dict(color="white",width=20*prox.loc[combo][side])
+                )
+
+            fig.add_trace(fig2.data[0], col=i+1, row=1)
         fig.add_layout_image(
             dict(
-                source=Image.open("../loltracker/assets/portraits/%sSquare.png" % champ.title()),
+                source=Image.open("../loltracker/assets/map2.png"),
                 xref="x",
                 yref="y",
-                x=df_means['x'][champ][0]-0.05,
-                y=df_means['y'][champ][0]-0.05,
-                sizex = 0.1,
-                sizey = 0.1, 
+                x=0,
+                y=0,
+                sizex = 1,
+                sizey = 1, 
                 sizing="stretch",
                 opacity=1,
-                layer="above"),
-            col='all',
-            row='all'
+                layer="below"),
+            col="all",
+            row=1
         )
-        
-    for combo in combos:
-        combo_roles = combo.split('_')
-        dft=(df_means_reset[df_means_reset.role.isin(combo_roles)][['x','y']]).values.tolist()
-        
-        fig.add_shape(type="line", layer='above',
-            x0=dft[0][0], y0=dft[0][1], x1=dft[1][0], y1=dft[1][1],
-            line=dict(color="white",width=30*prox.loc[combo]['blue'])
+
+        fig.update_layout(
+            height=500,
+            width=1000,
+            title_text="Proximities and Average Positions"
         )
-    
-    fig.update_yaxes(range=[1,0], showgrid=False, showticklabels=False)
-    fig.update_xaxes(range=[0,1], showgrid=False, showticklabels=False)
-    return plotly.offline.plot(fig, output_type = 'div')
+
+        fig.update_yaxes(range=[1,0], showgrid=False, showticklabels=False)
+        fig.update_xaxes(range=[0,1], showgrid=False, showticklabels=False)
+        graphs[side] = plotly.offline.plot(fig, output_type = 'div')
+    return graphs['blue'], graphs['red']
     
 def leveloneplots(df):
     champs = df.champ.unique()
@@ -155,7 +172,7 @@ def leveloneplots(df):
 
     fig.add_layout_image(
         dict(
-            source=Image.open("assets/hq_map.png"),
+            source=Image.open("assets/map2.png"),
             xref="x",
             yref="y",
             x=0,
