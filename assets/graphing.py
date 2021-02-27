@@ -5,7 +5,6 @@ import plotly
 from scipy.spatial.distance import pdist
 
 from jinja2 import Environment, FileSystemLoader
-
 from PIL import Image
 from numpy.linalg import norm as norm
 
@@ -13,7 +12,7 @@ def draw_graphs(df, video, collect):
     graph_dict = {}
 
     # Graph each level one pattern
-    graph_dict['level_ones'] = leveloneplots(df)#, H, W, LEAGUE, video)
+    graph_dict['level_ones'] = leveloneplots(df)
     if(not collect):
         print("Level One graphs complete")
 
@@ -34,7 +33,7 @@ def inject_html(graph_dict, video):
     template = env.get_template('game_graphs.html')
     source_html = template.render(**graph_dict)
 
-    with open("%s.html" % video,"w") as html_file:
+    with open(f"output/{video}/page.html","w") as html_file:
         html_file.write(source_html)
 
 def for_each_side(df_side):
@@ -57,7 +56,6 @@ def for_each_side(df_side):
         df_second = df_side[df_side.second == second]
         df_array = df_second[["x", "y"]].to_numpy()
         dist_mat = pdist(df_array)
-        # pd.DataFrame(dist_mat, index=l)
         close_proximities = combos[np.where(dist_mat < 0.15)]
         for combo in close_proximities:
             proximities[combo] += 1
@@ -139,7 +137,7 @@ def proximities(df):
 
         fig.update_layout(
             height=500,
-            width=1000,
+            width=1200,
             title_text="Proximities and Average Positions"
         )
 
@@ -416,7 +414,7 @@ def jungleplots(df, colour):
             )])
 
     fig2.update_layout(
-        title = "%s Jungler Locations" % colour.title(),
+        title = "<b>%s Jungler Locations</b>" % colour.title(),
         template = "plotly_white",
         shapes=shapes,
         width=1200,
@@ -601,7 +599,7 @@ def supportplots(df, colour):
             )])
 
     fig2.update_layout(
-        title = "%s Support Locations" % colour.title(),
+        title = "<b>%s Support Locations</b>" % colour.title(),
         template = "plotly_white",
         shapes=shapes,
         width=1200,
@@ -855,7 +853,7 @@ def midplots(df, colour):
                 ])
 
     fig2.update_layout(
-        title = "%s Midlane Locations" % colour.title(),
+        title = "<b>%s Midlane Locations</b>" % colour.title(),
         template = "plotly_white",
         shapes=shapes,
         width=1200,
