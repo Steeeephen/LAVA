@@ -18,7 +18,7 @@ def draw_graphs(df, video, logger):
     # Role Region Maps
     for role in ['jungle', 'support', 'mid']:
         for side in ['blue', 'red']:
-            graph_dict["%s_%s" % (side, role)] = eval("%splots(df, '%s')" % (role, side))
+            graph_dict[f"{side}_{role}"] = eval(f"{role}plots(df, '{side}')")
         logger.info(f"{role.title()} Region Maps Complete")
 
     graph_dict['prox_blue'], graph_dict['prox_red'] = proximities(df)
@@ -31,7 +31,7 @@ def inject_html(graph_dict, video):
     template = env.get_template('game_graphs.html')
     source_html = template.render(**graph_dict)
 
-    with open(f"output/{video}/page.html","w") as html_file:
+    with open(f"output/{video}/page.html", "w") as html_file:
         html_file.write(source_html)
 
 def for_each_side(df_side):
@@ -95,7 +95,7 @@ def proximities(df):
             for champ in champs:
                 fig.add_layout_image(
                     dict(
-                        source=Image.open("assets/graphing/portraits/%sSquare.png" % champ.title()),
+                        source=Image.open(f"assets/graphing/portraits/{champ.title()}Square.png"),
                         xref=subplot,
                         yref="y",
                         x=df_means['x'][champ][0]-0.05,
@@ -184,7 +184,7 @@ def leveloneplots(df):
     for i in range(10):
         fig.add_layout_image(
             dict(
-                source=Image.open('assets/graphing/portraits/%sSquare.png' % champs[i].capitalize().replace("_", "")),
+                source=Image.open(f'assets/graphing/portraits/{champs[i].capitalize().replace("_", "")}Square.png'),
                 xref="x",
                 yref="y",
                 x=0,
@@ -208,66 +208,65 @@ def leveloneplots(df):
 
 def classify_jgl(x, regions):
     point = np.array([x.x, x.y])
-    if(norm(point - np.array([0, 0])) < 0.4): # Toplane
+
+    if norm(point - np.array([0, 0])) < 0.4: # Toplane
         regions[5] += 1
-    elif(norm(point - np.array([1,0])) < 0.4): # Red base
+    elif norm(point - np.array([1,0])) < 0.4: # Red base
         regions[6] += 1
-    elif(norm(point - np.array([1,1])) < 0.4): # Botlane
+    elif norm(point - np.array([1,1])) < 0.4: # Botlane
         regions[8]+=1
-    elif(norm(point - np.array([0,1])) < 0.4): # Blue base
+    elif norm(point - np.array([0,1])) < 0.4: # Blue base
         regions[7]+=1
-    elif(point[0] < 0.9 - point[1]): # Above midlane upper border
-        if(point[0] < 1.05*point[1]):
+    elif point[0] < 0.9 - point[1]: # Above midlane upper border
+        if point[0] < 1.05*point[1]:
             regions[1]+=1 # Blue side
         else:
             regions[0]+=1 # Red side
-    elif(point[0] < 1.1 - point[1]): # Above midlane lower border (in midlane)
+    elif point[0] < 1.1 - point[1]: # Above midlane lower border (in midlane)
         regions[4]+=1 
-    elif(point[0] > 1.1 - point[1]): # Below midlane lower border
-        if(point[0] < 1.05*point[1]): # Blue side
+    elif point[0] > 1.1 - point[1]: # Below midlane lower border
+        if point[0] < 1.05*point[1]: # Blue side
             regions[2]+=1
-        elif(point[0] > 1.05*point[1]): # Red side
+        elif point[0] > 1.05*point[1]: # Red side
             regions[3]+=1
 
 def classify_sup(x, regions):
     point = np.array([x.x, x.y])
-    if(norm(point - np.array([1,0])) < 0.4): # Red base
+
+    if norm(point - np.array([1,0])) < 0.4: # Red base
         regions[6] += 1
-    elif(norm(point - np.array([0,1])) < 0.4): # Blue base
+    elif norm(point - np.array([0,1])) < 0.4: # Blue base
         regions[3]+=1
-    elif(
-        norm(point - np.array([1,1])) < 0.4
-        or point[0] > 0.9 
-        or point[1] > 0.9): # Botlane
+    elif norm(point - np.array([1,1])) < 0.4 or point[0] > 0.9 or point[1] > 0.9: # Botlane
             regions[5]+=1
-    elif(point[0] < 0.9 - point[1]): # Above midlane upper border
+    elif point[0] < 0.9 - point[1]: # Above midlane upper border
         regions[0]+=1
-    elif(point[0] < 1.1 - point[1]): # Above midlane lower border (in midlane)
+    elif point[0] < 1.1 - point[1]: # Above midlane lower border (in midlane)
         regions[4]+=1 
-    elif(point[0] > 1.1 - point[1]): # Below midlane lower border
-        if(point[0] < 1.05*point[1]): # Blue side
+    elif point[0] > 1.1 - point[1]: # Below midlane lower border
+        if point[0] < 1.05*point[1]: # Blue side
             regions[2]+=1
-        elif(point[0] > 1.05*point[1]): # Red side
+        elif point[0] > 1.05*point[1]: # Red side
             regions[1]+=1
 
 # And for midlaners
 def classify_mid(x, regions):
     point = np.array([x.x, x.y])
-    if(norm(point - np.array([1,0])) < 0.4): # Red base
+    if norm(point - np.array([1,0])) < 0.4: # Red base
         regions[6]+=1
-    elif(norm(point - np.array([0,1])) < 0.4): # Blue base
+    elif norm(point - np.array([0,1])) < 0.4: # Blue base
         regions[7]+=1
-    elif(norm(point - np.array([1,1])) < 0.4 or point[0] > 0.9 or point[1] > 0.9): # Botlane
+    elif norm(point - np.array([1,1])) < 0.4 or point[0] > 0.9 or point[1] > 0.9: # Botlane
         regions[5]+=1
-    elif(norm(point - np.array([0,1])) < 0.4 or point[0] < 0.1 or point[1] < 0.1): # Toplane
+    elif norm(point - np.array([0,1])) < 0.4 or point[0] < 0.1 or point[1] < 0.1: # Toplane
         regions[4]+=1
-    elif(point[0] < 0.875 - point[1]): # Topside jungle
+    elif point[0] < 0.875 - point[1]: # Topside jungle
         regions[3]+=1
-    elif(point[0] > 1.125 - point[1]): # Botside jungle
+    elif point[0] > 1.125 - point[1]: # Botside jungle
         regions[2]+=1
-    elif(point[0] < 1.05*point[1]): # Past halfway point of midlane
+    elif point[0] < 1.05*point[1]: # Past halfway point of midlane
         regions[1]+=1
-    elif(point[0] > 1.05*point[1]): # Behind halfway point of midlane
+    elif point[0] > 1.05*point[1]: # Behind halfway point of midlane
         regions[0]+=1
 
 def jungleplots(df, colour):
@@ -310,7 +309,7 @@ def jungleplots(df, colour):
                     'width':0.5,
                 },
                 xref=subplot,
-                fillcolor=('rgba(%s,1)' % fill_team) % (reds[0],reds[0]),
+                fillcolor= f'rgba({fill_team},1)' % (reds[0],reds[0]),
             ),
         dict(
                 type="path",
@@ -320,7 +319,7 @@ def jungleplots(df, colour):
                     'width':0.5,
                 },
                 xref=subplot,
-                fillcolor=('rgba(%s,1)' % fill_team) % (reds[1],reds[1]),
+                fillcolor = f'rgba({fill_team},1)' % (reds[1],reds[1]),
             ),
 
         dict(
@@ -331,7 +330,7 @@ def jungleplots(df, colour):
                     'width':0.5,
                 },
                 xref=subplot,
-                fillcolor=('rgba(%s,1)' % fill_team) % (reds[2],reds[2]),
+                fillcolor = f'rgba({fill_team},1)' % (reds[2],reds[2]),
             ),
         dict(
                 type="path",
@@ -341,7 +340,7 @@ def jungleplots(df, colour):
                     'width':0.5,
                 },
                 xref=subplot,
-                fillcolor=('rgba(%s,1)' % fill_team) % (reds[3],reds[3]),
+                fillcolor= f'rgba({fill_team},1)' % (reds[3],reds[3]),
             ),
         dict(
                 type="path",
@@ -351,14 +350,14 @@ def jungleplots(df, colour):
                     'width':0.5,
                 },
                 xref=subplot,
-                fillcolor=('rgba(%s,1)' % fill_team) % (reds[4],reds[4]),
+                fillcolor= f'rgba({fill_team},1)' % (reds[4],reds[4]),
             ),
 
         dict(
                 type="circle",
                 yref="y",
                 x0=-0.4,
-                fillcolor=('rgba(%s,1)' % fill_team) % (reds[5],reds[5]),
+                fillcolor= f'rgba({fill_team},1)' % (reds[5],reds[5]),
                 y0=0.4,
                 x1=0.4,
                 y1=-0.4,
@@ -371,7 +370,7 @@ def jungleplots(df, colour):
         dict(
                 type="circle",
                 yref="y",
-                fillcolor=('rgba(%s,1)' % fill_team) % (reds[6],reds[6]),
+                fillcolor= f'rgba({fill_team},1)' % (reds[6],reds[6]),
                 x0=0.6,
                 y0=0.4,
                 x1=1.4,
@@ -385,7 +384,7 @@ def jungleplots(df, colour):
         dict(
                 type="circle",
                 yref="y",
-                fillcolor=('rgba(%s,1)' % fill_team) % (reds[7],reds[7]),
+                fillcolor= f'rgba({fill_team},1)' % (reds[7],reds[7]),
                 x0=-0.4,
                 y0=1.4,
                 x1=0.4,
@@ -399,7 +398,7 @@ def jungleplots(df, colour):
         dict(
                 type="circle",
                 yref="y",
-                fillcolor=('rgba(%s,1)' % fill_team) % (reds[8],reds[8]),
+                fillcolor= f'rgba({fill_team},1)' % (reds[8],reds[8]),
                 x0=0.6,
                 y0=1.4,
                 x1=1.4,
@@ -412,7 +411,7 @@ def jungleplots(df, colour):
             )])
 
     fig2.update_layout(
-        title = "<b>%s Jungler Locations</b>" % colour.title(),
+        title = f"<b>{colour.title()} Jungler Locations</b>",
         template = "plotly_white",
         shapes=shapes,
         width=1200,
@@ -469,7 +468,7 @@ def supportplots(df, colour):
                 'width':0.5,
             },
             xref=subplot,
-            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[1],reds[1]),
+            fillcolor= f'rgba({fill_team},1)'  % (reds[1],reds[1]),
         ),
         dict(
             type="path",
@@ -479,7 +478,7 @@ def supportplots(df, colour):
                 'width':0.5,
             },
             xref=subplot,
-            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[2],reds[2]),
+            fillcolor= f'rgba({fill_team},1)'  % (reds[2],reds[2]),
         ),
         dict(
             type="path",
@@ -489,7 +488,7 @@ def supportplots(df, colour):
                 'width':0.5,
             },
             xref=subplot,
-            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[0],reds[0]),
+            fillcolor= f'rgba({fill_team},1)' % (reds[0],reds[0]),
         ),
         dict(
             type="rect",
@@ -502,7 +501,7 @@ def supportplots(df, colour):
                 'width':0.5,
             },
             xref=subplot,
-            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+            fillcolor= f'rgba({fill_team},1)' % (reds[5],reds[5]),
             ),
         dict(
             type="rect",
@@ -515,12 +514,12 @@ def supportplots(df, colour):
                 'width':0.5,
             },
             xref=subplot,
-            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+            fillcolor= f'rgba({fill_team},1)' % (reds[5],reds[5]),
             ),
         dict(
             type="circle",
             yref="y",
-            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+            fillcolor= f'rgba({fill_team},1)' % (reds[5],reds[5]),
             x0=0.6,
             y0=1.4,
             x1=1.4,
@@ -539,10 +538,10 @@ def supportplots(df, colour):
             y1=0.905,
             xref=subplot,
             line=dict(
-                color=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+                color= f'rgba({fill_team},1)' % (reds[5],reds[5]),
                 width=2,
             ),
-            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+            fillcolor= f'rgba({fill_team},1)' % (reds[5],reds[5]),
             ),
         dict(
             type="rect",
@@ -552,10 +551,10 @@ def supportplots(df, colour):
             y1=0,
             xref=subplot,
             line=dict(
-                color=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+                color= f'rgba({fill_team},1)' % (reds[5],reds[5]),
                 width=2,
             ),
-            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[5],reds[5]),
+            fillcolor= f'rgba({fill_team},1)' % (reds[5],reds[5]),
             ),
         dict(
             type="path",
@@ -565,13 +564,13 @@ def supportplots(df, colour):
                 'width':0.5,
             },
             xref=subplot,
-            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[4],reds[4]),
+            fillcolor= f'rgba({fill_team},1)' % (reds[4],reds[4]),
             ),
         dict(
             type="circle",
             xref=subplot,
             yref="y",
-            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[6],reds[6]),
+            fillcolor= f'rgba({fill_team},1)' % (reds[6],reds[6]),
             x0=0.6,
             y0=0.4,
             x1=1.4,
@@ -585,7 +584,7 @@ def supportplots(df, colour):
             type="circle",
             xref=subplot,
             yref="y",
-            fillcolor=('rgba(%s,1)' % fill_team)  % (reds[3],reds[3]),
+            fillcolor= f'rgba({fill_team},1)' % (reds[3],reds[3]),
             x0=-0.4,
             y0=1.4,
             x1=0.4,
@@ -597,7 +596,7 @@ def supportplots(df, colour):
             )])
 
     fig2.update_layout(
-        title = "<b>%s Support Locations</b>" % colour.title(),
+        title = f"<b>{colour.title()} Support Locations</b>",
         template = "plotly_white",
         shapes=shapes,
         width=1200,
@@ -654,7 +653,7 @@ def midplots(df, colour):
                             'width':0.5,
                         },
                         xref=subplot,
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[0],reds[0]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[0],reds[0]),
                     ),
                 dict(
                         type="path",
@@ -664,7 +663,7 @@ def midplots(df, colour):
                             'width':0.5,
                         },
                         xref=subplot,
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[1],reds[1]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[1],reds[1]),
                     ),
                 dict(
                         type="path",
@@ -674,7 +673,7 @@ def midplots(df, colour):
                             'width':0.5,
                         },
                         xref=subplot,
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[2],reds[2]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[2],reds[2]),
                     ),
                     
                 dict(
@@ -685,7 +684,7 @@ def midplots(df, colour):
                             'width':0.5,
                         },
                         xref=subplot,
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[3],reds[3]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[3],reds[3]),
                     ),
                 dict(
                         type="rect",
@@ -698,7 +697,7 @@ def midplots(df, colour):
                             'width':0.5,
                         },
                         xref=subplot,
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[4],reds[4]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[4],reds[4]),
                     ),
                 dict(
                         type="rect",
@@ -711,13 +710,13 @@ def midplots(df, colour):
                             'width':0.5,
                         },
                         xref=subplot,
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[4],reds[4]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[4],reds[4]),
                     ),
                 dict(
                         type="circle",
                         yref="y",
                         x0=-0.4,
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[4],reds[4]),
+                        fillcolor= 'rgba({fill_team},1)' % (reds[4],reds[4]),
                         y0=0.4,
                         x1=0.4,
                         y1=-0.4,
@@ -734,11 +733,11 @@ def midplots(df, colour):
                         x1=1,
                         y1=0,
                         line=dict(
-                            color=('rgba(%s,1)' % fill_team) % (reds[4],reds[4]),
+                            color= f'rgba({fill_team},1)' % (reds[4],reds[4]),
                             width=2,
                         ),
                         xref=subplot,
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[4],reds[4]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[4],reds[4]),
                     ),
                 dict(
                         type="rect",
@@ -747,11 +746,11 @@ def midplots(df, colour):
                         x1=0.095,
                         y1=0,
                         line=dict(
-                            color=('rgba(%s,1)' % fill_team) % (reds[4],reds[4]),
+                            color= f'rgba({fill_team},1)' % (reds[4],reds[4]),
                             width=2,
                         ),
                         xref=subplot,
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[4],reds[4]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[4],reds[4]),
                     ),
                 dict(
                         type="rect",
@@ -764,7 +763,7 @@ def midplots(df, colour):
                             'width':0.5,
                         },
                         xref=subplot,
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[5],reds[5]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[5],reds[5]),
                     ),
                 dict(
                         type="rect",
@@ -777,13 +776,13 @@ def midplots(df, colour):
                             'width':0.5,
                         },
                         xref=subplot,
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[5],reds[5]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[5],reds[5]),
                     ),
                 dict(
                         type="circle",
                         xref=subplot,
                         yref="y",
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[5],reds[5]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[5],reds[5]),
                         x0=0.6,
                         y0=1.4,
                         x1=1.4,
@@ -800,11 +799,11 @@ def midplots(df, colour):
                         x1=1,
                         y1=0.905,
                         line=dict(
-                            color=('rgba(%s,1)' % fill_team) % (reds[5],reds[5]),
+                            color= f'rgba({fill_team},1)' % (reds[5],reds[5]),
                             width=2,
                         ),
                         xref=subplot,
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[5],reds[5]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[5],reds[5]),
                     ),
                 dict(
                         type="rect",
@@ -813,17 +812,17 @@ def midplots(df, colour):
                         x1=1,
                         y1=0,
                         line=dict(
-                            color=('rgba(%s,1)' % fill_team) % (reds[5],reds[5]),
+                            color= f'rgba({fill_team},1)' % (reds[5],reds[5]),
                             width=2,
                         ),
                         xref=subplot,
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[5],reds[5]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[5],reds[5]),
                     ),
                 dict(
                         type="circle",
                         xref=subplot,
                         yref="y",
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[6],reds[6]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[6],reds[6]),
                         x0=0.6,
                         y0=0.4,
                         x1=1.4,
@@ -837,7 +836,7 @@ def midplots(df, colour):
                         type="circle",
                         xref=subplot,
                         yref="y",
-                        fillcolor=('rgba(%s,1)' % fill_team) % (reds[7],reds[7]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[7],reds[7]),
                         x0=-0.4,
                         y0=1.4,
                         x1=0.4,
@@ -851,7 +850,7 @@ def midplots(df, colour):
                 ])
 
     fig2.update_layout(
-        title = "<b>%s Midlane Locations</b>" % colour.title(),
+        title = f"<b>{colour.title()} Midlane Locations</b>",
         template = "plotly_white",
         shapes=shapes,
         width=1200,

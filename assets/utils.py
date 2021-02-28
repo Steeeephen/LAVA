@@ -33,7 +33,7 @@ def headers(cap, frames_to_skip, logger):
 
     header_found = False
     count = 0
-    while(ret and not header_found):
+    while ret is True and not header_found:
         count += 1
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -42,7 +42,7 @@ def headers(cap, frames_to_skip, logger):
         for header in header_templates.keys():
             matched = cv2.matchTemplate(cropped, header_templates[header], cv2.TM_CCOEFF_NORMED)
             location = np.where(matched > 0.75)
-            if(location[0].any()):
+            if location[0].any():
                 logger.info(f'Header Found: {header}')
                 header_found = True
                 break
@@ -74,6 +74,7 @@ def map_borders(cap, frames_to_skip, header, frame_height, frame_width):
             res = cv2.matchTemplate(cropped, inhib, cv2.TM_CCOEFF_NORMED)
             location = (np.where(res == max(0.65, np.max(res))))
 
+            ############
             try:
                 point = next(zip(*location[::-1]))
                 inhibs_found += 1
@@ -217,10 +218,11 @@ def identify(cap, frames_to_skip, header, frame_height, frame_width, logger):
                     blue_crop, template, cv2.TM_CCOEFF_NORMED))
 
                 # If a better match than the previous best, log that champion
-                if(champ_classify_percent > temp):
+                if champ_classify_percent > temp:
                     champ_found = True
                     temp = champ_classify_percent
                     most_likely_champ = blue_portraits[j][:-4]
+
             logger.info(f"Blue {role} identified ({100*temp:.2f}%):  {most_likely_champ.capitalize()}")
             champs[role_i] = most_likely_champ
             identified += champ_found
@@ -246,10 +248,11 @@ def identify(cap, frames_to_skip, header, frame_height, frame_width, logger):
             for j, template in enumerate(red_champ_templates):
                 champ_classify_percent = np.max(cv2.matchTemplate(
                     red_crop, template, cv2.TM_CCOEFF_NORMED))
-                if(champ_classify_percent > temp):
+                if champ_classify_percent > temp:
                     champ_found = True
                     temp = champ_classify_percent
                     most_likely_champ = red_portraits[j][:-4]
+
             logger.info(f"Red {role} identified ({100*temp:.2f}%):  {most_likely_champ.capitalize()}")
             champs[role_i+5] = most_likely_champ
             identified += champ_found

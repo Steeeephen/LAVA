@@ -43,9 +43,7 @@ role_dict = {
 digit_templates = dict()
 
 # won't be run if constants imported from another directory
-if(os.path.exists(digits_path) is True):
-    # digit_images = os.listdir(digits_path)
-
+if os.path.exists(digits_path):
     for digit in range(10):
         digit_image_path = os.path.join(
             digits_path,
@@ -64,13 +62,13 @@ if(os.path.exists(digits_path) is True):
     for portrait_i, portrait in enumerate(blue_portraits):
         portrait_image = os.path.join(
             blue_classify_path,
-            portrait
-        )
+            portrait)
+
         blue_champ_templates[portrait_i] = cv2.imread(portrait_image, 0)
 
     for portrait_i, portrait in enumerate(red_portraits):
         portrait_image = os.path.join(
             red_classify_path,
-            portrait
-        )
+            portrait)
+
         red_champ_templates[portrait_i] = cv2.imread(portrait_image, 0)

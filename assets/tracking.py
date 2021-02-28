@@ -22,7 +22,7 @@ def tracker(champs, header, cap, templates,
     count = 1
     ret, frame = cap.read()
         
-    while(ret is True):
+    while ret is True:
         count += 1
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -60,6 +60,7 @@ def tracker(champs, header, cap, templates,
                 location = (np.where(matched == max(0.8, np.max(matched))))
 
                 # If champion found, save their location
+                #############
                 try:
                     point = next(zip(*location[::-1]))
                     cv2.rectangle(cropped, point,
@@ -85,6 +86,7 @@ def tracker(champs, header, cap, templates,
                 cv2.imshow('minimap', cropped)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
+                    
         for _ in range(frames_to_skip):
             cap.grab()
         ret, frame = cap.read()

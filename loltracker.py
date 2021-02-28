@@ -77,16 +77,16 @@ def main(args):
   # Run on each video
   for i, video in enumerate(videos):    
     # Get the video url using pafy
-    if(local is False):
+    if local is False:
       v = pafy.new(video)
       play = v.getbest(preftype="mp4")
       video = clean_for_directory(play.title)
       cap = cv2.VideoCapture(play.url)
     else:
-      cap = cv2.VideoCapture("input/%s" % video)
+      cap = cv2.VideoCapture(f"input/{video}")
       video = clean_for_directory(video.split('.')[0])
 
-    overall_logger.info("Game %d of %d: %s" % (i+1, total_vids, video))
+    overall_logger.info(f"Game {i+1} of {total_vids}: {video}")
 
     positions_file = os.path.join(
       "output",
@@ -117,6 +117,7 @@ def main(args):
       frames_to_skip = int(cap.get(cv2.CAP_PROP_FPS))
       logger.info(f"Number of frames between datapoints: {frames_to_skip}")
       
+      ###################
       try:
         cap.set(1, frames_to_skip*int(url.split('t=')[1]))
       except:
