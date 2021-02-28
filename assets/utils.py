@@ -14,16 +14,16 @@ def clean_for_directory(video_title):
 
     return video_title
 
-def headers(cap, frames_to_skip, collect):
+def headers(cap, frames_to_skip, logger):
     headers_list = os.listdir('assets/tracking/headers')
-    header_templates = []
+    header_templates = {}
 
     for header in headers_list:
         header_directory = os.path.join(
             'assets/tracking/headers',
             header
         )
-        header_templates.append(cv2.imread(header_directory, 0))
+        header_templates[header] = cv2.imread(header_directory, 0)
 
     ret, frame = cap.read()
     frame_height, frame_width, _ = frame.shape
@@ -39,16 +39,17 @@ def headers(cap, frames_to_skip, collect):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         cropped = gray[0:header_height, header_width_left:header_width_right]
 
-        for header in header_templates:
-            matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
+        for header in header_templates.keys():
+            matched = cv2.matchTemplate(cropped, header_templates[header], cv2.TM_CCOEFF_NORMED)
             location = np.where(matched > 0.75)
             if(location[0].any()):
+                logger.info(f'Header Found: {header}')
                 header_found = True
                 break
 
         cap.set(1, frames_to_skip*120*count)
         ret, frame = cap.read()
-    return frame_height, frame_width, header, count
+    return frame_height, frame_width, header_templates[header], count
 
 
 def map_borders(cap, frames_to_skip, header, frame_height, frame_width):
@@ -62,7 +63,7 @@ def map_borders(cap, frames_to_skip, header, frame_height, frame_width):
     ret, frame = cap.read()
     h, w, _ = frame.shape
 
-    while(ret and inhibs_found < 4):
+    while ret is True and inhibs_found < 4:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         cropped = gray[h//2:h, (4*w)//5:w]
 
@@ -80,23 +81,24 @@ def map_borders(cap, frames_to_skip, header, frame_height, frame_width):
                     cropped, point, (point[0] + 18, point[1] + 12), 255, 2)
             except:
                 inhibs_found = 0
-                print("not all inhibs found")
-                for i in range(30):
+                logger.info("Not all inhibs found")
+                for i in range(frames_to_skip):
                     cap.grab()
                 break
             inhib_locations.append(point)
 
-        if(inhibs_found == 4):
+        if inhibs_found == 4:
             swapped_inhibs = [
                 coord[::-1] for coord in
                 inhib_locations[2:] + inhib_locations[:2]]
 
             inhib_order = inhib_locations != sorted(inhib_locations)
             swapped_order = swapped_inhibs != sorted(swapped_inhibs)
-            if(inhib_order or swapped_order):
-                print('inhibs not in correct order')
+            if inhib_order is True or swapped_order is True:
+                logger.info('Inhibs not in correct order')
+                
                 inhibs_found = 0
-                for i in range(30):
+                for i in range(frames_to_skip):
                     cap.grab()
                 ret, frame = cap.read()
 
@@ -163,7 +165,7 @@ def map_borders(cap, frames_to_skip, header, frame_height, frame_width):
     
 
 
-def identify(cap, frames_to_skip, collect, header, frame_height, frame_width):
+def identify(cap, frames_to_skip, header, frame_height, frame_width, logger):
     ret, frame = cap.read()
     header_height = frame_height//15
     header_width_left = 6*(frame_width//13)
@@ -172,7 +174,7 @@ def identify(cap, frames_to_skip, collect, header, frame_height, frame_width):
     # Templates stores the champion pictures to search for
     templates = [0]*10
 
-    while(ret):
+    while ret is True:
         ret, frame = cap.read()
 
         # Making the images gray will make template matching more efficient
@@ -184,7 +186,7 @@ def identify(cap, frames_to_skip, collect, header, frame_height, frame_width):
         # Look for the scoreboard
         matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
         location = np.where(matched > 0.75)
-        if(location[0].any()):
+        if location[0].any():
             break
 
         # Skip one second if not
@@ -195,7 +197,7 @@ def identify(cap, frames_to_skip, collect, header, frame_height, frame_width):
     identified = 0
 
     # Identify blue side champions until exactly 5 have been found
-    while(identified != 5):
+    while identified != 5:
         identified = 0
         champs = [""]*10
 
@@ -219,26 +221,20 @@ def identify(cap, frames_to_skip, collect, header, frame_height, frame_width):
                     champ_found = True
                     temp = champ_classify_percent
                     most_likely_champ = blue_portraits[j][:-4]
-            if(not collect):
-                print("Blu %s identified (%.2f%%):  %s" %
-                      (role, 100*temp, most_likely_champ.capitalize()))
+            logger.info(f"Blue {role} identified ({100*temp:.2f}%):  {most_likely_champ.capitalize()}")
             champs[role_i] = most_likely_champ
             identified += champ_found
 
         # If too few champions found, skip a frame and try again
-        if(identified < 5):
+        if identified < 5:
             for _ in range(frames_to_skip):
                 cap.grab()
             _, frame = cap.read()
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            if(not collect):
-                print("-"*30)
-
-    if(not collect):
-        print("-"*30)
+            logger.info("Too few champions found")
 
     # Same for red side champions
-    while(identified != 10):
+    while identified != 10:
         identified = 5
 
         for role_i, role in enumerate(['top', 'jgl', 'mid', 'adc', 'sup']):
@@ -254,27 +250,28 @@ def identify(cap, frames_to_skip, collect, header, frame_height, frame_width):
                     champ_found = True
                     temp = champ_classify_percent
                     most_likely_champ = red_portraits[j][:-4]
-            if(not collect):
-                print("Red %s identified (%.2f%%):  %s" %
-                      (role, 100*temp, most_likely_champ.capitalize()))
+            logger.info(f"Red {role} identified ({100*temp:.2f}%):  {most_likely_champ.capitalize()}")
             champs[role_i+5] = most_likely_champ
             identified += champ_found
 
-        if(identified < 10):
+        if identified < 10:
             for _ in range(frames_to_skip):
                 cap.grab()
             _, frame = cap.read()
-            if(not collect):
-                print("-"*30)
+            logger.info("Too few champions found")
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # Grab portraits of each champion found, to search for on the minimap
     for champ_i, champ in enumerate(champs):
-        templates[champ_i] = cv2.imread(
-            'assets/tracking/champ_tracking/%s.jpg' % champ, 0)
+        champ_image = os.path.join(
+            'assets',
+            'tracking',
+            'champ_tracking',
+            f'{champ}.jpg')
+
+        templates[champ_i] = cv2.imread(champ_image, 0)
 
     return templates, champs
-
 
 def data_collect():
     directory = os.listdir("output")

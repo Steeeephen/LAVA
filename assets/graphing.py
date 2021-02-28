@@ -8,20 +8,18 @@ from jinja2 import Environment, FileSystemLoader
 from PIL import Image
 from numpy.linalg import norm as norm
 
-def draw_graphs(df, video, collect):
+def draw_graphs(df, video, logger):
     graph_dict = {}
 
     # Graph each level one pattern
     graph_dict['level_ones'] = leveloneplots(df)
-    if(not collect):
-        print("Level One graphs complete")
+    logger.info("Level One graphs complete")
 
     # Role Region Maps
     for role in ['jungle', 'support', 'mid']:
         for side in ['blue', 'red']:
             graph_dict["%s_%s" % (side, role)] = eval("%splots(df, '%s')" % (role, side))
-        if(not collect):
-            print("%s Region Maps Complete" % role.title())
+        logger.info(f"{role.title()} Region Maps Complete")
 
     graph_dict['prox_blue'], graph_dict['prox_red'] = proximities(df)
     

@@ -4,26 +4,8 @@ import numpy as np
 
 from assets.constants import *
 
-# Function to recursively clean up and convert the timer reading to seconds.
-
-
-def timer(time_read, last):
-    if(len(time_read) < 1):
-        return(9999)
-    if(len(time_read) == 1):
-        timer_clean = last + time_read
-        try:
-            return(1200-(int(timer_clean[:-2])*60+int(timer_clean[-2:])))
-        except:
-            return(9999)
-    elif(time_read[0] == '7' and time_read[1] == '7'):
-        return(timer(time_read[2:], last+time_read[:1]))
-    else:
-        return(timer(time_read[1:], last + time_read[:1]))
-
-
 def tracker(champs, header, cap, templates,
-            map_coordinates, frames_to_skip, collect):  # noq-E501
+            map_coordinates, frames_to_skip, minimap):  # noq-E501
     _, frame = cap.read()
     hheight, hwidth, _ = frame.shape
     hheight = hheight//15
@@ -40,7 +22,7 @@ def tracker(champs, header, cap, templates,
     count = 1
     ret, frame = cap.read()
         
-    while(ret):
+    while(ret is True):
         count += 1
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -48,7 +30,7 @@ def tracker(champs, header, cap, templates,
 
         matched = cv2.matchTemplate(cropped, header, cv2.TM_CCOEFF_NORMED)
         location = np.where(matched > 0.65)
-        if(location[0].any()):
+        if location[0].any():
             cropped = gray[35:70, 625:665]
             digits = []
 
@@ -98,7 +80,7 @@ def tracker(champs, header, cap, templates,
                     'second': second
                 })
 
-            if(not collect):
+            if minimap is True:
                 # Show minimap with champions highlighted
                 cv2.imshow('minimap', cropped)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
