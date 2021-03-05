@@ -155,6 +155,26 @@ def main(args):
       # Output raw locations to a csv
       df.to_csv(positions_file, index = False)
       logger.info(f"Data saved to {positions_file}")
+    elif(graphs):
+      os.makedirs(f"logs/{video}", exist_ok=True)
+      
+      logger = logging.getLogger(__name__)
+      logger.setLevel(logging.INFO)
+
+      # Creating and adding the console handler
+      for hdlr in logger.handlers[:]:  # remove all old handlers
+          logger.removeHandler(hdlr)
+
+      log_file = f'logs/{video}/{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.log'
+      overall_logger.info(f'Logging run to {log_file}')
+
+      file_handler = logging.FileHandler(log_file)
+      file_handler.setFormatter(log_format)
+      logger.addHandler(file_handler)
+
+      df = pd.read_csv(positions_file)
+      draw_graphs(df, video, logger)
+
     else:
       overall_logger.info(f"Skipping, {video} data already collected")
   

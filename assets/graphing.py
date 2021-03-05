@@ -3,35 +3,55 @@ import pandas as pd
 import numpy as np
 import plotly
 from scipy.spatial.distance import pdist
+import os
 
 from jinja2 import Environment, FileSystemLoader
 from PIL import Image
 from numpy.linalg import norm as norm
 
 def draw_graphs(df, video, logger):
-    graph_dict = {}
+    output_path = os.path.join(
+        'output',
+        video)
 
+    image_path = os.path.join(
+        output_path,
+        "level_one.svg")
+    
     # Graph each level one pattern
-    graph_dict['level_ones'] = leveloneplots(df)
+    level_one = leveloneplots(df)
+    level_one.write_image(image_path, engine='kaleido')
     logger.info("Level One graphs complete")
 
     # Role Region Maps
     for role in ['jungle', 'support', 'mid']:
         for side in ['blue', 'red']:
-            graph_dict[f"{side}_{role}"] = eval(f"{role}plots(df, '{side}')")
+            image_path = os.path.join(
+                output_path,
+                f'{side}_{role}.svg')
+
+            exec(f"{role}plots(df, '{side}', image_path)")
         logger.info(f"{role.title()} Region Maps Complete")
 
-    graph_dict['prox_blue'], graph_dict['prox_red'] = proximities(df)
-    
-    inject_html(graph_dict, video)
+    graphs = {}
 
-def inject_html(graph_dict, video):
+    graphs['blue_prox.svg'], graphs['red_prox.svg'] = proximities(df)
+
+    for side in graphs:
+        image_path = os.path.join(
+            output_path,
+            side)
+        graphs[side].write_image(image_path, engine='kaleido')
+
+    inject_html(video)
+
+def inject_html(video):
     file_loader = FileSystemLoader('assets/templates')
     env = Environment(loader=file_loader)
     template = env.get_template('game_graphs.html')
-    source_html = template.render(**graph_dict)
+    source_html = template.render(video=video)
 
-    with open(f"output/{video}/page.html", "w") as html_file:
+    with open(f"output/templates/{video}.html", "w") as html_file:
         html_file.write(source_html)
 
 def for_each_side(df_side):
@@ -141,7 +161,7 @@ def proximities(df):
 
         fig.update_yaxes(range=[1,0], showgrid=False, showticklabels=False)
         fig.update_xaxes(range=[0,1], showgrid=False, showticklabels=False)
-        graphs[side] = plotly.offline.plot(fig, output_type = 'div')
+        graphs[side] = fig
     return graphs['blue'], graphs['red']
     
 def leveloneplots(df):
@@ -203,7 +223,8 @@ def leveloneplots(df):
     fig.update_xaxes(showgrid=False, showticklabels = False)
     fig.update_yaxes(showgrid=False, showticklabels = False)
 
-    return plotly.offline.plot(fig, output_type = 'div')
+    # return plotly.offline.plot(fig, output_type = 'div')
+    return fig
 
 
 def classify_jgl(x, regions):
@@ -269,7 +290,7 @@ def classify_mid(x, regions):
     elif point[0] > 1.05*point[1]: # Behind halfway point of midlane
         regions[0]+=1
 
-def jungleplots(df, colour):
+def jungleplots(df, colour, image_path):
     df_jungle = df[(df.role == 'jgl')]
     
     graph_dict = {}
@@ -425,10 +446,12 @@ def jungleplots(df, colour):
     fig = px.scatter(x=[0, 100], y=[0, 1], color=[0, 1])
 
     fig2.add_trace(fig.data[0])
-    return plotly.offline.plot(fig2, output_type='div')
+    # return plotly.offline.plot(fig2, output_type='div')
+    fig2.write_image(image_path, engine='kaleido')
+    # return fig
 
     
-def supportplots(df, colour):
+def supportplots(df, colour, image_path):
     df_support = df[(df.role == 'sup')]
 
     graph_dict = {}
@@ -610,10 +633,12 @@ def supportplots(df, colour):
     fig = px.scatter(x=[0, 100], y=[0, 1], color=[0, 1])
 
     fig2.add_trace(fig.data[0])
-    return plotly.offline.plot(fig2, output_type='div')
+    # return plotly.offline.plot(fig2, output_type='div')
+    fig2.write_image(image_path, engine='kaleido')
+    #return fig
 
 
-def midplots(df, colour):
+def midplots(df, colour, image_path):
     df_mid = df[(df.role == 'mid')]
     
     graph_dict = {}
@@ -716,7 +741,7 @@ def midplots(df, colour):
                         type="circle",
                         yref="y",
                         x0=-0.4,
-                        fillcolor= 'rgba({fill_team},1)' % (reds[4],reds[4]),
+                        fillcolor= f'rgba({fill_team},1)' % (reds[4],reds[4]),
                         y0=0.4,
                         x1=0.4,
                         y1=-0.4,
@@ -864,4 +889,6 @@ def midplots(df, colour):
     fig = px.scatter(x=[0, 100], y=[0, 1], color=[0, 1])
 
     fig2.add_trace(fig.data[0])
-    return plotly.offline.plot(fig2, output_type='div')
+    # return plotly.offline.plot(fig2, output_type='div')
+    fig2.write_image(image_path, engine='kaleido')
+    # return fig
