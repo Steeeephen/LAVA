@@ -9,10 +9,6 @@ digits_path = os.path.join(
     tracking_folder,
     "digits")
 
-baron_image = os.path.join(
-    tracking_folder,
-    "baron.jpg")
-
 blue_classify_path = os.path.join(
     tracking_folder,
     "champ_classifying",
@@ -25,19 +21,24 @@ red_classify_path = os.path.join(
     "red"
 )
 
-# Dimensions of in-game timer
-baron = [23, 50, 1207, 1230]
-
-# Baron spawns at 20mins, when it appears we use this to sync the time
-baron_template = cv2.imread(baron_image, 0)
-
 # Dimensions of role portraits
-role_dict = {
-    "top": [108, 133],
-    "jgl": [178, 203],
-    "mid": [246, 268],
-    "adc": [310, 340],
-    "sup": [380, 410]}
+blue_champ_sidebar = {
+    "top": (slice(108, 133), slice(20, 50)),
+    "jgl": (slice(178, 203), slice(20, 50)),
+    "mid": (slice(246, 268), slice(20, 50)),
+    "adc": (slice(310, 340), slice(20, 50)),
+    "sup": (slice(380, 410), slice(20, 50))}
+
+red_champ_sidebar = {
+    "top": (slice(108, 133), slice(1228, 1262)),
+    "jgl": (slice(178, 203), slice(1228, 1262)),
+    "mid": (slice(246, 268), slice(1228, 1262)),
+    "adc": (slice(310, 340), slice(1228, 1262)),
+    "sup": (slice(380, 410), slice(1228, 1262))}
+
+timer_borders = (
+    slice(35,70),
+    slice(625,665))
 
 # The digits for reading the timer
 digit_templates = dict()
