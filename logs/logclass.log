@@ -1,0 +1,17 @@
+INFO:gather:ERunning video
+INFO:gather:ERunning video
+INFO:gather:Header Found: default.jpg
+INFO:gather:default.jpg header collected after 840 seconds
+INFO:gather:Blue top identified (98.44%):  Fiora
+INFO:gather:Blue jgl identified (92.95%):  Kayn
+INFO:gather:Blue mid identified (99.23%):  Azir
+INFO:gather:Blue adc identified (95.44%):  Kaisa
+INFO:gather:Blue sup identified (89.76%):  Alistar
+INFO:gather:Red top identified (98.70%):  Sion
+INFO:gather:Red jgl identified (93.28%):  Lillia
+INFO:gather:Red mid identified (89.65%):  Orianna
+INFO:gather:Red adc identified (86.52%):  Tristana
+INFO:gather:Red sup identified (91.00%):  Galio
+INFO:gather:Champs identified
+INFO:gather:Map coordinates found: slice(547, 707, None),slice(1103, 1270, None)
+INFO:gather:Tracking commenced

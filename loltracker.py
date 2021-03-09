@@ -9,7 +9,7 @@
 
 Project     : LolTracker 
 
-Version     : 1.2.6
+Version     : 1.2.7
 
 Author      : Stephen O' Farrell (stephen.ofarrell64@gmail.com)
 
