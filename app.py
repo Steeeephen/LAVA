@@ -3,6 +3,8 @@ import os
 
 from flask import render_template
 
+from assets.classtest import LolTracker
+
 os.makedirs('output/templates', exist_ok = True)
 app = flask.Flask(__name__, template_folder='output/templates', static_folder="output")
 
@@ -15,7 +17,7 @@ def index():
     for output in directories:
         table_rows += f'<a href=/page/{output[:-5]}>{output[:-5]}</a><br>'
 
-    return table_rows
+    return render_template('home.html')
 
 @app.route('/page/<video>')
 def test(video):
