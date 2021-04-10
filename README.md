@@ -1,6 +1,6 @@
 DEPRECATION WARNING:
 
-Loltracker 2.0 will be released by the end of March/Mid-April. Thus, **all 1.x versions can now be considered deprecated** and will no longer be supported with the release of version 2. The older versions will likely still work until a new champion is released, though any bugs will only be addressed in newer versions. This will mark a complete overhaul of the system; including but not limited to the input method, output data and graphing options. It's an exciting time for the project and I'm very excited to bring the new update.
+Loltracker 2.0 will be released by the end of ~~March/Mid-April~~ April/Mid-May (sorry). Thus, **all 1.x versions can now be considered deprecated** and will no longer be supported with the release of version 2. The older versions will likely still work until a new champion is released, though any bugs will only be addressed in newer versions. This will mark a complete overhaul of the system; including but not limited to the input method, output data and graphing options. It's an exciting time for the project and I'm very excited to bring the new update.
 
 ***
 # LolTracker
