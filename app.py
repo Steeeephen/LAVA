@@ -1,26 +1,87 @@
 import flask
 import os
+import threading
 
-from flask import render_template
+from flask import render_template, request, send_from_directory, redirect
 
-from assets.classtest import LolTracker
+from assets.loltracker import LolTracker
 
-os.makedirs('output/templates', exist_ok = True)
-app = flask.Flask(__name__, template_folder='output/templates', static_folder="output")
+app = flask.Flask(__name__, template_folder='assets/webui_templates', static_folder="output")
 
-@app.route("/")
-def index():
-    directories = os.listdir('output/templates')
+@app.route('/')
+def home():
+  return render_template('home.html')
 
-    table_rows = ""
+@app.route('/games')
+def games():
+  directories = os.listdir('output')
 
-    for output in directories:
-        table_rows += f'<a href=/page/{output[:-5]}>{output[:-5]}</a><br>'
+  directories.remove('positions')
 
-    return render_template('home.html')
+  return render_template('games.html', games=directories)
 
-@app.route('/page/<video>')
+@app.route('/data')
+def data():
+  games = os.listdir('output/positions')
+  games = [game.split('.')[0] for game in games]
+
+  return render_template('data.html', games=games)
+
+@app.route('/download_data/<game>')
+def download_data(game):
+  positions_directory = os.path.join(
+    'output',
+    'positions',
+    game)
+
+  return send_from_directory(positions_directory, game, as_attachment=True)
+
+@app.route('/delete_data/<game>')
+def delete_data(game):
+  positions_file = os.path.join(
+    'output',
+    'positions',
+    game)
+
+  os.remove(positions_file)
+
+  games = os.listdir('output/positions')
+  games = [game.split('.')[0] for game in games]
+
+  return redirect('/data')
+
+@app.route("/input", methods=['GET', 'POST'])
+def input():
+  if request.method=='GET':
+    return render_template('input.html')
+  elif request.method == 'POST':
+    form = request.form
+    
+    loltracker_operator = LolTracker()
+
+    url = form['url']
+    local = form.get('local', False) == 'true'
+    playlist = form.get('playlist', False) == 'true'
+    graphs = form.get('graphs', False) == 'true'
+    minimap = form.get('minimap', False) == 'true'
+
+    run_video_thread = threading.Thread(
+      target=loltracker_operator.execute, 
+      name="tracker", 
+      args=(
+        url,
+        local, 
+        playlist, 
+        0, 
+        minimap,
+        graphs
+      )
+    ).start()
+
+    return render_template('input.html')
+
+@app.route('/games/<video>')
 def test(video):
-    return render_template(f'{video}.html')
+    return render_template('game.html', game=video)
 
 app.run(debug=True)

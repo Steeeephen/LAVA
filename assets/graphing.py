@@ -6,7 +6,7 @@ import logging
 from scipy.spatial.distance import pdist
 import os
 
-from jinja2 import Environment, FileSystemLoader
+# from jinja2 import Environment, FileSystemLoader
 from PIL import Image
 from numpy.linalg import norm as norm
 
@@ -17,6 +17,7 @@ class GraphsOperator():
         output_path = os.path.join(
             'output',
             video)
+        os.makedirs(output_path, exist_ok=True)
 
         image_path = os.path.join(
             output_path,
@@ -25,7 +26,8 @@ class GraphsOperator():
 
         # Graph each level one pattern
         level_one = self.leveloneplots(df)
-        level_one.write_image(image_path, engine='kaleido')
+        if level_one is not None:
+            level_one.write_image(image_path, engine='kaleido')
         # logger.info("Level One graphs complete")
 
         # Role Region Maps
@@ -48,13 +50,13 @@ class GraphsOperator():
                 side)
             graphs[side].write_image(image_path, engine='kaleido')
 
-        file_loader = FileSystemLoader('assets/templates')
-        env = Environment(loader=file_loader)
-        template = env.get_template('game_graphs.html')
-        source_html = template.render(video=video)
+        # file_loader = FileSystemLoader('assets/templates')
+        # env = Environment(loader=file_loader)
+        # template = env.get_template('game_graphs.html')
+        # source_html = template.render(video=video)
 
-        with open(f"output/templates/{video}.html", "w") as html_file:
-            html_file.write(source_html)
+        # with open(f"output/templates/{video}.html", "w") as html_file:
+            # html_file.write(source_html)
 
     @staticmethod
     def proximity_values(df):
@@ -185,62 +187,64 @@ class GraphsOperator():
         champs = df.champ.unique()
         df = df[df.second <= 90]
         
-        fig = px.scatter(
-            df, 
-            x='x', 
-            y='y', 
-            range_x = [0, 1],
-            range_y = [1, 0],
-            facet_col='role',
-            facet_row='side',
-            width = 1200,
-            height = 500,
-            color='second', 
-            hover_name = 'second',
-            title="<b>Level Ones</b>",
-            color_continuous_scale='Oranges',
-            labels = {'y':'', 'x':''}
-        )
+        if not df.empty:
+            fig = px.scatter(
+                df, 
+                x='x', 
+                y='y', 
+                range_x = [0, 1],
+                range_y = [1, 0],
+                facet_col='role',
+                facet_row='side',
+                width = 1200,
+                height = 500,
+                color='second', 
+                hover_name = 'second',
+                title="<b>Level Ones</b>",
+                color_continuous_scale='Oranges',
+                labels = {'y':'', 'x':''}
+            )
 
-        fig.add_layout_image(
-            dict(
-                source=Image.open("assets/graphing/map.png"),
-                xref="x",
-                yref="y",
-                x=0,
-                y=0,
-                sizex = 1,
-                sizey = 1, 
-                sizing="stretch",
-                opacity=1,
-                layer="below"),
-            col='all',
-            row='all'
-        )
-
-        for i in range(10):
             fig.add_layout_image(
                 dict(
-                    source=Image.open(f'assets/graphing/portraits/{champs[i].capitalize().replace("_", "")}Square.png'),
+                    source=Image.open("assets/graphing/map.png"),
                     xref="x",
                     yref="y",
                     x=0,
                     y=0,
-                    sizex=0.15,
-                    sizey=0.15,
+                    sizex = 1,
+                    sizey = 1, 
                     sizing="stretch",
                     opacity=1,
                     layer="below"),
-                row=round((1+i)/10)+1,
-                col=(i % 5)+1
+                col='all',
+                row='all'
             )
 
-        fig.for_each_annotation(lambda a: a.update(text="<b>{}</b>".format(a.text.split("=")[-1].title())))
+            for i in range(10):
+                fig.add_layout_image(
+                    dict(
+                        source=Image.open(f'assets/graphing/portraits/{champs[i].capitalize().replace("_", "")}Square.png'),
+                        xref="x",
+                        yref="y",
+                        x=0,
+                        y=0,
+                        sizex=0.15,
+                        sizey=0.15,
+                        sizing="stretch",
+                        opacity=1,
+                        layer="below"),
+                    row=round((1+i)/10)+1,
+                    col=(i % 5)+1
+                )
 
-        fig.update_xaxes(showgrid=False, showticklabels = False)
-        fig.update_yaxes(showgrid=False, showticklabels = False)
+            fig.for_each_annotation(lambda a: a.update(text="<b>{}</b>".format(a.text.split("=")[-1].title())))
 
-        return fig
+            fig.update_xaxes(showgrid=False, showticklabels = False)
+            fig.update_yaxes(showgrid=False, showticklabels = False)
+
+            return fig
+        return
 
     @staticmethod
     def classify_jgl(x, regions):

@@ -19,9 +19,16 @@ logging.basicConfig(
 logger = logging.getLogger('gather')
 
 class LolTracker(GraphsOperator):
+  def execute(self, url="", local=False, playlist=False, skip=0, minimap=False, graphs=False):
+    df = self.gather_data(url, local, playlist, skip, minimap)
+
+    if graphs is True:
+      self.draw_graphs(df, df.video.iloc[0])
+
+
   def gather_data(self, url="", local=False, playlist=False, skip=0, minimap=False):
     videos = self.parse_url(url, local, playlist, skip)
-    logger.info("ERunning video")
+    logger.info("Running video")
     full_data = pd.DataFrame()
 
     for video, url in videos.items():
@@ -61,9 +68,11 @@ class LolTracker(GraphsOperator):
 
       df['video'] = video
 
+      df.to_csv(f'output/positions/{video}.csv')
+
       full_data = full_data.append(df)
-      
-    # Output raw locations to a csv
+      cv2.destroyAllWindows()
+
     return full_data
 
   def gather_info(self, url="", local=False, playlist=False, skip=0):
@@ -452,14 +461,14 @@ class LolTracker(GraphsOperator):
       location = np.where(matched > 0.65)
 
       if location[0].any():
-          cropped = gray[timer_borders]
+          cropped_timer = gray[timer_borders]
           digits = []
 
           for num in digit_templates.keys():
               template = digit_templates[num]
               check = cv2.matchTemplate(
-                  cropped, template, cv2.TM_CCOEFF_NORMED)
-              digit = np.where(check > 0.85)
+                  cropped_timer, template, cv2.TM_CCOEFF_NORMED)
+              digit = np.where(check > 0.8)
               for test in (list(zip(*digit[::-1]))):
                   digits.append([test, num])
 
