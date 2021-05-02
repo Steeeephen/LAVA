@@ -1,8 +1,7 @@
 DEPRECATION WARNING:
 
-Loltracker 2.0 will be released by the end of ~~March/Mid-April~~ April/Mid-May (sorry). Thus, **all 1.x versions can now be considered deprecated** and will no longer be supported with the release of version 2. The older versions will likely still work until a new champion is released, though any bugs will only be addressed in newer versions. This will mark a complete overhaul of the system; including but not limited to the input method, output data and graphing options. It's an exciting time for the project and I'm very excited to bring the new update.
+Loltracker 2.0 will be released by the end of ~~March/Mid-April~~ ~~April/Mid-May (sorry)~~ sometime in the next couple of months (work is busy and the 2021 change to broadcast overlays delayed things heavily, will continue to work on it but I may need to scale down a bit). Thus, **all 1.x versions can now be considered deprecated** (but for how long? who knows, they still work for videos using the default overlay)
 
-***
 # LolTracker
 
 A program for gathering positional data and providing analytics from League of Legends videos. It can be used to automatically gather spatiotemporal data (player locations over time) from a series of Youtube/locally stored videos
