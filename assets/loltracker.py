@@ -5,18 +5,13 @@ import cv2
 import os
 import numpy as np
 import pandas as pd
-import logging
 
 from assets.graphing import GraphsOperator
 
 from youtubesearchpython import Playlist, Video, StreamURLFetcher
 from sympy.geometry import Point, Circle, intersection, Line
 from sympy import N
-
-logging.basicConfig(
-  level=logging.INFO,
-  filename='logs/logclass.log')
-logger = logging.getLogger('gather')
+from numpy.linalg import norm
 
 class LolTracker(GraphsOperator):
   def execute(self, url="", local=False, playlist=False, skip=0, minimap=False, graphs=False):
@@ -28,7 +23,7 @@ class LolTracker(GraphsOperator):
 
   def gather_data(self, url="", local=False, playlist=False, skip=0, minimap=False):
     videos = self.parse_url(url, local, playlist, skip)
-    logger.info("Running video")
+    print("Running video")
     full_data = pd.DataFrame()
 
     for video, url in videos.items():
@@ -51,26 +46,25 @@ class LolTracker(GraphsOperator):
       self.cap.set(1, self.frames_to_skip*120*(count-2))
 
       champs = self.identify(self.cap)
-      logger.info("Champs identified")
+      print("Champs identified")
 
       # map borders
-      map_coordinates = self.map_borders(self.cap)
-      logger.info(f"Map coordinates found: {','.join(map(str, map_coordinates))}")
+      map_coordinates = self.map_borders(self.cap, league='automatic')
+      print(f"Map coordinates found: {','.join(map(str, map_coordinates))}")
 
-      logger.info("Tracking commenced")
+      print("Tracking commenced")
       df = self.tracker(map_coordinates, champs)
-      logger.info("Tracking complete")
+      print("Tracking complete")
 
       df = self.interpolate(df)
-      logger.info("Interpolation complete")
-
-      df = df[df.second.notnull()].sort_values('second')
+      print("Interpolation completed")
 
       df['video'] = video
 
-      df.to_csv(f'output/positions/{video}.csv')
+      df.to_csv(f'output/positions/{video}.csv', index=False)
 
       full_data = full_data.append(df)
+      print("Video complete")
       cv2.destroyAllWindows()
 
     return full_data
@@ -171,29 +165,33 @@ class LolTracker(GraphsOperator):
     header_borders = get_header_borders(frame.shape)
 
     header_found = False
+    threshold = 0.8
     count = 0
 
     while ret is True and header_found is False:
       count += 1
 
       gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-      cropped = gray
+      cropped = gray[0:120, 500:700]
 
       for header in header_templates.keys():
-          matched = cv2.matchTemplate(cropped, header_templates[header], cv2.TM_CCOEFF_NORMED)
-          location = np.where(matched > 0.8)
+          header_max_probability = np.max(
+            cv2.matchTemplate(
+              cropped, 
+              header_templates[header], 
+              cv2.TM_CCOEFF_NORMED))
 
-          if location[0].any():
-              logger.info(f'Header Found: {header}')
+          if header_max_probability > threshold:
               header_found = True
-              break
+              header_temp = header
+              threshold = header_max_probability
 
       self.cap.set(1, self.frames_to_skip*120*count)
       ret, frame = self.cap.read()
 
       if header_found is True:
-        logger.info(f'{header} header collected after {count*120} seconds')
-        self.header = header_templates[header]
+        print(f'{header_temp} header collected after {count*120} seconds')
+        self.header = header_templates[header_temp]
         return count
 
   def identify(self, cap):
@@ -239,7 +237,7 @@ class LolTracker(GraphsOperator):
 
         # Check the sidebar for each champion
         for role in roles:
-          temp = 0.7
+          temp = 0.65
           most_likely_champ = ""
           
           sidebar_borders = blue_champ_sidebar[role]
@@ -262,7 +260,7 @@ class LolTracker(GraphsOperator):
                   temp = champ_classify_percent
                   most_likely_champ = blue_portraits[j][:-4]
 
-          logger.info(f"Blue {role} identified ({100*temp:.2f}%):  {most_likely_champ.capitalize()}")
+          print(f"Blue {role} identified ({100*temp:.2f}%):  {most_likely_champ.capitalize()}")
           champs['blue'][role]['champ'] = most_likely_champ
           if most_likely_champ != "":
             identified += 1
@@ -274,14 +272,14 @@ class LolTracker(GraphsOperator):
 
             _, frame = cap.read()
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            logger.info("Too few champions found")
+            print("Too few champions found")
 
     # Same for red side champions
     while identified != 10:
         identified = 5
 
         for role in roles:
-            temp = 0.7
+            temp = 0.65
             most_likely_champ = ""
             
             sidebar_borders = red_champ_sidebar[role]
@@ -296,7 +294,7 @@ class LolTracker(GraphsOperator):
                     temp = champ_classify_percent
                     most_likely_champ = red_portraits[j][:-4]
 
-            logger.info(f"Red {role} identified ({100*temp:.2f}%):  {most_likely_champ.capitalize()}")
+            print(f"Red {role} identified ({100*temp:.2f}%):  {most_likely_champ.capitalize()}")
             champs['red'][role]['champ'] = most_likely_champ
             if most_likely_champ != "":
                 identified += 1
@@ -307,7 +305,7 @@ class LolTracker(GraphsOperator):
             
             ret, frame = cap.read()
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            logger.info("Too few champions found")
+            print("Too few champions found")
 
     # Grab portraits of each champion found, to search for on the minimap
     for side in champs:
@@ -322,126 +320,133 @@ class LolTracker(GraphsOperator):
 
     return champs
 
-  def map_borders(self, cap):
+  def map_borders(self, cap, league):
     inhib_templates = []
 
-    minimap_path = os.path.join(
-      tracking_folder,
-      "minimap")
+    if league == 'automatic':
+      for i in range(4):
+        inhib_path = os.path.join(
+          tracking_folder,
+          "minimap",
+          f"inhib{i}.jpg")
 
-    for i in range(4):
-      inhib_path = os.path.join(
-        tracking_folder,
-        "minimap",
-        f"inhib{i}.jpg")
+        inhib_templates.append(cv2.imread(inhib_path, 0))
 
-      inhib_templates.append(cv2.imread(inhib_path, 0))
+      inhibs_found = 0
+      ret, frame = cap.read()
+      height, width, _ = frame.shape
 
-    inhibs_found = 0
-    ret, frame = cap.read()
-    height, width, _ = frame.shape
+      while ret is True and inhibs_found < 4:
+          gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    while ret is True and inhibs_found < 4:
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+          crop_frame_corner = (
+            slice(height//2, height),
+            slice(4*width//5, width))
 
-        crop_frame_corner = (
-          slice(height//2, height),
-          slice(4*width//5, width))
+          cropped = gray[crop_frame_corner]
 
-        cropped = gray[crop_frame_corner]
+          inhib_locations = []
+          inhibs_found = 0
 
-        inhib_locations = []
-        inhibs_found = 0
+          for inhib in inhib_templates:
+              res = cv2.matchTemplate(cropped, inhib, cv2.TM_CCOEFF_NORMED)
+              location = (np.where(res == max(0.65, np.max(res))))
 
-        for inhib in inhib_templates:
-            res = cv2.matchTemplate(cropped, inhib, cv2.TM_CCOEFF_NORMED)
-            location = (np.where(res == max(0.65, np.max(res))))
+              try:
+                  point = next(zip(*location[::-1]))
+                  inhibs_found += 1
+              except:
+                  inhibs_found = 0
+                  print("Not all inhibs found")
 
-            try:
-                point = next(zip(*location[::-1]))
-                inhibs_found += 1
-            except:
-                inhibs_found = 0
-                logger.info("Not all inhibs found")
-                for i in range(self.frames_to_skip):
-                    cap.grab()
-                break
-            inhib_locations.append(point)
+                  for i in range(self.frames_to_skip):
+                      cap.grab()
+                      ret, frame = cap.read()
+                  break
+              inhib_locations.append(point)
 
-        if inhibs_found == 4:
-            swapped_inhibs = [
-                coord[::-1] for coord in
-                inhib_locations[2:] + inhib_locations[:2]]
+          if inhibs_found == 4:
+              swapped_inhibs = [
+                  coord[::-1] for coord in
+                  inhib_locations[2:] + inhib_locations[:2]]
 
-            inhib_order = inhib_locations != sorted(inhib_locations)
-            swapped_order = swapped_inhibs != sorted(swapped_inhibs)
-            if inhib_order is True or swapped_order is True:
-                logger.info('Inhibs not in correct order')
-                
-                inhibs_found = 0
-                for i in range(self.frames_to_skip):
-                    cap.grab()
-                ret, frame = cap.read()
+              inhib_order = inhib_locations != sorted(inhib_locations)
+              swapped_order = swapped_inhibs != sorted(swapped_inhibs)
+              if inhib_order is True or swapped_order is True:
+                  print('Inhibs found in incorrect order')
+                  
+                  inhibs_found = 0
+                  for i in range(self.frames_to_skip):
+                      cap.grab()
+                  ret, frame = cap.read()
 
-    inhib_blue_top = inhib_locations[0]
-    inhib_blue_bot = inhib_locations[1]
-    inhib_red_top = inhib_locations[2]
-    inhib_red_bot = inhib_locations[3]
+      inhib_blue_top = inhib_locations[0]
+      inhib_blue_bot = inhib_locations[1]
+      inhib_red_top = inhib_locations[2]
+      inhib_red_bot = inhib_locations[3]
 
-    dist2 = np.linalg.norm(
-        np.array(inhib_blue_top) - np.array(inhib_blue_bot))
-    dist4 = np.linalg.norm(
-        np.array(inhib_red_bot) - np.array(inhib_red_top))
+      dist2 = np.linalg.norm(
+          np.array(inhib_blue_top) - np.array(inhib_blue_bot))
+      dist4 = np.linalg.norm(
+          np.array(inhib_red_bot) - np.array(inhib_red_top))
 
-    inhib_blue_top = (
-        (inhib_blue_bot[0] - inhib_blue_top[0])//4 + inhib_blue_top[0],
-        (inhib_blue_bot[1] - inhib_blue_top[1])//4 + inhib_blue_top[1]
-    )
+      inhib_blue_top = (
+          (inhib_blue_bot[0] - inhib_blue_top[0])//4 + inhib_blue_top[0],
+          (inhib_blue_bot[1] - inhib_blue_top[1])//4 + inhib_blue_top[1]
+      )
 
-    x = Point(inhib_blue_top[0], inhib_blue_top[1])
-    y = Point(inhib_blue_bot[0], inhib_blue_bot[1])
+      x = Point(inhib_blue_top[0], inhib_blue_top[1])
+      y = Point(inhib_blue_bot[0], inhib_blue_bot[1])
 
-    c1 = Circle(x, dist2)
-    c2 = Circle(y, dist2)
-    points = np.array(
-      [np.array([N(i).x, N(i).y]) for i in intersection(c1, c2)])
+      c1 = Circle(x, dist2)
+      c2 = Circle(y, dist2)
+      points = np.array(
+        [np.array([N(i).x, N(i).y]) for i in intersection(c1, c2)])
+      
+      intersect1 = points[np.argmin(points[:, 1])]
+
+      inhib_red_top = (
+          (inhib_red_bot[0] - inhib_red_top[0])//4 + inhib_red_top[0],
+          (inhib_red_bot[1] - inhib_red_top[1])//4 + inhib_red_top[1]
+      )
+
+      x = Point(inhib_red_bot[0], inhib_red_bot[1])
+      y = Point(inhib_red_top[0], inhib_red_top[1])
+
+      c3 = Circle(x, dist4)
+      c4 = Circle(y, dist4)
+      
+      points = np.array(
+        [np.array([N(i).x, N(i).y]) for i in intersection(c3, c4)])
+      
+      intersect2 = points[np.argmin(points[:, 0])]
+
+      l = Line(intersect1, intersect2)
+      
+      points = np.array(
+        [np.array([N(i).x, N(i).y]) for i in intersection(l, c1)])
+      border1 = points[np.argmin(points[:, 0])]
+
+      points = np.array(
+        [np.array([N(i).x, N(i).y]) for i in intersection(l, c4)])
+      border2 = points[np.argmin(points[:, 1])]
+      
+      return (
+        slice(
+          height//2 + int(border2[1]),
+          height//2 + int(border1[1])),
+        slice(
+          4*width//5 + int(border1[0]),
+          4*width//5 + int(border2[0]))
+      )
+    else:
+      borders = leagues[league]
+
+      return (
+        slice(borders[0], borders[1]),
+        slice(borders[2], borders[3])
+      )
     
-    intersect1 = points[np.argmin(points[:, 1])]
-
-    inhib_red_top = (
-        (inhib_red_bot[0] - inhib_red_top[0])//4 + inhib_red_top[0],
-        (inhib_red_bot[1] - inhib_red_top[1])//4 + inhib_red_top[1]
-    )
-
-    x = Point(inhib_red_bot[0], inhib_red_bot[1])
-    y = Point(inhib_red_top[0], inhib_red_top[1])
-
-    c3 = Circle(x, dist4)
-    c4 = Circle(y, dist4)
-    
-    points = np.array(
-      [np.array([N(i).x, N(i).y]) for i in intersection(c3, c4)])
-    
-    intersect2 = points[np.argmin(points[:, 0])]
-
-    l = Line(intersect1, intersect2)
-    
-    points = np.array(
-      [np.array([N(i).x, N(i).y]) for i in intersection(l, c1)])
-    border1 = points[np.argmin(points[:, 0])]
-
-    points = np.array(
-      [np.array([N(i).x, N(i).y]) for i in intersection(l, c4)])
-    border2 = points[np.argmin(points[:, 1])]
-    
-    return [
-      slice(
-        height//2 + int(border2[1]),
-        height//2 + int(border1[1])),
-      slice(
-        4*width//5 + int(border1[0]),
-        4*width//5 + int(border2[0]))
-    ]
     
 
   def tracker(self, map_coordinates, champs):
@@ -497,15 +502,14 @@ class LolTracker(GraphsOperator):
                   cv2.rectangle(cropped, point,
                                 (point[0] + 14, point[1] + 14), 255, 2)
               except:
-                  point = [np.nan, np.nan]
+                  point = (np.nan, np.nan)
                   pass
 
               data_entries.append({
                   'champ': champs[side][role]['champ'],
                   'role': role, 
                   'side': side, 
-                  'x': (point[0] + 7)/H,
-                  'y': (point[1] + 7)/W, 
+                  'coords': np.array([(point[0] + 7)/H, (point[1] + 7)/W]), 
                   'second': second
               })
 
@@ -522,5 +526,188 @@ class LolTracker(GraphsOperator):
     return pd.DataFrame(data_entries)
 
   @staticmethod
-  def interpolate(df):
-    return df
+  def interpolate(df_input):
+    df_input['iter'] = np.repeat(range(df_input.shape[0]//10), 10)
+
+    df = df_input.pivot(columns='champ', values='coords', index='iter')
+    
+    if isinstance(df.iloc[0, 0], str):
+      df = df.applymap(lambda a : np.fromstring(a[1:-1], dtype=float, sep=' '))
+    
+    H=1
+    W=1
+    RADIUS = 0.4
+    cols = df.columns
+    for index,column in enumerate(cols):
+      cols_team = list(cols)
+
+      cols_team.remove(column)
+      col = df[column]
+      col = np.array(col)
+      colt = np.concatenate(col)
+
+      # If no points found, usually caused by a bug in champion identification
+      if(np.all(np.all(np.isnan(colt)))): 
+        df[column] = [(np.nan,np.nan)]*len(col)
+      else:
+        col_temp = col
+        i = 0
+
+        # Search through points until an actual location is found
+        while(np.all(np.isnan(col[i]))):
+          i += 1
+
+        # If there are missing values at the start
+        if(np.all(np.isnan(col[0]))):
+          try: # Need to fix
+            temp = 20
+            found = False
+
+            # Check every champion on the same team to see if any were near the first known location
+            for col_team in cols_team:
+              for n in range(5): #4 seconds either side
+                check = norm(df[col_team][i-n] - col[i])
+                if(check < temp):
+                  temp = check
+                  found = True
+                  champ_found = col_team
+                check = norm(df[col_team][i+n] - col[i])
+                if(check < temp):
+                  temp = check
+                  found = True
+                  champ_found = col_team
+            # If an ally was found near the first known location
+            if(found):
+              # Assume the two walked together
+              col_temp = pd.concat([df[champ_found][:i],(col[i:])])
+          except:
+            pass
+
+        j = len(col)-1
+
+        # Same thing for missing values at the end
+        while(np.all(np.isnan(col[j]))):
+          j -= 1
+        if(np.all(np.isnan(col[len(col)-1]))):
+          try:
+            temp = 20
+            found = False
+            for col_team in cols_team:
+              for n in range(5):
+                check = norm(df[col_team][j-n] - col[j])
+                if(check < temp):
+                  temp = check
+                  found = True
+                  champ_found = col_team
+                check = norm(df[col_team][j+n] - col[j])
+                if(check < temp):
+                  temp = check
+                  found = True
+                  champ_found = col_team
+            if(found):
+              col_temp = pd.concat([(col_temp[:j+1]),(df[champ_found][j+1:])])
+          except:
+            pass
+
+        count = 0
+        k = i
+        col_temp2 = col_temp
+
+        # Deal with large chunks of missing values in the middle
+        while(k < len(col_temp2)-1):
+          k+=1
+          if(np.all(np.isnan(col_temp[k]))):
+            count += 1
+          else:
+            if(count > 5): # Missing for more than 5 seconds
+              point = col_temp[k]
+              if(index < 5): # Blue Side
+                circle_x = 0
+                circle_y = H
+              else: # Red Side
+                circle_x = W
+                circle_y = 0
+              # If first location after disappearing is in the base
+              if(norm(np.array(point) - np.array([circle_x,circle_y])) < RADIUS):
+                # Fill in with location just before disappearing (Assuming they died/recalled)
+                col_temp2 = pd.concat([pd.Series(col_temp2[:k-count]),
+                        pd.Series([col_temp2[k-count-1]]*count),
+                        pd.Series(col_temp2[k:])], ignore_index = True)
+              # Otherwise, check if there were any allies nearby before and after disappearing
+              else:
+                closest = 20
+                found_closest = False
+
+                # For every ally champion
+                for col_team in cols_team:
+                  temp = 20
+                  found = False
+                  for i in range(5):
+                    try:
+                      check = norm(np.array(point) - np.array(df[col_team][k+i]))
+                      if(check < temp):
+                        temp = check
+                        found = True
+
+                      check = norm(np.array(point) - np.array(df[col_team][k-i]))
+                      if(check < temp):
+                        temp = check
+                        found = True
+                    except:
+                      pass
+
+                  # If ally found nearby just before disappearing
+                  if(found):
+                    temp2 = 20
+                    for i in range(5):
+                      try:                      
+                        check2 = norm(np.array(col_temp[k-count-1]) - np.array(df[col_team][k-count-1+i]))
+                        if(check2 < temp2):
+                          temp2 = check2
+                          found_closest = True
+
+                        check2 = norm(np.array(col_temp[k-count-1]) - np.array(df[col_team][k-count-1-i]))
+                        if(check2 < temp2):
+                          temp2 = check2
+                          found_closest = True
+                      except:
+                        pass
+
+                  # If ally found nearby before and after disappearing
+                  if(found_closest):
+                    # Choose ally who was closest on average
+                    average = (temp + temp2) / 2
+                    if(average < closest):
+                      closest = average
+                      champ_found = col_team
+
+                # Assume the two walked together
+                if(found_closest):
+                  col_temp2 = pd.concat([pd.Series(col_temp2[:k-count]),
+                          df[champ_found][k-count:k],
+                          pd.Series(col_temp2[k:])],ignore_index = True)
+            count = 0
+        df[column] = col_temp2
+    for col in df.columns: ###########
+      df[col] = list(zip(*map(
+        lambda l: l.interpolate().round(3),
+        list(
+          map(pd.Series, 
+          zip(*df[col]))))))
+
+    # df.to_csv('test2.csv')
+    df_melted = pd.melt(df.reset_index(), id_vars='iter')
+
+    df_merged = pd.merge(
+      df_input, 
+      df_melted, 
+      on=['champ', 'iter']
+    ).drop(
+      ['coords', 'iter'], 
+      axis=1)
+
+    df_merged['x'] = df_merged['value'].apply(lambda x : x[0])
+    df_merged['y'] = df_merged['value'].apply(lambda x : x[1])
+    df_merged.drop('value', axis=1, inplace=True)
+
+    return(df_merged)

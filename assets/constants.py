@@ -40,6 +40,10 @@ timer_borders = (
     slice(35,70),
     slice(625,665))
 
+leagues = {
+    "lec_summer_2020": [563, 712, 1108, 1258]
+}
+
 # The digits for reading the timer
 digit_templates = dict()
 

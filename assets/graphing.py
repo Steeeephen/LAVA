@@ -2,7 +2,6 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 import plotly
-import logging
 from scipy.spatial.distance import pdist
 import os
 
@@ -12,7 +11,6 @@ from numpy.linalg import norm as norm
 
 class GraphsOperator():
     def draw_graphs(self, df, video):
-        self.logger = logging.getLogger('graphs')
 
         output_path = os.path.join(
             'output',
@@ -28,7 +26,7 @@ class GraphsOperator():
         level_one = self.leveloneplots(df)
         if level_one is not None:
             level_one.write_image(image_path, engine='kaleido')
-        # logger.info("Level One graphs complete")
+        print("Level One graphs complete")
 
         # Role Region Maps
         for role in ['jungle', 'support', 'mid']:
@@ -38,7 +36,7 @@ class GraphsOperator():
                     f'{side}_{role}.svg')
 
                 exec(f"self.{role}plots(df, '{side}', image_path)")
-            # logger.info(f"{role.title()} Region Maps Complete")
+            print(f"{role.title()} Region Maps Complete")
 
         graphs = {}
 

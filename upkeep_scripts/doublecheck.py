@@ -13,8 +13,9 @@ Each league may have a different overlay size, so this is used to make sure it l
 import cv2
 import numpy as np
 import os
-import pafy
-import youtube_dl
+from youtubesearchpython import Playlist, Video, StreamURLFetcher
+
+
 import argparse
 import sys,inspect
 
@@ -22,7 +23,7 @@ current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfra
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
-from assets.constants import LEAGUES 
+# from assets.constants import LEAGUES 
 
 #-----------------------------
 
@@ -56,8 +57,14 @@ def main():
             video = videos[videos_to_skip]
             cap = cv2.VideoCapture("../input/%s" % video)   
     else:
-        play = pafy.new(url.split('v=')[1]).getbest(preftype="mp4")
-        cap = cv2.VideoCapture(play.url)
+        # play = pafy.new(url.split('v=')[1]).getbest(preftype="mp4")
+
+        fetcher = StreamURLFetcher()
+
+        video = Video.get(url)
+        url = fetcher.get(video, 22)
+
+        cap = cv2.VideoCapture(url)
 
     while(True):
         frame_input = input("Skip how many frames?: (q to continue) ")
@@ -73,13 +80,13 @@ def main():
     ret, frame = cap.read()
     gray = frame
 
-    print("Click on the window and press any key to continue, find the one that fits best")
+    # print("Click on the window and press any key to continue, find the one that fits best")
   
-    for league in LEAGUES.keys():
-        mmap0, mmap1, mmap2, mmap3 = LEAGUES[league]
-        cropped = gray[mmap0:mmap1, mmap2:mmap3]
-        cv2.imshow(league, cropped)
-        cv2.waitKey()
+    # for league in LEAGUES.keys():
+    #     mmap0, mmap1, mmap2, mmap3 = LEAGUES[league]
+    #     cropped = gray[mmap0:mmap1, mmap2:mmap3]
+    #     cv2.imshow(league, cropped)
+    #     cv2.waitKey()
 
     # Check for sword icon in overlay, should be visible if correct
     hheight,hwidth, _ = frame.shape
