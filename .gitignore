@@ -8,6 +8,3 @@ __pycache__/*
 assets/__pycache__/*
 
 envi/
-
-scrape.py
-remove_logs.py

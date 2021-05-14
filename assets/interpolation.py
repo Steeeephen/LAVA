@@ -3,10 +3,22 @@ import pandas as pd
 
 from numpy.linalg import norm as norm
 
-def interpolate(df, map_coordinates):
-	H = map_coordinates[1] - map_coordinates[0]
-	W = map_coordinates[3] - map_coordinates[2]
-	RADIUS = int(W/2.5)
+def interpolate(df_input):
+	# H = map_coordinates[1] - map_coordinates[0]
+	# W = map_coordinates[3] - map_coordiates[2]
+
+	# W = map_coordinates[3] - map_coordiates[2]
+	df = pd.concat(
+		[
+			df_input['champ'], 
+			pd.Series(zip(df_input['x'], df_input['y']))
+		], 
+		axis=1
+	).pivot(columns='champ', values=0)
+	
+	H=1
+	W=1
+	RADIUS = 0.4
 	cols = df.columns
 	for index,column in enumerate(cols):
 		if(index < 5): # Blue side
@@ -167,4 +179,6 @@ def interpolate(df, map_coordinates):
 			list(
 				map(pd.Series, 
 				zip(*df[col]))))))
+
+	df.to_csv('test.csv')
 	return(df)

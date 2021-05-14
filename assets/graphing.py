@@ -11,7 +11,6 @@ from numpy.linalg import norm as norm
 
 class GraphsOperator():
     def draw_graphs(self, df, video):
-
         output_path = os.path.join(
             'output',
             video)
@@ -269,8 +268,6 @@ class GraphsOperator():
             elif point[0] > 1.05*point[1]: # Red side
                 regions[3]+=1
 
-        return regions
-
     @staticmethod
     def classify_sup(x, regions):
         point = np.array([x.x, x.y])
@@ -290,6 +287,8 @@ class GraphsOperator():
                 regions[2]+=1
             elif point[0] > 1.05*point[1]: # Red side
                 regions[1]+=1
+
+        return regions
 
 
     # And for midlaners
@@ -312,6 +311,8 @@ class GraphsOperator():
             regions[1]+=1
         elif point[0] > 1.05*point[1]: # Behind halfway point of midlane
             regions[0]+=1
+
+        return regions
 
     def jungleplots(self, df, colour, image_path):
         df_jungle = df[(df.role == 'jgl')]
@@ -340,6 +341,7 @@ class GraphsOperator():
         shapes = []
         for subplot in ['x', 'x2', 'x3']:
             reds = areas[subplot]
+            print(reds)
             reds = list(map(lambda x : 255-255*(x - min(reds))/(max(reds)), reds))
 
             # Different colours for each team

@@ -4,7 +4,7 @@ import threading
 
 from flask import render_template, request, send_from_directory, redirect
 
-from assets.loltracker import LolTracker
+from assets.lava import LAVA
 
 app = flask.Flask(__name__, template_folder='assets/webui_templates', static_folder="output")
 
@@ -57,7 +57,7 @@ def input():
   elif request.method == 'POST':
     form = request.form
     
-    loltracker_operator = LolTracker()
+    lava = LAVA()
 
     url = form['url']
     local = form.get('local', False) == 'true'
@@ -66,7 +66,7 @@ def input():
     minimap = form.get('minimap', False) == 'true'
 
     run_video_thread = threading.Thread(
-      target=loltracker_operator.execute, 
+      target=lava.execute, 
       name="tracker", 
       args=(
         url,
@@ -84,4 +84,4 @@ def input():
 def test(video):
     return render_template('game.html', game=video)
 
-app.run(debug=True)
+app.run(debug=True, port=8080)
