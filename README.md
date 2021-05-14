@@ -1,6 +1,13 @@
-DEPRECATION WARNING:
+***
+***
+# Update 2021-05-14
 
-Loltracker 2.0 will be released by the end of ~~March/Mid-April~~ ~~April/Mid-May (sorry)~~ sometime in the next couple of months (work is busy and the 2021 change to broadcast overlays delayed things heavily, will continue to work on it but I may need to scale down a bit). Thus, **all 1.x versions can now be considered deprecated** (but for how long? who knows, they still work for videos using the default overlay)
+LolTracker v2 (renamed to LoL Automated Video Analyser - LAVA) beta has now been released. I'll continue to add new champions to LolTracker as it's a quick job but for the most part, all updates will now be made to LAVA and the sun is setting on LolTracker
+
+You can find the new project [here](https://github.com/Steeeephen/LAVA). There are still bugs to work through and features to add but I'm excited to share this new development with the public. Thanks for all the support so far!
+
+***
+***
 
 # LolTracker
 
