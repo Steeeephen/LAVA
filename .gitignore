@@ -2,11 +2,9 @@ input/*
 !input/.gitkeep
 
 output/*
-!output/.gitkeep
+logs/*
 
 __pycache__/*
 assets/__pycache__/*
 
 envi/
-
-scrape.py
