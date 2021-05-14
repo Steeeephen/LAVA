@@ -1,12 +1,9 @@
-DEPRECATION WARNING:
-
-Loltracker 2.0 will be released by the end of ~~March/Mid-April~~ ~~April/Mid-May (sorry)~~ sometime in the next couple of months (work is busy and the 2021 change to broadcast overlays delayed things heavily, will continue to work on it but I may need to scale down a bit). Thus, **all 1.x versions can now be considered deprecated** (but for how long? who knows, they still work for videos using the default overlay)
-
-# LolTracker
+***
+# LAVA Beta
 
 A program for gathering positional data and providing analytics from League of Legends videos. It can be used to automatically gather spatiotemporal data (player locations over time) from a series of Youtube/locally stored videos
 
-For more information, see the [wiki](https://github.com/Steeeephen/loltracker/wiki)
+For more information, see the [wiki](https://github.com/Steeeephen/LAVA/wiki)
 
 ***
 
@@ -15,7 +12,7 @@ For more information, see the [wiki](https://github.com/Steeeephen/loltracker/wi
 Download directly from github and unzip or clone from the command line
 
 ```
-$ git clone https://github.com/Steeeephen/loltracker
+$ git clone https://github.com/Steeeephen/LAVA
 ```
 
 ### 2. Install [Python 3.6](https://www.python.org/downloads/) and pip

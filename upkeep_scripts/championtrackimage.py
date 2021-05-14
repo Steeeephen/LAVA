@@ -88,7 +88,7 @@ def main():
         cv2.waitKey()
 
     # Saves image in correct directory
-    cv2.imwrite('../assets/champs/%s.jpg' % champ, cropped)
+    cv2.imwrite('../assets/%s.jpg' % champ, cropped)
 
 if __name__ == "__main__":
     main()

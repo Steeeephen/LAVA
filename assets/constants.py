@@ -1,57 +1,79 @@
 import cv2
 import os
 
-# Minimap dimensions
-LEAGUES = {
-	"uklc":	[
-	545, 708, 1105, 1270],
-	"lec":	[
-	563, 712, 1108, 1258],
-	"lck": 	[
-	535, 705, 1095, 1267],
-	"lpl": 	[
-	535, 705, 1095, 1267],
-	"lcs": [
-	554, 707, 1112, 1267],
-	"pcs": [
-	538, 705, 1098, 1265]
-}
+tracking_folder = os.path.join(
+    "assets",
+    "tracking")
 
+digits_path = os.path.join(
+    tracking_folder,
+    "digits")
 
-# Dimensions of in-game timer
-BARON = [23, 50, 1207, 1230]
+blue_classify_path = os.path.join(
+    tracking_folder,
+    "champ_classifying",
+    "blue"
+)
 
-# 8 minutes, 14 minutes and 20 minutes are important breakpoints in the game, we'll split our data into those time intervals
-TIMESPLITS =  {480:"0-8", 840:"8-14", 1200:"14-20"}
-TIMESPLITS2 = {480:0, 840:480, 1200:840}
-
-# Baron spawns at 20mins, when it appears we use this to sync the time
-BARON_TEMPLATE = cv2.imread("assets/baron.jpg", 0)
+red_classify_path = os.path.join(
+    tracking_folder,
+    "champ_classifying",
+    "red"
+)
 
 # Dimensions of role portraits
-ROLE_DICT = {
-	"top":[108,133], 
-	"jgl":[178,203], 
-	"mid":[246,268],
-	"adc":[310,340],
-	"sup":[380,410]}
+blue_champ_sidebar = {
+    "top": (slice(108, 133), slice(20, 50)),
+    "jgl": (slice(178, 203), slice(20, 50)),
+    "mid": (slice(246, 268), slice(20, 50)),
+    "adc": (slice(310, 340), slice(20, 50)),
+    "sup": (slice(380, 410), slice(20, 50))}
 
-# The digits for reading the timer 
-DIGIT_TEMPLATES = dict()
+red_champ_sidebar = {
+    "top": (slice(108, 133), slice(1228, 1262)),
+    "jgl": (slice(178, 203), slice(1228, 1262)),
+    "mid": (slice(246, 268), slice(1228, 1262)),
+    "adc": (slice(310, 340), slice(1228, 1262)),
+    "sup": (slice(380, 410), slice(1228, 1262))}
+
+timer_borders = (
+    slice(35,70),
+    slice(625,665))
+
+leagues = {
+    "lec_summer_2020": [563, 712, 1108, 1258]
+}
+
+# The digits for reading the timer
+digit_templates = dict()
 
 # won't be run if constants imported from another directory
-if(os.path.exists("assets/images")):
-	for image_temp in os.listdir("assets/images"):
-		DIGIT_TEMPLATES[image_temp] = cv2.imread("assets/images/%s" % image_temp, 0)
+if os.path.exists(digits_path):
+    for digit in range(10):
+        digit_image_path = os.path.join(
+            digits_path,
+            f'{digit}.jpg'
+        )
 
-	BLUE_PORTRAITS = os.listdir("assets/classify/blue")
-	RED_PORTRAITS = os.listdir("assets/classify/red")	
+        digit_templates[digit] = cv2.imread(digit_image_path, 0)
 
-	BLUE_CHAMP_TEMPLATES = [""]*len(BLUE_PORTRAITS)
-	RED_CHAMP_TEMPLATES = [""]*len(RED_PORTRAITS)
+    blue_portraits = os.listdir(blue_classify_path)
+    red_portraits = os.listdir(red_classify_path)
 
-	# Save templates for template matching
-	for portrait_i, portrait in enumerate(BLUE_PORTRAITS):
-		BLUE_CHAMP_TEMPLATES[portrait_i] = cv2.imread("assets/classify/blue/%s" % portrait, 0)
-	for portrait_i, portrait in enumerate(RED_PORTRAITS):	
-		RED_CHAMP_TEMPLATES[portrait_i] = cv2.imread("assets/classify/red/%s" % portrait, 0)
+    blue_champ_templates = [""]*len(blue_portraits)
+    red_champ_templates = [""]*len(red_portraits)
+
+    # Save templates for template matching
+    for portrait_i, portrait in enumerate(blue_portraits):
+        portrait_image = os.path.join(
+            blue_classify_path,
+            portrait)
+
+        blue_champ_templates[portrait_i] = cv2.imread(portrait_image, 0)
+
+    for portrait_i, portrait in enumerate(red_portraits):
+        portrait_image = os.path.join(
+            red_classify_path,
+            portrait)
+
+        red_champ_templates[portrait_i] = cv2.imread(portrait_image, 0)
