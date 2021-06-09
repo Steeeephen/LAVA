@@ -15,19 +15,24 @@ Download directly from github and unzip or clone from the command line
 $ git clone https://github.com/Steeeephen/LAVA
 ```
 
-### 2. Install [Python 3.6](https://www.python.org/downloads/) and pip
+### 2. Install [Python 3](https://www.python.org/downloads/) and pip
 
-### 3. Navigate to folder with levelone.py in the command line/terminal
+### 3. Navigate to folder in the command line/terminal
 
 ```
-$ cd PATH/loltracker
+$ cd <path_to_folder>/LAVA
 ```
 
-Where PATH is the path to the folder containing the unzipped file (e.g. C:/Users/admin/Downloads/)
+Where `path_to_folder` is the path to the folder containing the unzipped file (e.g. C:/Users/ste/Downloads/ or ~/Documents/python/)
 
 ### 4. Install dependencies, these are the libraries required to run the program
 
 ```
 $ pip install -r requirements.txt
 ```
+
+### 5. Run App
+
+`$ python app.py`
+
 ***
