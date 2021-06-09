@@ -14,6 +14,10 @@ from sympy import N
 from numpy.linalg import norm
 
 class LAVA(GraphsOperator):
+  def __init__(self):
+    os.makedirs('output/positions', exist_ok=True)
+    __version__ = '2.0.1'
+
   def execute(self, url="", local=False, playlist=False, skip=0, minimap=False, graphs=False):
     df = self.gather_data(url, local, playlist, skip, minimap)
 

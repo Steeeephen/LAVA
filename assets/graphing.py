@@ -377,7 +377,7 @@ class GraphsOperator():
         shapes = []
         for subplot in ['x', 'x2', 'x3']:
             reds = areas[subplot]
-            print(reds)
+            
             reds = list(
                 map(lambda x: 255-255*(x - min(reds))/(max(reds)), reds))
 
@@ -513,11 +513,9 @@ class GraphsOperator():
         fig = px.scatter(x=[0, 100], y=[0, 1], color=[0, 1])
 
         fig2.add_trace(fig.data[0])
-        # return plotly.offline.plot(fig2, output_type='div')
-        print(f'writingt')
+        
         fig2.write_image(image_path, engine='kaleido')
-        # return fig
-
+        
     def supportplots(self, df, colour, image_path):
         df_support = df[(df.role == 'sup')]
 
