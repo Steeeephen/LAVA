@@ -35,10 +35,19 @@ red_champ_sidebar = {
     "mid": (slice(246, 268), slice(1228, 1262)),
     "adc": (slice(310, 340), slice(1228, 1262)),
     "sup": (slice(380, 410), slice(1228, 1262))}
-
-timer_borders = (
-    slice(35,70),
-    slice(625,665))
+    
+timer_borders = {
+    'default': {
+        'minute': (
+            slice(52,63),
+            slice(628, 641)
+        ),
+        'second': (
+            slice(52,63),
+            slice(644, 658)
+        )
+    }
+}
 
 leagues = {
     "lec_summer_2020": [563, 712, 1108, 1258]

@@ -9,10 +9,13 @@ from assets.lava import LAVA
 app = flask.Flask(
     __name__, template_folder='assets/webui_templates', static_folder="output")
 
+lava = LAVA()
+
+version = lava.__version__
 
 @app.route('/')
 def home():
-    return render_template('home.html')
+    return render_template('home.html', version=version)
 
 
 @app.route('/games')
@@ -21,7 +24,7 @@ def games():
 
     directories.remove('positions')
 
-    return render_template('games.html', games=directories)
+    return render_template('games.html', games=directories, version=version)
 
 
 @app.route('/data')
@@ -29,7 +32,7 @@ def data():
     games = os.listdir('output/positions')
     games = [game.split('.')[0] for game in games]
 
-    return render_template('data.html', games=games)
+    return render_template('data.html', games=games, version=version)
 
 
 @app.route('/download_data/<game>')
@@ -60,11 +63,9 @@ def delete_data(game):
 @app.route("/input", methods=['GET', 'POST'])
 def input():
     if request.method == 'GET':
-        return render_template('input.html')
+        return render_template('input.html', version=version)
     elif request.method == 'POST':
         form = request.form
-
-        lava = LAVA()
 
         url = form['url']
         local = form.get('local', False) == 'true'
@@ -85,12 +86,12 @@ def input():
             )
         ).start()
 
-        return render_template('input.html')
+        return render_template('input.html', version=version)
 
 
 @app.route('/games/<video>')
 def test(video):
-    return render_template('game.html', game=video)
+    return render_template('game.html', game=video, version=version)
 
 
 app.run(debug=True, port=8080)

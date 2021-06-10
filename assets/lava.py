@@ -1,4 +1,4 @@
-from assets.utils import get_header_borders, clean_for_directory 
+from assets.utils import get_header_borders, clean_for_directory, decodeText
 from assets.constants import *
 
 import cv2
@@ -15,8 +15,21 @@ from numpy.linalg import norm
 
 class LAVA(GraphsOperator):
   def __init__(self):
-    os.makedirs('output/positions', exist_ok=True)
-    __version__ = '2.0.1'
+    self.__version__ = '2.0.1'
+    output_file = os.path.join(
+      'output',
+      'positions')
+
+    os.makedirs(output_file, exist_ok=True)
+    
+    text_recogniser_path = os.path.join(
+      'assets',
+      'tracking',
+      'crnn.onnx')
+
+    self.recogniser = cv2.dnn.readNet(text_recogniser_path)
+    self.recogniser.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+    self.recogniser.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
   def execute(self, url="", local=False, playlist=False, skip=0, minimap=False, graphs=False):
     df = self.gather_data(url, local, playlist, skip, minimap)
@@ -197,6 +210,7 @@ class LAVA(GraphsOperator):
       if header_found is True:
         print(f'{header_temp} header collected after {count*120} seconds')
         self.header = header_templates[header_temp]
+        self.overlay = header_temp.split('.')[0]
         return count
 
   def identify(self, cap):
@@ -468,8 +482,28 @@ class LAVA(GraphsOperator):
         slice(borders[0], borders[1]),
         slice(borders[2], borders[3])
       )
+  
+  def read_timer(self, gray, minute_borders, second_borders):
+    cropped = gray[minute_borders]
     
+    blob = cv2.dnn.blobFromImage(cropped, size=(100, 32), mean=127.5, scalefactor=1 / 127.5)
+    self.recogniser.setInput(blob)
+
+    minute = self.recogniser.forward()
+
+    cropped = gray[second_borders]
     
+    blob = cv2.dnn.blobFromImage(cropped, size=(100, 32), mean=127.5, scalefactor=1 / 127.5)
+    self.recogniser.setInput(blob)
+
+    second = self.recogniser.forward()
+
+    try:
+      seconds = 60*int(decodeText(minute)) + int(decodeText(second))
+    except ValueError:
+      seconds = np.nan
+
+    return seconds
 
   def tracker(self, map_coordinates, champs):
     H = map_coordinates[0].stop - map_coordinates[0].start
@@ -479,6 +513,8 @@ class LAVA(GraphsOperator):
 
     ret, frame = self.cap.read()
     header_borders = get_header_borders(frame.shape)
+    minute_borders = timer_borders[self.overlay]['minute']
+    second_borders = timer_borders[self.overlay]['second']
         
     while ret is True:
       gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -488,24 +524,8 @@ class LAVA(GraphsOperator):
       location = np.where(matched > 0.65)
 
       if location[0].any():
-          cropped_timer = gray[timer_borders]
-          digits = []
+          second = self.read_timer(gray, minute_borders, second_borders)
 
-          for num in digit_templates.keys():
-              template = digit_templates[num]
-              check = cv2.matchTemplate(
-                  cropped_timer, template, cv2.TM_CCOEFF_NORMED)
-              digit = np.where(check > 0.8)
-              for test in (list(zip(*digit[::-1]))):
-                  digits.append([test, num])
-
-          digits.sort()
-          try:
-              second = 600*digits[0][1]+60 * \
-                  digits[1][1]+10*digits[2][1]+digits[3][1]
-          except IndexError:
-              second = np.nan
-          
           # Crop to minimap
           cropped = gray[map_coordinates]
 
@@ -710,14 +730,13 @@ class LAVA(GraphsOperator):
                           pd.Series(col_temp2[k:])],ignore_index = True)
             count = 0
         df[column] = col_temp2
-    for col in df.columns: ###########
+    for col in df.columns:
       df[col] = list(zip(*map(
         lambda l: l.interpolate().round(3),
         list(
           map(pd.Series, 
           zip(*df[col]))))))
 
-    # df.to_csv('test2.csv')
     df_melted = pd.melt(df.reset_index(), id_vars='iter')
 
     df_merged = pd.merge(
