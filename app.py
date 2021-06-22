@@ -67,23 +67,23 @@ def input():
     elif request.method == 'POST':
         form = request.form
 
-        url = form['url']
-        local = form.get('local', False) == 'true'
-        playlist = form.get('playlist', False) == 'true'
-        graphs = form.get('graphs', False) == 'true'
-        minimap = form.get('minimap', False) == 'true'
+        input_vars = [
+            'local',
+            'playlist',
+            'graphs',
+            'minimap',
+            'lightweight'
+        ]
+
+        input_args = {'url': form['url']}
+
+        for var in input_vars:
+            input_args[var] = var in form
 
         run_video_thread = threading.Thread(
             target=lava.execute,
             name="tracker",
-            args=(
-                url,
-                local,
-                playlist,
-                0,
-                minimap,
-                graphs
-            )
+            kwargs=input_args
         ).start()
 
         return render_template('input.html', version=version)
@@ -94,4 +94,4 @@ def test(video):
     return render_template('game.html', game=video, version=version)
 
 
-app.run(debug=True, port=8080)
+app.run(debug=os.getenv('LAVA_DEBUG', False), port=8080)

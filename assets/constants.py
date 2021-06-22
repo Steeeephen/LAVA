@@ -5,10 +5,6 @@ tracking_folder = os.path.join(
     "assets",
     "tracking")
 
-digits_path = os.path.join(
-    tracking_folder,
-    "digits")
-
 blue_classify_path = os.path.join(
     tracking_folder,
     "champ_classifying",
@@ -53,19 +49,8 @@ leagues = {
     "lec_summer_2020": [563, 712, 1108, 1258]
 }
 
-# The digits for reading the timer
-digit_templates = dict()
-
 # won't be run if constants imported from another directory
-if os.path.exists(digits_path):
-    for digit in range(10):
-        digit_image_path = os.path.join(
-            digits_path,
-            f'{digit}.jpg'
-        )
-
-        digit_templates[digit] = cv2.imread(digit_image_path, 0)
-
+if os.path.exists(blue_classify_path):
     blue_portraits = os.listdir(blue_classify_path)
     red_portraits = os.listdir(red_classify_path)
 

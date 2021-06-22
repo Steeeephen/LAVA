@@ -16,7 +16,6 @@
       <h1><a href='/'>LAVA Beta v{{version}}</a></h1>
       <h3>Input</h3>
       <h3>I'm aware of the issues with leagues that have strange overlays, working on a fix</h3>
-      <h3>Same for the issue with timers</h3>
     </center>
     <br><br>
     <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
@@ -53,7 +52,7 @@
             <div class="input-group-prepend">
               <div class="btn-group" data-toggle="buttons">
                 <label class="btn btn-info">
-                  <input type="radio" id="option1" name="local" value="false" checked=""> YouTube
+                  <input type="radio" id="option1" name="youtube" value="false" checked=""> YouTube
                 </label>
                 <label class="btn btn-info">
                   <input type="radio" id="option2" name="local" value="true"> Local
@@ -80,6 +79,12 @@
                 </label>
             </div>
         </div>
+        <div class="row justify-content-md-center">
+          <label class="btn btn-info">
+            <input type="checkbox" class="btn-check" id="btn-check3" autocomplete="off" name="lightweight" value="true" checked=""> Lightweight Mode (Recommended)
+          </label>
+        </div>
+
         <div class="row justify-content-md-center">
             <input type="submit" class="btn btn-primary" value="Run"/>
         </div>

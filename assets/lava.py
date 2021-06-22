@@ -1,4 +1,4 @@
-from assets.utils import get_header_borders, clean_for_directory, decodeText
+from assets.utils import *
 from assets.constants import *
 
 import cv2
@@ -15,12 +15,13 @@ from numpy.linalg import norm
 
 class LAVA(GraphsOperator):
   def __init__(self):
-    self.__version__ = '2.0.2'
+    self.__version__ = '2.0.3'
     output_file = os.path.join(
       'output',
       'positions')
 
     os.makedirs(output_file, exist_ok=True)
+    os.makedirs('input', exist_ok=True)
     
     text_recogniser_path = os.path.join(
       'assets',
@@ -31,8 +32,8 @@ class LAVA(GraphsOperator):
     self.recogniser.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
     self.recogniser.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
-  def execute(self, url="", local=False, playlist=False, skip=0, minimap=False, graphs=False):
-    df = self.gather_data(url, local, playlist, skip, minimap)
+  def execute(self, url="", local=False, playlist=False, skip=0, minimap=False, graphs=False, lightweight=True):
+    df = self.gather_data(url, local, playlist, skip, minimap, lightweight)
 
     if graphs is True:
       self.draw_graphs(df, df.video.iloc[0])
@@ -40,9 +41,11 @@ class LAVA(GraphsOperator):
     print(f'Video {df.video.iloc[0]} complete')
 
 
-  def gather_data(self, url="", local=False, playlist=False, skip=0, minimap=False):
+  def gather_data(self, url="", local=False, playlist=False, skip=0, minimap=False, lightweight=True):
     videos = self.parse_url(url, local, playlist, skip)
     full_data = pd.DataFrame()
+
+    self.lightweight = lightweight
 
     for video, url in videos.items():
       print(f'Running Video: {video}')
@@ -483,25 +486,50 @@ class LAVA(GraphsOperator):
         slice(borders[2], borders[3])
       )
   
-  def read_timer(self, gray, minute_borders, second_borders):
-    cropped = gray[minute_borders]
-    
-    blob = cv2.dnn.blobFromImage(cropped, size=(100, 32), mean=127.5, scalefactor=1 / 127.5)
-    self.recogniser.setInput(blob)
+  def read_timer(self, gray):
+    if self.lightweight is True:
+      # to be changed, this is the default
+      cropped_timer = gray[23:50, 1210:1250]
+      nums = {}
+      for image_i in self.digit_templates:
+        res = cv2.matchTemplate(cropped_timer, self.digit_templates[image_i], cv2.TM_CCOEFF_NORMED)
+        
+        # Try to find each digit in the timer
+        digit = np.where(res > 0.75)
+        if(digit[0].any()):
+          seen = set()
+          inp = (list(zip(*digit)))
+          outp = [(a, b) for a, b in inp if not (b in seen or seen.add(b) or seen.add(b+1) or seen.add(b-1))]
+          for out in outp:
+            nums[out[1]] = image_i
+      timer_ordered = ""
 
-    minute = self.recogniser.forward()
+      # Sort time
+      for num in (sorted(nums)):
+        timer_ordered = ''.join([timer_ordered, nums[num]])
+      try:
+        seconds = int(timer(timer_ordered))
+      except ValueError:
+        seconds = np.nan
+    else:
+      cropped = gray[self.minute_borders]
+      
+      blob = cv2.dnn.blobFromImage(cropped, size=(100, 32), mean=127.5, scalefactor=1 / 127.5)
+      self.recogniser.setInput(blob)
 
-    cropped = gray[second_borders]
-    
-    blob = cv2.dnn.blobFromImage(cropped, size=(100, 32), mean=127.5, scalefactor=1 / 127.5)
-    self.recogniser.setInput(blob)
+      minute = self.recogniser.forward()
 
-    second = self.recogniser.forward()
+      cropped = gray[self.second_borders]
+      
+      blob = cv2.dnn.blobFromImage(cropped, size=(100, 32), mean=127.5, scalefactor=1 / 127.5)
+      self.recogniser.setInput(blob)
 
-    try:
-      seconds = 60*int(decodeText(minute)) + int(decodeText(second))
-    except ValueError:
-      seconds = np.nan
+      second = self.recogniser.forward()
+
+      try:
+        seconds = 60*int(decodeText(minute)) + int(decodeText(second))
+      except ValueError:
+        seconds = np.nan
 
     return seconds
 
@@ -513,9 +541,12 @@ class LAVA(GraphsOperator):
 
     ret, frame = self.cap.read()
     header_borders = get_header_borders(frame.shape)
-    minute_borders = timer_borders[self.overlay]['minute']
-    second_borders = timer_borders[self.overlay]['second']
-        
+
+    if self.lightweight is True:
+      self.digit_templates = get_digit_templates(self.overlay)
+    else:
+      self.minute_borders = timer_borders[self.overlay]['minute']
+      self.second_borders = timer_borders[self.overlay]['second']
     while ret is True:
       gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
       cropped = gray[header_borders]
@@ -524,7 +555,7 @@ class LAVA(GraphsOperator):
       location = np.where(matched > 0.65)
 
       if location[0].any():
-          second = self.read_timer(gray, minute_borders, second_borders)
+          second = self.read_timer(gray)
 
           # Crop to minimap
           cropped = gray[map_coordinates]
@@ -538,7 +569,6 @@ class LAVA(GraphsOperator):
               location = (np.where(matched == max(0.8, np.max(matched))))
 
               # If champion found, save their location
-              #############
               try:
                   point = next(zip(*location[::-1]))
                   cv2.rectangle(cropped, point,

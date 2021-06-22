@@ -1,10 +1,8 @@
 input/*
-!input/.gitkeep
-
 output/*
-logs/*
 
 __pycache__/*
 assets/__pycache__/*
 
-envi/
+envi/*
+venv/*
