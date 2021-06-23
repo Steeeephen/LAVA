@@ -207,7 +207,7 @@ class GraphsOperator():
     @staticmethod
     def leveloneplots(df):
         champs = df.champ.unique()
-        df = df[df.second <= 90]
+        df = df[(df.second > 0) & (df.second <= 90)]
 
         if not df.empty:
             fig = px.scatter(
