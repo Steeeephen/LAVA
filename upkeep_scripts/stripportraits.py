@@ -27,8 +27,7 @@ Numbers:
 import cv2
 import numpy as np
 import os
-import pafy
-import youtube_dl
+from youtubesearchpython import Playlist, Video, StreamURLFetcher
 import argparse
 parser = argparse.ArgumentParser(description = "Saving Images of Champions")
 
@@ -41,27 +40,71 @@ args = parser.parse_args()
 
 def main():
     local = args.video
-    playlist_url = args.playlist
+    playlist = args.playlist
     url = args.url
     videos_to_skip = args.videos_to_skip
 
-    if(url == ''):
-        if(not local):
-          playlist = pafy.get_playlist(playlist_url)
-          videos = []
-          for item_i in (playlist['items']):
-            videos.append(item_i['pafy'].videoid)
-            v = pafy.new(videos[videos_to_skip])
-            play = v.getbest(preftype="mp4")
-            cap = cv2.VideoCapture(play.url)
-        elif(local):
-            videos = os.listdir('../input')
-            videos.remove('.gitkeep')
-            video = videos[videos_to_skip]
-            cap = cv2.VideoCapture("../input/%s" % video)   
+    # if(url == ''):
+    #     if(not local):
+    #       playlist = pafy.get_playlist(playlist_url)
+    #       videos = []
+    #       for item_i in (playlist['items']):
+    #         videos.append(item_i['pafy'].videoid)
+    #         v = pafy.new(videos[videos_to_skip])
+    #         play = v.getbest(preftype="mp4")
+    #         cap = cv2.VideoCapture(play.url)
+    #     elif(local):
+    #         videos = os.listdir('../input')
+    #         videos.remove('.gitkeep')
+    #         video = videos[videos_to_skip]
+    #         cap = cv2.VideoCapture("../input/%s" % video)   
+    # else:
+    #     play = pafy.new(url.split('v=')[1]).getbest(preftype="mp4")
+    #     cap = cv2.VideoCapture(play.url)
+
+    videos = {}
+    if local is False:
+      fetcher = StreamURLFetcher()
+
+      if playlist is True:
+        playlist_data = Playlist.getVideos(url)
+        videos_list = [x['link'] for x in playlist_data['videos']]
+        videos_list = videos_list[skip:]
+      else:
+        if isinstance(url, list):
+          videos_list = url
+        else:
+          videos_list = [url]
+        
+      for video_url in videos_list:
+        video = Video.get(video_url)
+        url = fetcher.get(video, 22)
+          
+        # video = clean_for_directory(video['title'])
+
+        videos[video['title']] = url
+    # If pulling from local
     else:
-        play = pafy.new(url.split('v=')[1]).getbest(preftype="mp4")
-        cap = cv2.VideoCapture(play.url)
+      if playlist is True:
+        videos_list = os.listdir('input')
+        videos_list.remove('.gitkeep')
+        videos_list = videos_list[skip:]
+      else:
+        if isinstance(url, list):
+          videos_list = url
+        else:
+          videos_list = [url]
+        
+      for video_file in videos_list:
+        video_path = os.path.join(
+          'input',
+          video_file)
+
+        video = os.path.splitext(video_file)[0]
+
+        videos[video] = video_path
+
+    cap = cv2.VideoCapture(videos[video['title']])
 
     while(True):
         frame_input = input("Skip how many frames?: (q if image shows all players at level 1) ")
@@ -114,7 +157,7 @@ def main():
         cropped = gray[locations[i % 5]:(locations[i % 5]+20), x:y]
 
         # Save image to directory
-        cv2.imwrite('../assets/classify/%s/%s.jpg' % (col, name),cropped)
+        cv2.imwrite('../assets/tracking/champ_classifying/%s/%s.jpg' % (col, name),cropped)
         print("%s saved to %s side" % (name, col))
 
 if __name__ == "__main__":
