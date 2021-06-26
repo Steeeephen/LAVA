@@ -15,7 +15,7 @@ from numpy.linalg import norm
 
 class LAVA(GraphsOperator):
   def __init__(self):
-    self.__version__ = '2.1.0'
+    self.__version__ = '2.1.1'
     output_file = os.path.join(
       'output',
       'positions')
