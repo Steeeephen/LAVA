@@ -15,7 +15,7 @@ from numpy.linalg import norm
 
 class LAVA(GraphsOperator):
   def __init__(self):
-    self.__version__ = '2.0.4'
+    self.__version__ = '2.1.0'
     output_file = os.path.join(
       'output',
       'positions')
@@ -69,6 +69,9 @@ class LAVA(GraphsOperator):
 
       champs = self.identify(self.cap)
       print("Champs identified")
+
+      self.match_summoners = self.summoner_spells(self.cap)
+      print('Summoner Spells identified')
 
       # map borders
       map_coordinates = self.map_borders(self.cap, league='automatic')
@@ -220,12 +223,12 @@ class LAVA(GraphsOperator):
     ret, frame = cap.read()
     header_borders = get_header_borders(frame.shape)
 
-    roles = blue_champ_sidebar.keys()
+    self.roles = blue_champ_sidebar.keys()
 
     # Instantiate dictionary for champions
     champs = {'blue': {}, 'red': {}}
 
-    for role in roles:
+    for role in self.roles:
       champs['blue'][role] = {'champ': "", 'template': ""}
       champs['red'][role] = {'champ': "", 'template': ""}
 
@@ -254,10 +257,10 @@ class LAVA(GraphsOperator):
             ret, frame = cap.read()
         identified = 0
 
-        roles = blue_champ_sidebar.keys()
+        self.roles = blue_champ_sidebar.keys()
 
         # Check the sidebar for each champion
-        for role in roles:
+        for role in self.roles:
           temp = 0.65
           most_likely_champ = ""
           
@@ -317,7 +320,7 @@ class LAVA(GraphsOperator):
             ret, frame = cap.read()
         identified = 5
 
-        for role in roles:
+        for role in self.roles:
             temp = 0.65
             most_likely_champ = ""
             
@@ -358,6 +361,31 @@ class LAVA(GraphsOperator):
         champs[side][role]['template'] = cv2.imread(champ_image, 0)
 
     return champs
+
+  def summoner_spells(self, cap):
+    _, frame = cap.read()
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    match_summoners = {'red': {k:[] for k in self.roles}, 'blue': {k:[] for k in self.roles}}
+
+    for side in ['red', 'blue']:
+        for role in self.roles:
+            for i in range(2):
+                cropped = gray[summoner_spells[role][i], summoner_spells[side]]
+                threshold = 0.
+
+                for summoner in summoners.keys():
+                    max_probability = np.max(
+                        cv2.matchTemplate(
+                        cropped, 
+                        summoners[summoner], 
+                        cv2.TM_CCOEFF_NORMED))
+                    if max_probability > threshold:
+                        summoner_temp = summoner
+                        threshold = max_probability
+                
+                match_summoners[side][role].append(summoner_temp)
+    return match_summoners
 
   def map_borders(self, cap, league):
     inhib_templates = []
@@ -582,7 +610,9 @@ class LAVA(GraphsOperator):
                   'role': role, 
                   'side': side, 
                   'coords': np.array([(point[0] + 7)/H, (point[1] + 7)/W]), 
-                  'second': second
+                  'second': second,
+                  'summoner_spell_1': self.match_summoners[side][role][0],
+                  'summoner_spell_2': self.match_summoners[side][role][1]
               })
 
           if self.minimap is True:

@@ -17,6 +17,22 @@ red_classify_path = os.path.join(
     "red"
 )
 
+roles = ['top', 'jgl', 'mid', 'adc', 'sup']
+
+summoner_path = os.path.join(
+    tracking_folder,
+    'summoners'
+)
+
+summoners = {}
+
+for summoner in os.listdir(summoner_path):
+    summoner_image_path = os.path.join(
+        summoner_path,
+        summoner
+    )
+    summoners[summoner[:-4]] = cv2.imread(summoner_image_path, 0)
+
 # Dimensions of role portraits
 blue_champ_sidebar = {
     "top": (slice(108, 133), slice(20, 50)),
@@ -31,7 +47,17 @@ red_champ_sidebar = {
     "mid": (slice(246, 268), slice(1228, 1262)),
     "adc": (slice(310, 340), slice(1228, 1262)),
     "sup": (slice(380, 410), slice(1228, 1262))}
-    
+
+summoner_spells = {
+    "top": [slice(103, 121), slice(118, 137)],
+    "jgl": [slice(172, 188), slice(187, 203)],
+    "mid": [slice(241, 257), slice(256, 272)],
+    "adc": [slice(309, 325), slice(324, 340)],
+    "sup": [slice(378, 394), slice(393, 409)],
+    "blue": slice(1, 19),
+    "red": slice(1261, 1279),
+}
+
 timer_borders = {
     'default': {
         'minute': (
