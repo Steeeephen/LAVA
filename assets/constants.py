@@ -72,7 +72,9 @@ timer_borders = {
 }
 
 leagues = {
-    "lec_summer_2020": [563, 712, 1108, 1258]
+    "lec_summer_2020": [563, 712, 1108, 1258],
+    "lec_spring_2021": [563, 712, 1103, 1259],
+    "lec_summer_2021": [569, 706, 1107, 1257]
 }
 
 # won't be run if constants imported from another directory
