@@ -4,18 +4,12 @@
 
 These are the scripts needed to maintain and update the project as new LoL/broadcast updates come out
 
-***
-
-## `champion_track_image`
-
-For adding champion portraits to be tracked on the in-game minimap. If a new champion is added to the game/portrait updated, their portraits must be added to the directory using this script
-
-The usage is simple enough
+The usage is simple enough, add these parameters when running the scripts
 
 |Argument|Variable Name|Explanation|
 |---|---|---|
 |`-l`|`local`|Use local videos instead of Youtube|
-|`-u`|`url`|Link to Youtube video or path to local video| 
+|`-u`|`url`|Link to Youtube video or path to local video|
 
 So for example, to use a local video:
 
@@ -26,18 +20,16 @@ $ python3 champion_track_image.py -l -u '~/Downloads/test.mp4'
 Or a youtube VOD:
 
 ```sh
-$ python3 champion_track_image.py -u 'https://www.youtube.com/watch?v=xnEbF-a0k80'
+$ python3 strip_portraits.py -u 'https://www.youtube.com/watch?v=xnEbF-a0k80'
 ```
 
+***
+
+## `champion_track_image`
+
+For adding champion portraits to be tracked on the in-game minimap. If a new champion is added to the game/portrait updated, their portraits must be added to the directory using this script
+
 First you must find a frame at which the champion portrait is isolated on the minimap. Then you must give the name of the champ and the 4 coordinates that result in a 14x14px image of the champion. This is best done through trial-and-error and multiple iterations until the perfect match is found.
-
-## CreateMapBase
-
-For creating a map base should you need to support a new minimap. This needs to be done for any new leagues the program supports and acts as a reference for the graphs
-
-The usage is essentially the same as in `championtrackimage`, with the only real difference being that you input the code that you want to attribute to the league. Once you've found the 4 coordinates that cover the minimap, the program will draw up a base map without any champions present.
-
-Call with `$ python createmapbase.py`
 
 
 ## DoubleCheck
@@ -47,9 +39,9 @@ This is for making sure that the dimensions of a video line up with the program'
 Usage is just like the previous two, all you have to do is check if the pictures line up as you would expect
 
 
-## Stripportraits.py
+## `strip_portraits`
 
-For stripping champion portraits from the sidebars. These portraits are used for identifying the champions at the start of the game. 
+For stripping champion portraits from the sidebars. These portraits are used for identifying the champions at the start of the game.
 
 Once you have found a frame with all champions at level one, you must fill in their position's number and name and their portrait will be added to the db
 
