@@ -23,7 +23,7 @@ $ git clone https://github.com/Steeeephen/LAVA
 $ cd <path_to_folder>/LAVA
 ```
 
-Where `path_to_folder` is the path to the folder containing the unzipped file (e.g. C:/Users/ste/Downloads/ or ~/Documents/python/)
+Where `path_to_folder` is the path to the folder containing the unzipped file (e.g. C:/Users/ste/Downloads/ or \~/Documents/python/)
 
 ### 4. Install dependencies, these are the libraries required to run the program
 
