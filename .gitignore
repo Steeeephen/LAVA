@@ -6,3 +6,5 @@ assets/__pycache__/*
 
 envi/*
 venv/*
+
+.DS_Store
