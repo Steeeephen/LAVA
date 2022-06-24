@@ -5,30 +5,31 @@
 These are the scripts needed to maintain and update the project as new LoL/broadcast updates come out
 
 ***
-All four of these take the same arguments
 
-|Argument|Addition|Explanation
-|---|---|---|
-|-v|Videos|Call to use local videos instead of YouTube|
-|-n|Videos to skip| Number of videos to skip in the playlist| 
-|-p|Playlist|YouTube playlist URL|
-|-u|url|YouTube video URL|
-
-***
-
-## ChampionTrackImage
+## `champion_track_image`
 
 For adding champion portraits to be tracked on the in-game minimap. If a new champion is added to the game/portrait updated, their portraits must be added to the directory using this script
 
-The usage is simple enough, simply type `$ python championtrackimage.py` and follow the on-screen instructions
+The usage is simple enough
 
-First you must find a frame at which the champion portrait is isolated on the minimap. Just like the highlighted champions here:
+|Argument|Variable Name|Explanation|
+|---|---|---|
+|`-l`|`local`|Use local videos instead of Youtube|
+|`-u`|`url`|Link to Youtube video or path to local video| 
 
-<p align = "center">
-	<img src = "/assets/markdown_assets/isolated_minimap.png" width = 300>
-</p> 
+So for example, to use a local video:
 
-Then you must give the name of the champ and the 4 coordinates that result in a 14x14px image of the champion. This is best done through trial-and-error and multiple iterations until the perfect match is found
+```sh
+$ python3 champion_track_image.py -l -u '~/Downloads/test.mp4'
+```
+
+Or a youtube VOD:
+
+```sh
+$ python3 champion_track_image.py -u 'https://www.youtube.com/watch?v=xnEbF-a0k80'
+```
+
+First you must find a frame at which the champion portrait is isolated on the minimap. Then you must give the name of the champ and the 4 coordinates that result in a 14x14px image of the champion. This is best done through trial-and-error and multiple iterations until the perfect match is found.
 
 ## CreateMapBase
 
