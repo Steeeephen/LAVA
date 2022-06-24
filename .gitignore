@@ -1,4 +1,6 @@
 input/*
+!input/.gitkeep
+
 output/*
 
 __pycache__/*
