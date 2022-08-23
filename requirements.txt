@@ -1,7 +1,7 @@
 Flask==2.0.0
 Jinja2==3.0.0
 kaleido==0.2.1
-numpy==1.21.0
+numpy==1.22.0
 opencv-python==4.5.2.52
 pandas==1.1.5
 Pillow==9.0.1
