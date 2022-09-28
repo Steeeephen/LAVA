@@ -1,13 +1,13 @@
 Flask==2.0.0
 Jinja2==3.0.0
 kaleido==0.2.1
-numpy==1.22.0
-opencv-python==4.5.2.52
+numpy==1.23.3
+opencv-python==4.6.0.66
 pandas==1.1.5
 Pillow==9.0.1
 plotly==4.14.3
 pytube==10.8.1
-scipy==1.5.4
+scipy==1.9.1
 sympy==1.8
 youtube-search-python==1.6.6
 yt-dlp==2022.6.22.1
