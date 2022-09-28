@@ -1,5 +1,5 @@
 ***
-# LoL Automated Video Analyser - LAVA Beta
+# LoL Automated Video Analyser - LAVA
 
 A program for gathering positional data and providing analytics from League of Legends videos. It can be used to automatically gather spatiotemporal data (player locations over time) from a series of Youtube/locally stored videos
 
@@ -7,7 +7,7 @@ For more information, see the [wiki](https://github.com/Steeeephen/LAVA/wiki)
 
 ***
 
-### 1. Download or clone loltracker directory
+### 1. Download or clone the repo
 
 Download directly from github and unzip or clone from the command line
 
