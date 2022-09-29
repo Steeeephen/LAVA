@@ -37,7 +37,7 @@ def main(url, local):
     while True:
         frame_input = input("Show Frame Number (type 'q' to quit): ")
 
-        if frame_input.lower() in ('q', 'quit'):
+        if frame_input.lower() in ("q", "quit"):
             break
 
         # Sets video to frame
@@ -51,12 +51,14 @@ def main(url, local):
 
     # Default locations of the sidebar portraits
     locations = {
-        'vertical': [110, 180, 247, 315, 383],
-        'blue': slice(25, 45),
-        'red': slice(1235, 1255)
+        "vertical": [110, 180, 247, 315, 383],
+        "blue": slice(25, 45),
+        "red": slice(1235, 1255),
     }
 
-    print(dedent("""
+    print(
+        dedent(
+            """
         Input Numbers:
         1  : Blue side toplaner
         2  : Blue side jungler
@@ -69,13 +71,15 @@ def main(url, local):
         8  : Red side midlaner
         9  : Red side ADC
         10 : Red side support
-    """))
+    """
+        )
+    )
 
     # Keep adding portraits
     while True:
         frame_input = input("Number (type 'q' to exit):\n")
 
-        if frame_input.lower() in ('q', 'quit'):
+        if frame_input.lower() in ("q", "quit"):
             break
 
         # Champion name
@@ -83,11 +87,11 @@ def main(url, local):
 
         idx = int(frame_input) - 1
         vertical = slice(
-            locations['vertical'][idx % 5],
-            locations['vertical'][idx % 5] + 20,
+            locations["vertical"][idx % 5],
+            locations["vertical"][idx % 5] + 20,
         )
 
-        col = "blue" if idx < 5 else 'red'
+        col = "blue" if idx < 5 else "red"
         horizontal = locations[col]
 
         # Crop image to portrait
@@ -95,17 +99,14 @@ def main(url, local):
 
         path = (
             Path(__file__).resolve().parent.parent
-            / 'assets'
-            / 'tracking'
-            / 'champ_classifying'
+            / "assets"
+            / "tracking"
+            / "champ_classifying"
             / col
-            / f'{name}.jpg'
+            / f"{name}.jpg"
         )
 
-        gray_cropped = cv2.cvtColor(
-            cropped,
-            cv2.COLOR_BGR2GRAY
-        )
+        gray_cropped = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
 
         # Save image to directory
         cv2.imwrite(str(path), gray_cropped)
@@ -114,12 +115,19 @@ def main(url, local):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Helper script for saving templates from a video")
+        description="Helper script for saving templates from a video"
+    )
 
-    parser.add_argument('-l', '--local', action='store_true',
-                        help='Use local videos instead of Youtube')
-    parser.add_argument('-u', '--url', type=str, required=True,
-                        help='Link to Youtube video or path to local video')
+    parser.add_argument(
+        "-l", "--local", action="store_true", help="Use local videos instead of Youtube"
+    )
+    parser.add_argument(
+        "-u",
+        "--url",
+        type=str,
+        required=True,
+        help="Link to Youtube video or path to local video",
+    )
 
     args = parser.parse_args()
 

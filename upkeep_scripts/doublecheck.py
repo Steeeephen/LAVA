@@ -17,24 +17,41 @@ from youtubesearchpython import Playlist, Video, StreamURLFetcher
 
 
 import argparse
-import sys,inspect
+import sys, inspect
 
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
-# from assets.constants import LEAGUES 
+# from assets.constants import LEAGUES
 
-#-----------------------------
+# -----------------------------
 
-parser = argparse.ArgumentParser(description = "Saving Images of Champions")
+parser = argparse.ArgumentParser(description="Saving Images of Champions")
 
-parser.add_argument('-v', '--video', action = 'store_true', default =  False, help = 'Use local videos instead of Youtube playlist')
-parser.add_argument('-p', '--playlist', type=str, default = 'https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s', help = 'YouTube playlist')
-parser.add_argument('-u', '--url', type=str, default =  '', help = 'Link to single Youtube video')
-parser.add_argument('-n', '--videos_to_skip', type=int, default = 0, help = 'Number of Videos to skip')
+parser.add_argument(
+    "-v",
+    "--video",
+    action="store_true",
+    default=False,
+    help="Use local videos instead of Youtube playlist",
+)
+parser.add_argument(
+    "-p",
+    "--playlist",
+    type=str,
+    default="https://www.youtube.com/playlist?list=PLTCk8PVh_Zwmfpm9bvFzV1UQfEoZDkD7s",
+    help="YouTube playlist",
+)
+parser.add_argument(
+    "-u", "--url", type=str, default="", help="Link to single Youtube video"
+)
+parser.add_argument(
+    "-n", "--videos_to_skip", type=int, default=0, help="Number of Videos to skip"
+)
 
 args = parser.parse_args()
+
 
 def main():
     local = args.video
@@ -42,20 +59,20 @@ def main():
     url = args.url
     videos_to_skip = args.videos_to_skip
 
-    if(url == ''):
-        if(not local):
-          playlist = pafy.get_playlist(playlist_url)
-          videos = []
-          for item_i in (playlist['items']):
-            videos.append(item_i['pafy'].videoid)
-            v = pafy.new(videos[videos_to_skip])
-            play = v.getbest(preftype="mp4")
-            cap = cv2.VideoCapture(play.url)
-        elif(local):
-            videos = os.listdir('../input')
-            videos.remove('.gitkeep')
+    if url == "":
+        if not local:
+            playlist = pafy.get_playlist(playlist_url)
+            videos = []
+            for item_i in playlist["items"]:
+                videos.append(item_i["pafy"].videoid)
+                v = pafy.new(videos[videos_to_skip])
+                play = v.getbest(preftype="mp4")
+                cap = cv2.VideoCapture(play.url)
+        elif local:
+            videos = os.listdir("../input")
+            videos.remove(".gitkeep")
             video = videos[videos_to_skip]
-            cap = cv2.VideoCapture("../input/%s" % video)   
+            cap = cv2.VideoCapture("../input/%s" % video)
     else:
         # play = pafy.new(url.split('v=')[1]).getbest(preftype="mp4")
 
@@ -66,9 +83,9 @@ def main():
 
         cap = cv2.VideoCapture(url)
 
-    while(True):
+    while True:
         frame_input = input("Skip how many frames?: (q to continue) ")
-        if(frame_input.lower() in ('q','quit')):
+        if frame_input.lower() in ("q", "quit"):
             break
         # Sets video to frame frames_to_skip. Change until you have a frame where desired champion is isolated
         cap.set(1, int(frame_input))
@@ -81,7 +98,7 @@ def main():
     gray = frame
 
     # print("Click on the window and press any key to continue, find the one that fits best")
-  
+
     # for league in LEAGUES.keys():
     #     mmap0, mmap1, mmap2, mmap3 = LEAGUES[league]
     #     cropped = gray[mmap0:mmap1, mmap2:mmap3]
@@ -89,15 +106,15 @@ def main():
     #     cv2.waitKey()
 
     # Check for sword icon in overlay, should be visible if correct
-    hheight,hwidth, _ = frame.shape
-    hheight = hheight//15
-    hwidth1 = 6*(hwidth//13)
-    hwidth2 = 7*(hwidth//13)
+    hheight, hwidth, _ = frame.shape
+    hheight = hheight // 15
+    hwidth1 = 6 * (hwidth // 13)
+    hwidth2 = 7 * (hwidth // 13)
 
     cropped = gray[0:hheight, hwidth1:hwidth2]
     cv2.imshow("sword icon", cropped)
     cv2.waitKey()
-    cv2.destroyAllWindows() 
+    cv2.destroyAllWindows()
 
     blue_top = gray[108:133, 20:50]
     blue_jgl = gray[178:203, 20:50]
@@ -117,7 +134,7 @@ def main():
     cv2.waitKey()
 
     # Check baron timer, should be very clear in centre of image if correct
-    cropped = gray[23:50, 1210:1250] #timer
+    cropped = gray[23:50, 1210:1250]  # timer
     cv2.imshow("timer", cropped)
     cv2.waitKey()
 
@@ -131,9 +148,9 @@ def main():
     cv2.waitKey()
 
     # Clear windows
+
+
 cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()
-
-
