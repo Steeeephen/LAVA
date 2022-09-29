@@ -1,5 +1,6 @@
-import cv2
 import os
+
+import cv2
 
 tracking_folder = os.path.join(
     "assets",
@@ -61,11 +62,11 @@ summoner_spells = {
 timer_borders = {
     'default': {
         'minute': (
-            slice(52,63),
+            slice(52, 63),
             slice(628, 641)
         ),
         'second': (
-            slice(52,63),
+            slice(52, 63),
             slice(644, 658)
         )
     }
@@ -82,8 +83,8 @@ if os.path.exists(blue_classify_path):
     blue_portraits = os.listdir(blue_classify_path)
     red_portraits = os.listdir(red_classify_path)
 
-    blue_champ_templates = [""]*len(blue_portraits)
-    red_champ_templates = [""]*len(red_portraits)
+    blue_champ_templates = [""] * len(blue_portraits)
+    red_champ_templates = [""] * len(red_portraits)
 
     # Save templates for template matching
     for portrait_i, portrait in enumerate(blue_portraits):
