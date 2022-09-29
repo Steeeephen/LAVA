@@ -1,11 +1,10 @@
-import plotly.express as px
-import pandas as pd
-import numpy as np
-import plotly
-from scipy.spatial.distance import pdist
 import os
 
-# from jinja2 import Environment, FileSystemLoader
+import numpy as np
+import pandas as pd
+import plotly
+import plotly.express as px
+from scipy.spatial.distance import pdist
 from PIL import Image
 from numpy.linalg import norm as norm
 
@@ -148,8 +147,8 @@ class GraphsOperator():
                             source=Image.open(image_path),
                             xref=subplot,
                             yref="y",
-                            x=df_means['x'][champ][0]-0.05,
-                            y=df_means['y'][champ][0]-0.05,
+                            x=df_means['x'][champ][0] - 0.05,
+                            y=df_means['y'][champ][0] - 0.05,
                             sizex=0.1,
                             sizey=0.1,
                             sizing="stretch",
@@ -170,11 +169,13 @@ class GraphsOperator():
                         y0=dft[0][1],
                         x1=dft[1][0],
                         y1=dft[1][1],
-                        line=dict(color="white", width=20 *
-                                  prox.loc[combo][side])
+                        line=dict(
+                            color="white",
+                            width=20 * prox.loc[combo][side]
+                        )
                     )
 
-                fig.add_trace(fig2.data[0], col=i+1, row=1)
+                fig.add_trace(fig2.data[0], col=i + 1, row=1)
             fig.add_layout_image(
                 dict(
                     source=Image.open("assets/graphing/map.png"),
@@ -261,8 +262,8 @@ class GraphsOperator():
                         sizing="stretch",
                         opacity=1,
                         layer="below"),
-                    row=round((1+i)/10)+1,
-                    col=(i % 5)+1
+                    row=round((1 + i) / 10) + 1,
+                    col=(i % 5) + 1
                 )
 
             fig.for_each_annotation(lambda a: a.update(
@@ -287,7 +288,7 @@ class GraphsOperator():
         elif norm(point - np.array([0, 1])) < 0.4:  # Blue base
             regions[7] += 1
         elif point[0] < 0.9 - point[1]:  # Above midlane upper border
-            if point[0] < 1.05*point[1]:
+            if point[0] < 1.05 * point[1]:
                 regions[1] += 1  # Blue side
             else:
                 regions[0] += 1  # Red side
@@ -295,9 +296,9 @@ class GraphsOperator():
         elif point[0] < 1.1 - point[1]:
             regions[4] += 1
         elif point[0] > 1.1 - point[1]:  # Below midlane lower border
-            if point[0] < 1.05*point[1]:  # Blue side
+            if point[0] < 1.05 * point[1]:  # Blue side
                 regions[2] += 1
-            elif point[0] > 1.05*point[1]:  # Red side
+            elif point[0] > 1.05 * point[1]:  # Red side
                 regions[3] += 1
 
     @staticmethod
@@ -318,9 +319,9 @@ class GraphsOperator():
         elif point[0] < 1.1 - point[1]:
             regions[4] += 1
         elif point[0] > 1.1 - point[1]:  # Below midlane lower border
-            if point[0] < 1.05*point[1]:  # Blue side
+            if point[0] < 1.05 * point[1]:  # Blue side
                 regions[2] += 1
-            elif point[0] > 1.05*point[1]:  # Red side
+            elif point[0] > 1.05 * point[1]:  # Red side
                 regions[1] += 1
 
     # And for midlaners
@@ -344,15 +345,14 @@ class GraphsOperator():
             regions[3] += 1
         elif point[0] > 1.125 - point[1]:  # Botside jungle
             regions[2] += 1
-        elif point[0] < 1.05*point[1]:  # Past halfway point of midlane
+        elif point[0] < 1.05 * point[1]:  # Past halfway point of midlane
             regions[1] += 1
-        elif point[0] > 1.05*point[1]:  # Behind halfway point of midlane
+        elif point[0] > 1.05 * point[1]:  # Behind halfway point of midlane
             regions[0] += 1
 
     def jungleplots(self, df, colour, image_path):
         df_jungle = df[(df.role == 'jgl')]
 
-        graph_dict = {}
         df_side = df_jungle[df_jungle.side == colour]
 
         subplots = {'x': [0, 480], 'x2': [480, 840], 'x3': [840, 1200]}
@@ -361,7 +361,7 @@ class GraphsOperator():
             df_timesplit = df_side[(df_side.second >= subplots[subplot][0]) & (
                 df_side.second < subplots[subplot][1])]
 
-            regions = [0]*9
+            regions = [0] * 9
             df_timesplit.apply(lambda x: self.classify_jgl(x, regions), axis=1)
             areas[subplot] = regions
 
@@ -377,9 +377,9 @@ class GraphsOperator():
         shapes = []
         for subplot in ['x', 'x2', 'x3']:
             reds = areas[subplot]
-            
+
             reds = list(
-                map(lambda x: 255-255*(x - min(reds))/(max(reds)), reds))
+                map(lambda x: 255 - 255 * (x - min(reds)) / (max(reds)), reds))
 
             # Different colours for each team
             fill_team = "255, %d, %d" if colour == "red" else "%d, %d, 255"
@@ -513,13 +513,12 @@ class GraphsOperator():
         fig = px.scatter(x=[0, 100], y=[0, 1], color=[0, 1])
 
         fig2.add_trace(fig.data[0])
-        
+
         fig2.write_image(image_path, engine='kaleido')
-        
+
     def supportplots(self, df, colour, image_path):
         df_support = df[(df.role == 'sup')]
 
-        graph_dict = {}
         df_side = df_support[df_support.side == colour]
 
         subplots = {'x': [0, 480], 'x2': [480, 840], 'x3': [840, 1200]}
@@ -527,7 +526,7 @@ class GraphsOperator():
         for subplot in subplots.keys():
             df_timesplit = df_side[(df_side.second >= subplots[subplot][0]) & (
                 df_side.second < subplots[subplot][1])]
-            regions = [0]*7
+            regions = [0] * 7
             df_timesplit.apply(lambda x: self.classify_sup(x, regions), axis=1)
             areas[subplot] = regions
 
@@ -544,7 +543,7 @@ class GraphsOperator():
         for subplot in ['x', 'x2', 'x3']:
             reds = areas[subplot]
             reds = list(
-                map(lambda x: 255-255*(x - min(reds))/(max(reds)), reds))
+                map(lambda x: 255 - 255 * (x - min(reds)) / (max(reds)), reds))
 
             # Different colours for each team
             fill_team = "255, %d, %d" if colour == "red" else "%d, %d, 255"
@@ -711,7 +710,6 @@ class GraphsOperator():
     def midplots(self, df, colour, image_path):
         df_mid = df[(df.role == 'mid')]
 
-        graph_dict = {}
         df_side = df_mid[df_mid.side == colour]
 
         subplots = {'x': [0, 480], 'x2': [480, 840], 'x3': [840, 1200]}
@@ -720,7 +718,7 @@ class GraphsOperator():
             df_timesplit = df_side[(df_side.second >= subplots[subplot][0]) & (
                 df_side.second < subplots[subplot][1])]
 
-            regions = [0]*8
+            regions = [0] * 8
             df_timesplit.apply(lambda x: self.classify_mid(x, regions), axis=1)
             areas[subplot] = regions
 
@@ -737,7 +735,7 @@ class GraphsOperator():
         for subplot in ['x', 'x2', 'x3']:
             reds = areas[subplot]
             reds = list(
-                map(lambda x: 255-255*(x - min(reds))/(max(reds)), reds))
+                map(lambda x: 255 - 255 * (x - min(reds)) / (max(reds)), reds))
 
             # Different colours for each team
             fill_team = "255, %d, %d" if colour == "red" else "%d, %d, 255"
