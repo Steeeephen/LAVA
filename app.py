@@ -68,8 +68,6 @@ def input():
         form = request.form
 
         input_vars = [
-            'local',
-            'playlist',
             'graphs',
             'minimap',
             'lightweight'
@@ -80,7 +78,7 @@ def input():
         for var in input_vars:
             input_args[var] = var in form
 
-        run_video_thread = threading.Thread(
+        threading.Thread(
             target=lava.execute,
             name="tracker",
             kwargs=input_args
