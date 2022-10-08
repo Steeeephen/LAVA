@@ -107,6 +107,9 @@ class LAVA(GraphsOperator):
 
             df['video'] = video
 
+            # Champs with updated splash arts are denoted with e.g. 'udyr_' and 'udyr'
+            df['champ'] = df['champ'].str.replace('_', '')
+
             df.to_csv(
                 output_file,
                 index=False
