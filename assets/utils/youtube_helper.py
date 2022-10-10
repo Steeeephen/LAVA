@@ -1,17 +1,11 @@
 import yt_dlp
-from assets.utils.videoFileHelper import clean_for_directory
+from assets.utils.video_file_helper import clean_for_directory
 
 def is_valid_youtube_url(url) -> bool:
-    if 'youtube' in url and '/watch?v=' in url:
-        return True
-    else:
-        return False
+    return 'youtube' in url and '/watch?v=' in url
 
 def is_youtube_playlist(url) -> bool:
-    if '&list=' in url or '/playlist?list=' in url:
-        return True
-    else:
-        return False
+    return '&list=' in url or '/playlist?list=' in url
 
 def parse_youtube_url(url : str) -> dict:
     videos = {}
