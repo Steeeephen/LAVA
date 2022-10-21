@@ -4,15 +4,6 @@ import numpy as np
 import cv2
 
 
-def clean_for_directory(video_title):
-    for ch in ['*', '.', '"', '/', '\\', ':', ';', '|', ',']:
-        if ch in video_title:
-            video_title = video_title.replace(ch, '')
-        video_title = video_title.replace(' ', '_')
-
-    return video_title
-
-
 def get_header_borders(frame_shape):
     frame_height, frame_width, _ = frame_shape
     header_height = frame_height // 15

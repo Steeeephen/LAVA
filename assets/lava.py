@@ -6,11 +6,12 @@ import pandas as pd
 from numpy.linalg import norm
 from sympy.geometry import Point, Circle, intersection, Line
 from sympy import N
-from youtubesearchpython import Playlist, Video, StreamURLFetcher
+from assets.utils import utils
+from assets.utils.ytHelper import is_valid_youtube_url, parse_youtube_url
+from assets.utils.videoFileHelper import parse_local_files
 
 from assets.graphing import GraphsOperator
-from assets import utils, constants
-
+import assets.utils.constants as constants
 
 class LAVA(GraphsOperator):
     def __init__(self):
@@ -29,37 +30,28 @@ class LAVA(GraphsOperator):
 
     def execute(self,
                 url="",
-                local=False,
-                playlist=False,
                 output_file='positions.csv',
-                skip=0,
                 minimap=False,
                 graphs=False,
                 lightweight=True):
         df = self.gather_data(
             url,
-            local,
             output_file,
-            playlist,
-            skip,
             minimap,
             lightweight
         )
 
         if graphs is True:
             self.draw_graphs(df, df.video.iloc[0])
-
+        
         print(f'Video {df.video.iloc[0]} complete')
 
     def gather_data(self,
                     url="",
-                    local=False,
                     output_file='positions.csv',
-                    playlist=False,
-                    skip=0,
                     minimap=False,
                     lightweight=True):
-        videos = self.parse_url(url, local, playlist, skip)
+        videos = self.parse_url(url)
         full_data = pd.DataFrame()
 
         self.lightweight = lightweight
@@ -119,9 +111,8 @@ class LAVA(GraphsOperator):
             cv2.destroyAllWindows()
 
         return full_data
-
-    def gather_info(self, url="", local=False, playlist=False, skip=0):
-        videos = self.parse_url(url, local, playlist, skip)
+    def gather_info(self, url=""):
+        videos = self.parse_url(url)
 
         full_data = {}
 
@@ -150,49 +141,11 @@ class LAVA(GraphsOperator):
             full_data[video] = champs
         return full_data
 
-    def parse_url(self, url="", local=False, playlist=False, skip=0):
-        videos = {}
-
-        if local is False:
-            fetcher = StreamURLFetcher()
-
-            if playlist is True:
-                playlist_data = Playlist.getVideos(url)
-                videos_list = [x['link'] for x in playlist_data['videos']]
-                videos_list = videos_list[skip:]
-            else:
-                if isinstance(url, list):
-                    videos_list = url
-                else:
-                    videos_list = [url]
-
-            for video_url in videos_list:
-                video = Video.get(video_url)
-                url = fetcher.get(video, 22)
-
-                video = utils.clean_for_directory(video['title'])
-
-                videos[video] = url
-        # If pulling from local
+    def parse_url(self, url=""):
+        if is_valid_youtube_url(url):
+            return parse_youtube_url(url)
         else:
-            if playlist is True:
-                videos_list = os.listdir('input')
-                videos_list.remove('.gitkeep')
-                videos_list = videos_list[skip:]
-            else:
-                if isinstance(url, list):
-                    videos_list = url
-                else:
-                    videos_list = [url]
-
-            for video_file in videos_list:
-                video_path = video_file
-
-                video = os.path.splitext(video_file)[0]
-
-                videos[video] = video_path
-
-        return videos
+            return parse_local_files(url)
 
     def headers(self):
         headers_path = os.path.join(

@@ -2,6 +2,7 @@ import os
 
 import cv2
 
+
 tracking_folder = os.path.join(
     "assets",
     "tracking")
