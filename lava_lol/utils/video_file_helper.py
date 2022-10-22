@@ -3,6 +3,9 @@ import os
 VALID_VIDEO_FORMATS = ["WEBM", "MPG", "MP2", "MPEG", "MPE", "MPV", "OGG", "MP4", "M4P", "M4V", "AVI", "WMV", "MOV", "QT", "FLV", "SWF", "AVCHD"]
 
 def clean_for_directory(video_title : str) -> str:
+    """
+    
+    """
     for ch in ['*', '.', '"', '/', '\\', ':', ';', '|', ',']:
         if ch in video_title:
             video_title = video_title.replace(ch, '')
@@ -11,8 +14,11 @@ def clean_for_directory(video_title : str) -> str:
     return video_title
 
 def parse_local_files(url : str) -> dict or None:
+    """
+
+    """
     videos = {}
-    print(url)
+    
     if os.path.isdir(url):
         for file in os.listdir(url):
             if file.split('.')[-1].upper() in VALID_VIDEO_FORMATS:

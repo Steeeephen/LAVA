@@ -18,7 +18,7 @@ def get_header_borders(frame_shape):
     return header_borders
 
 
-def decodeText(scores):
+def decode_text(scores):
     text = ""
     alphabet = "0123456789abcdefghijklmn0pqr5tuvwxyz"
     for i in range(scores.shape[0]):

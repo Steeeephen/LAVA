@@ -47,14 +47,6 @@ class GraphsOperator():
                 side)
             graphs[side].write_image(image_path, engine='kaleido')
 
-        # file_loader = FileSystemLoader('assets/templates')
-        # env = Environment(loader=file_loader)
-        # template = env.get_template('game_graphs.html')
-        # source_html = template.render(video=video)
-
-        # with open(f"output/templates/{video}.html", "w") as html_file:
-            # html_file.write(source_html)
-
     @staticmethod
     def proximity_values(df):
         df.drop_duplicates(subset=['second', 'side', 'role'], inplace=True)
