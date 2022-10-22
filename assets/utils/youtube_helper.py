@@ -20,8 +20,8 @@ def parse_youtube_url(url : str) -> dict:
         if video_info['_type'] == 'playlist':
             for video in video_info['entries']:
                 video_name = clean_for_directory(video['title'])
-                videos[video_name] = video_info['formats'][-1]['url']
+                videos[video_name] = video_info['url']
         else:
             video_name = clean_for_directory(video_info['title'])
-            videos[video_name] = video_info['formats'][-1]['url']
+            videos[video_name] = video_info['url']
     return videos
