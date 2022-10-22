@@ -7,8 +7,8 @@ from numpy.linalg import norm
 from sympy.geometry import Point, Circle, intersection, Line
 from sympy import N
 from assets.utils import utils
-from assets.utils.ytHelper import is_valid_youtube_url, parse_youtube_url
-from assets.utils.videoFileHelper import parse_local_files
+from assets.utils.youtube_helper import is_valid_youtube_url, parse_youtube_url
+from assets.utils.video_file_helper import parse_local_files
 
 from assets.graphing import GraphsOperator
 import assets.utils.constants as constants
