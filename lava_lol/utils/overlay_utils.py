@@ -92,8 +92,10 @@ def get_header_borders(frame_height: int,
     return header_borders
 
 
-def get_first_ingame_frame(cap, header):
-    """"
+def get_first_ingame_frame(cap: cv2.VideoCapture,
+                           header: np.array,
+                           header_threshold: float = 0.8):
+    """
     """
     ret, frame = cap.read()
     header_borders = get_header_borders(*frame.shape[:2])
