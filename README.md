@@ -1,6 +1,8 @@
 ***
 # LoL Automated Video Analyser - LAVA
 
+*Note - Repo is being heavily refactored, see `3.0.0` branch for a sneak peek*
+
 A program for gathering positional data and providing analytics from League of Legends videos. It can be used to automatically gather spatiotemporal data (player locations over time) from a series of Youtube/locally stored videos
 
 For more information, see the [wiki](https://github.com/Steeeephen/LAVA/wiki)
