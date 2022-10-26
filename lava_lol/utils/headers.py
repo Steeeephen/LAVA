@@ -3,9 +3,9 @@ from typing import Tuple
 import cv2
 import numpy as np
 
-from utils.overlay_utils import get_assets, get_header_borders
+from ..utils.overlay_utils import get_assets, get_header_borders
 
-def get_headers(cap: cv2.VideoCapture,
+def identify_headers(cap: cv2.VideoCapture,
                 frames_to_skip: int, 
                 threshold: float = 0.7) -> Tuple[int, np.array, str]:
     """

@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
 
-from utils.constants import Borders
-from utils.headers import get_header_borders
-from utils.overlay_utils import get_assets, get_champion_portraits, get_champion_minimap_icon
+from ..utils.constants import Borders
+from ..utils.headers import get_header_borders
+from ..utils.overlay_utils import get_assets, get_champion_portraits, get_champion_minimap_icon
 
 def identify_champions(cap: cv2.VideoCapture,
                        header: np.array,
@@ -28,11 +28,19 @@ def identify_champions(cap: cv2.VideoCapture,
         champions['blue'][role] = {'champion': "", 'template': ""}
         champions['red'][role] = {'champion': "", 'template': ""}
 
+    ret, frame = cap.read()
+    
     # Grab portraits for identifying the champions played
     identified = 0
 
+    champions_found = []
+
     # Identify blue side champions until exactly 5 have been found
     while identified != 5:
+        gray = cv2.cvtColor(
+            frame,
+            cv2.COLOR_BGR2GRAY
+        )
 
         identified = 0
         
@@ -48,6 +56,9 @@ def identify_champions(cap: cv2.VideoCapture,
 
             # Scroll through each template and find the best match
             for champion_name, champion_portrait in blue_champion_portraits.items():
+                if champion_name in champions_found:
+                    continue
+
                 champion_classify_percent = np.max(
                     cv2.matchTemplate(
                         cropped,
@@ -60,15 +71,18 @@ def identify_champions(cap: cv2.VideoCapture,
                 if champion_classify_percent > threshold:
                     threshold = champion_classify_percent
                     most_likely_champion = champion_name
+                    champions_found.append(champion_name)
 
             champions['blue'][role]['champion'] = most_likely_champion
             if most_likely_champion != "":
                 identified += 1
 
-            print(f"Blue {role} identified ({100 * threshold:.2f}%): {most_likely_champion}")
+                print(f"Blue {role} identified ({100 * threshold:.2f}%): {most_likely_champion}")
 
         # If too few champions found, skip a frame and try again
         if identified < 5:
+            print(f"-- Not enough champions found, trying again --")
+            champions_found = []
             for _ in range(frames_to_skip):
                 cap.grab()
 
@@ -76,33 +90,6 @@ def identify_champions(cap: cv2.VideoCapture,
 
     # Same for red side champions
     while identified != 10:
-        while ret is True:
-            # Making the images gray will make template matching more efficient
-            gray = cv2.cvtColor(
-                frame,
-                cv2.COLOR_BGR2GRAY
-            )
-
-            # Search only in a section near the top, again for efficiency
-            cropped = gray[header_borders]
-
-            # Look for the scoreboard
-            matched = cv2.matchTemplate(
-                cropped,
-                header,
-                cv2.TM_CCOEFF_NORMED
-            )
-            
-            location = np.where(matched > header_threshold)
-
-            if location[0].any():
-                break
-
-            # Skip one second if not
-            for _ in range(frames_to_skip):
-                cap.grab()
-
-            ret, frame = cap.read()
         identified = 5
 
         for role in roles:

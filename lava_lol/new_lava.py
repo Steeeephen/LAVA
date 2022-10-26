@@ -2,10 +2,13 @@ from typing import List, Dict
 
 import cv2
 
-from utils.logger import make_logger
-from utils.new_utils import parse_url
-from utils.headers import get_headers
-from utils.identify_champions import identify_champions
+from .utils.champions import identify_champions
+from .utils.headers import identify_headers
+from .utils.logger import make_logger
+from .utils.minimap import get_map_borders
+from .utils.new_utils import parse_url, reset_capture
+from .utils.summoners import identify_summoner_spells
+from .utils.tracker import track_champions
 
 class LAVA():
     """
@@ -24,14 +27,29 @@ class LAVA():
             cap = cv2.VideoCapture(url)
             frames_to_skip = int(cap.get(cv2.CAP_PROP_FPS))
 
-            count, header, overlay = get_headers(cap, frames_to_skip)
+            count, header, overlay = identify_headers(cap, frames_to_skip)
 
-            # get_headers found the start of the match, skip to it
-            cap.set(1, frames_to_skip * 120 * (count - 2))
+            champs = identify_champions(
+                reset_capture(cap, frames_to_skip, count),
+                header,
+                frames_to_skip
+            )
 
-            champs = identify_champions(cap, header, frames_to_skip)
+            # summoners = identify_summoner_spells(
+            #     reset_capture(cap, frames_to_skip, count),
+            #     frames_to_skip
+            # )
 
-            summoners = get_summoner_spells(cap, frames_to_skip)
+            map_borders = get_map_borders(cap, 'lec_summer_2020', frames_to_skip)
+
+            df = track_champions(
+                cap,
+                frames_to_skip,
+                map_borders,
+                header,
+                champs
+            )
+
 
     def parse_champions(self, url: str) -> List[Dict[str, str]]:
         """
