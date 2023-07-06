@@ -9,4 +9,4 @@ plotly==4.14.3
 pytube==10.8.1
 scipy>=1.5.4
 sympy==1.8
-yt-dlp==2022.10.4
+yt-dlp==2023.7.6
